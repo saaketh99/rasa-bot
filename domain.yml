@@ -1,0 +1,131 @@
+version: "3.1"
+
+intents:
+  - greet
+  - goodbye
+  - cx_date_orders
+  - route_orders
+  - orders_to_destination
+  - get_orders_by_status
+  - fetch_by_metadata
+  - track_order_by_id
+  - track_order_by_invoice
+  - orders_by_location_duration
+  - service_availability
+  - delivery_report_duration
+  - order_full_details
+  - get_orders_by_tat
+  - get_pending_orders_past_days
+  - get_top_pincodes_by_customer
+
+
+entities:
+ - customer_name 
+ - start_date
+ - end_date
+ - delivery_status
+ - order_id
+ - invoice_number
+ - location_code
+ - pincode
+ - tat_days
+ - n_days
+
+ - location:
+      roles:
+        - pickup
+        - drop
+        - destination
+
+
+responses:
+  utter_greet:
+  - text: "Hey! How can I help you ?"
+
+  utter_goodbye:
+  - text: "Bye"
+
+actions:
+ - action_cx_date
+ - action_route
+ - action_cx_destination
+ - action_get_orders_by_status 
+ - action_fetch_by_metadata
+ - action_get_order_status
+ - action_get_orders_by_tat
+ - action_pending_orders_past_days
+ - action_top_pincodes_by_customer
+
+  
+slots:
+  customer_name:
+    type: text
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: customer_name   
+
+  start_date:
+    type: text
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: start_date
+
+  end_date:
+    type: text
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: end_date
+
+  pickup:
+    type: text
+    mappings:
+      - type: from_entity
+        entity: location
+        role: pickup
+
+  drop:
+    type: text
+    mappings:
+      - type: from_entity
+        entity: location
+        role: drop
+
+  destination:
+    type: text
+    mappings:
+      - type: from_entity
+        entity: location
+        role: destination
+
+  delivery_status:
+    type: text
+    mappings:
+      - type: from_entity
+        entity: delivery_status
+
+  order_id:
+    type: text
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: order_id
+
+  tat_days:
+    type: float
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: tat_days
+  n_days:
+    type: float
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: n_days
+
+session_config:
+  session_expiration_time: 60
+  carry_over_slots_to_new_session: true
