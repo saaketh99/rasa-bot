@@ -1,0 +1,61 @@
+version: "3.1"
+
+stories:
+
+- story: happy path
+  steps:
+    - intent: greet
+    - action: utter_greet
+
+- story: sad path
+  steps:
+    - intent: goodbye
+    - action: utter_goodbye
+
+- story: cx date orders story
+  steps: 
+    - intent: cx_date_orders
+    - action: action_cx_date
+
+- story: shipment route between locations story
+  steps:
+    - intent: route_orders
+    - action: action_route
+
+- story: customer orders to destination story
+  steps:
+    - intent: orders_to_destination
+    - action: action_cx_destination
+
+- story: get orders by status story
+  steps: 
+    - intent: get_orders_by_status
+    - action: action_get_orders_by_status
+    
+- story: fetch orders by metadata story
+  steps:
+    - intent: fetch_by_metadata
+    - action: action_fetch_by_metadata
+
+- story: track order by id story
+  steps:
+    - intent: track_order_by_id
+    - action: action_get_order_status
+
+- story: Retrieve orders by specific TAT
+  steps:
+  - intent: get_orders_by_tat
+  - action: action_get_orders_by_tat
+
+- story: Check pending orders for a customer in the past N days
+  steps:
+  - intent: get_pending_orders_past_days
+  - action: action_pending_orders_past_days
+
+
+- story: Show top Wakefit pincodes
+  steps:
+  - intent: get_top_pincodes_by_customer
+  - action: action_top_pincodes_by_customer
+
+

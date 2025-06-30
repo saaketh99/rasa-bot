@@ -1,0 +1,1255 @@
+version: "3.1"
+
+nlu:
+- intent: greet
+  examples: |
+    - hey
+    - hello
+    - hi
+    - hello there
+    - good morning
+    - good evening
+    - moin
+    - hey there
+    - let's go
+    - hey dude
+    - goodmorning
+    - goodevening
+    - good afternoon
+
+- intent: goodbye
+  examples: |
+    - cu
+    - good by
+    - cee you later
+    - good night
+    - bye
+    - goodbye
+    - have a nice day
+    - see you around
+    - bye bye
+    - see you later
+
+- intent: cx_date_orders
+  examples: |
+    - show me orders from [OLAELE](customer_name) between [2024-12-01](start_date) and [2024-12-31](end_date)
+    - get [Wakefit](customer_name) orders from [2024-11-01](start_date) to [2024-11-15](end_date)
+    - list all [OLA Elec](customer_name) deliveries between [2025-01-10](start_date) and [2025-01-20](end_date)
+    - give me orders booked by [OLAELE](customer_name) from [2024-10-01](start_date) to [2024-10-31](end_date)
+    - fetch [Wakefit](customer_name) shipments from [2024-09-01](start_date) through [2024-09-10](end_date)
+    - what are the orders of [OLA Elec](customer_name) from [2025-03-01](start_date) to [2025-03-05](end_date)
+    - get me all orders from [OLAELE](customer_name) between [2025-01-01](start_date) and [2025-01-15](end_date)
+    - find orders of [Wakefit](customer_name) dated from [2024-12-15](start_date) to [2024-12-20](end_date)
+    - any shipments by [OLA Elec](customer_name) between [2024-11-01](start_date) and [2024-11-10](end_date)?
+    - check [OLAELE](customer_name) orders placed from [2025-02-01](start_date) till [2025-02-15](end_date)
+
+- intent: route_orders
+  examples: |
+    - get all orders from [Hydrbd]{"entity": "location", "role": "pickup"} to [Vizag]{"entity": "location", "role": "drop"}
+    - need shipments from [Vijwada]{"entity": "location", "role": "pickup"} to [Guntur]{"entity": "location", "role": "drop"}
+    - are there any loads moved from [Tirupathi]{"entity": "location", "role": "pickup"} to [Kadapa]{"entity": "location", "role": "drop"}
+    - show me all bookings from [KKD]{"entity": "location", "role": "pickup"} to [SKLM]{"entity": "location", "role": "drop"}
+    - list packages sent from [Bhimawaram]{"entity": "location", "role": "pickup"} to [VZM]{"entity": "location", "role": "drop"}
+    - show me movements between [Chitoor]{"entity": "location", "role": "pickup"} and [Anantpur]{"entity": "location", "role": "drop"}
+    - any orders from [Medk]{"entity": "location", "role": "pickup"} to [NLR]{"entity": "location", "role": "drop"}
+    - need details of consignments between [Secbd]{"entity": "location", "role": "pickup"} and [Rajahmundry]{"entity": "location", "role": "drop"}
+    - show all routes starting in [Ongl]{"entity": "location", "role": "pickup"} and going to [Cuddapah]{"entity": "location", "role": "drop"}
+    - orders picked in [Warngl]{"entity": "location", "role": "pickup"} and dropped at [Vizianagram]{"entity": "location", "role": "drop"}
+    - list orders between [ATP]{"entity": "location", "role": "pickup"} and [CTR]{"entity": "location", "role": "drop"}
+    - check shipments that were routed from [Scbd]{"entity": "location", "role": "pickup"} to [KKM]{"entity": "location", "role": "drop"}
+    - anything shipped from [GNT]{"entity": "location", "role": "pickup"} to [VSKPTNM]{"entity": "location", "role": "drop"}
+    - packages moved from [Neloor]{"entity": "location", "role": "pickup"} to [Vizg]{"entity": "location", "role": "drop"}
+    - I need the delivery details from [Rajahmundri]{"entity": "location", "role": "pickup"} to [HYDRBD]{"entity": "location", "role": "drop"}
+    - show bookings from [Hydrbd]{"entity": "location", "role": "pickup"} to [Vizg]{"entity": "location", "role": "drop"}
+    - get all orders from [Bngluru]{"entity": "location", "role": "pickup"} to [Neloor]{"entity": "location", "role": "drop"}
+    - need loads from [Srungvrp Kota]{"entity": "location", "role": "pickup"} to [Kadppa]{"entity": "location", "role": "drop"}
+    - any consignments from [Vzg]{"entity": "location", "role": "pickup"} to [Gntur]{"entity": "location", "role": "drop"}
+    - orders moved from [Tpty]{"entity": "location", "role": "pickup"} to [Rjy]{"entity": "location", "role": "drop"}
+    - packages between [Anantpr]{"entity": "location", "role": "pickup"} and [Chittor]{"entity": "location", "role": "drop"}
+    - need list from [Scbd]{"entity": "location", "role": "pickup"} to [MachliPtam]{"entity": "location", "role": "drop"}
+    - loads from [Knr]{"entity": "location", "role": "pickup"} to [KKD]{"entity": "location", "role": "drop"}
+    - check for bookings from [Nlr]{"entity": "location", "role": "pickup"} to [Vijywd]{"entity": "location", "role": "drop"}
+    - anything sent from [Pune]{"entity": "location", "role": "pickup"} to [Elru]{"entity": "location", "role": "drop"}
+    - check if loads exist from [Cuddapa]{"entity": "location", "role": "pickup"} to [Ndyala]{"entity": "location", "role": "drop"}
+    - list shipments from [BVRM]{"entity": "location", "role": "pickup"} to [KKM]{"entity": "location", "role": "drop"}
+    - are there any packages moved from [Hanamkonda]{"entity": "location", "role": "pickup"} to [Khmm]{"entity": "location", "role": "drop"}
+    - list all bookings from [Tadeplgudem]{"entity": "location", "role": "pickup"} to [SKLM]{"entity": "location", "role": "drop"}
+    - show deliveries from [JGPL]{"entity": "location", "role": "pickup"} to [GVP]{"entity": "location", "role": "drop"}
+    - loads routed from [BLR]{"entity": "location", "role": "pickup"} to [VZM]{"entity": "location", "role": "drop"}
+    - any orders from [Kammam]{"entity": "location", "role": "pickup"} to [Tadepalli]{"entity": "location", "role": "drop"}
+    - consignments between [Rjy]{"entity": "location", "role": "pickup"} and [Hyd]{"entity": "location", "role": "drop"}
+    - show all shipments from [BPTL]{"entity": "location", "role": "pickup"} to [PTR]{"entity": "location", "role": "drop"}
+    - packages picked up in [Kurnl]{"entity": "location", "role": "pickup"} and dropped in [Nalgda]{"entity": "location", "role": "drop"}
+- intent: orders_to_destination
+  examples: |
+    - Show orders sent to [Chennai]{"entity": "location", "role": "destination"} for [Wakefit]{"entity": "customer_name"}
+    - Shipments for [Amazon]{"entity": "customer_name"} delivered to [Bangalore]{"entity": "location", "role": "destination"}
+    - [Flipkart]{"entity": "customer_name"} packages sent to [Delhi]{"entity": "location", "role": "destination"}
+    - List orders under [Myntra]{"entity": "customer_name"} delivered to [Hyderabad]{"entity": "location", "role": "destination"}
+    - Anything for [Pepperfry]{"entity": "customer_name"} that went to [Pune]{"entity": "location", "role": "destination"}
+    - Check all shipments from [Ola]{"entity": "customer_name"} to [Ahmedabad]{"entity": "location", "role": "destination"}
+    - Give me [JioMart]{"entity": "customer_name"} deliveries to [Jaipur]{"entity": "location", "role": "destination"}
+    - Which orders from [BigBasket]{"entity": "customer_name"} went to [Indore]{"entity": "location", "role": "destination"}
+    - Show bookings by [Tata Cliq]{"entity": "customer_name"} for [Kolkata]{"entity": "location", "role": "destination"}
+    - Deliveries handled for [Urban Ladder]{"entity": "customer_name"} that reached [Nagpur]{"entity": "location", "role": "destination"}
+    - Show orders sent to [Chnai]{"entity": "location", "role": "destination"} for [Wakeft]{"entity": "customer_name"}
+    - Shipments for [Amzon]{"entity": "customer_name"} delivered to [Bangalor]{"entity": "location", "role": "destination"}
+    - [Flipkrt]{"entity": "customer_name"} packages sent to [Delli]{"entity": "location", "role": "destination"}
+    - List orders under [Myntr]{"entity": "customer_name"} delivered to [Hydrbd]{"entity": "location", "role": "destination"}
+    - Anything for [Pprfry]{"entity": "customer_name"} that went to [Puna]{"entity": "location", "role": "destination"}
+    - Check all shipments from [Oola]{"entity": "customer_name"} to [Ahmdbd]{"entity": "location", "role": "destination"}
+    - Give me [JMart]{"entity": "customer_name"} deliveries to [Jaypur]{"entity": "location", "role": "destination"}
+    - Which orders from [BigBsket]{"entity": "customer_name"} went to [Indr]{"entity": "location", "role": "destination"}
+    - Show bookings by [Tta Cliq]{"entity": "customer_name"} for [Kolkatta]{"entity": "location", "role": "destination"}
+    - Deliveries handled for [Urban Ladr]{"entity": "customer_name"} that reached [Nagpr]{"entity": "location", "role": "destination"}
+    - Show orders for [Wakfit]{"entity": "customer_name"} sent to [Chnnai]{"entity": "location", "role": "destination"}
+    - [Big Baskt]{"entity": "customer_name"} shipments arrived in [Indorr]{"entity": "location", "role": "destination"}
+    - Any orders from [Flipkart]{"entity": "customer_name"} to [Delhi]{"entity": "location", "role": "destination"}
+    - I need orders by [Amazn]{"entity": "customer_name"} for [Bglr]{"entity": "location", "role": "destination"}
+    - [Tata Clicq]{"entity": "customer_name"} deliveries went to [Kolkat]{"entity": "location", "role": "destination"}
+    - Anything from [URBN Ladder]{"entity": "customer_name"} shipped to [Nagpoor]{"entity": "location", "role": "destination"}
+    - [Jio Mart]{"entity": "customer_name"} orders to [Jypur]{"entity": "location", "role": "destination"}
+    - Show bookings of [Mntra]{"entity": "customer_name"} for [Hyderbad]{"entity": "location", "role": "destination"}
+    - [OlA]{"entity": "customer_name"} consignments to [Ahmedbad]{"entity": "location", "role": "destination"}
+
+- intent: get_orders_by_status
+  examples: |
+    - show me orders that are [delivered](delivery_status)
+    - list all orders [in transit](delivery_status)
+    - can you find orders that are [pending](delivery_status)
+    - display all [delivered](delivery_status) shipments
+    - give me the [pending](delivery_status) orders
+    - I want to see orders that are [in transit](delivery_status)
+    - orders which are [delivered](delivery_status)
+    - any orders still [pending](delivery_status)?
+    - do we have any [in transit](delivery_status) deliveries?
+    - show [delivered](delivery_status) packages
+    - get all orders marked as [pending](delivery_status)
+    - I need the [in transit](delivery_status) orders
+    - are there any orders that were [delivered](delivery_status)?
+    - pull up [pending](delivery_status) shipments
+    - how many orders are [in transit](delivery_status)?
+    - list the [delivered](delivery_status) ones
+    - give me a report on [pending](delivery_status) orders
+    - what are the current [in transit](delivery_status) orders?
+    - check for [delivered](delivery_status) shipments
+    - retrieve all [pending](delivery_status) consignments
+
+- intent: fetch_by_metadata
+  examples: |
+    - Show orders inserted by user_1
+    - Get all orders inserted by user_2
+    - I want records added by user_3
+    - Orders uploaded by user_4
+    - What are the orders inserted by user_5
+    - Fetch all entries inserted by user_6
+    - Can you get orders entered by user_10
+    - Please retrieve orders inserted by user_8
+
+- intent: track_order_by_id
+  examples: |
+    - What is the delivery status of order ID [WKFT000123](order_id)?
+    - Track my order with ID [OLAELE04199](order_id)
+    - I want the status of order [OLA998877](order_id)
+    - Where is the order with ID [WKFT000789](order_id)?
+    - Can you check the status for [ORDER12345](order_id)?
+    - What is the status of order ID [OLAELE04199](order_id)?
+    - Can you tell me the delivery status of order [1234567](order_id)?
+    - I want to know the status of order ID [WKFT0006858](order_id)
+    - Status for order [OLAELE04200](order_id)
+    - Track order [1236789](order_id)
+    - Please update me on the order [ORD90876](order_id)
+    - Is order [ABC123](order_id) delivered?
+    - Has my order [XZY999](order_id) been delivered?
+    - I placed an order with ID [QWERTY001](order_id), what’s the status?
+    - What happened to order number [789654](order_id)?
+    - Is [ORD112233](order_id) on the way?
+    - Where is my order [DEL8899](order_id)?
+    - Track order number [XYZ987](order_id)
+    - Is [ABC09876](order_id) delivered yet?
+    - Check if [ORD102938](order_id) has been delivered
+
+
+
+- intent: track_order_by_invoice
+  examples: |
+    - What is the status of invoice number [INV998877](invoice_number)?
+    - Track order using invoice [INV45678](invoice_number)
+    - I want delivery details for invoice [INV00055](invoice_number)
+    - Where is the package with invoice number [INV001122](invoice_number)?
+    - Can you get the POD for invoice [INV008888](invoice_number)?
+    - Please provide details for invoice number [INV100002](invoice_number)
+
+- intent: get_orders_by_tat
+  examples: |
+    - Show me all orders delivered in [2](tat_days) days
+    - I want orders that were delivered in [5](tat_days) days
+    - Orders with delivery TAT of [3](tat_days) days
+    - Get orders completed within [4](tat_days) days
+    - How many orders were delivered in [6](tat_days) days?
+    - List orders with a turnaround of [1](tat_days) day
+    - Give me orders that matched TAT of [7](tat_days) days
+    - Can you find orders delivered in [10](tat_days) days?
+    - Total orders with TAT equal to [3](tat_days)
+    - Retrieve orders with delivery done in [9](tat_days) days
+    - I need all orders completed in [8](tat_days) days
+    - Find orders that were closed in [2](tat_days) days
+    - Delivered orders with exact [4](tat_days)-day TAT
+    - Orders closed within [5](tat_days) days duration
+    - How many deliveries were made in [3](tat_days) days?
+    - Filter orders that were delivered in [6](tat_days) days
+    - Report on orders done in [1](tat_days) day
+    - Fetch orders delivered in exactly [2](tat_days) days
+    - Are there any orders with [7](tat_days)-day turnaround?
+
+
+
+- intent: orders_by_location_duration
+  examples: |
+    - Show orders from location code [HYD001](location_code) between [May 1st](start_date) and [May 10th](end_date)
+    - I want all orders sent from location code [CHN123](location_code) from [01-04-2024](start_date) to [10-04-2024](end_date)
+    - Get shipments from location code [BLR456](location_code) in the first week of [June](start_date)
+    - Orders moved from [DELHI-LC007](location_code) between [April 10](start_date) and [April 15](end_date)
+    - Provide all orders sent from location code [MUM005](location_code) during [July](start_date)
+    - Give me data of orders from [VIS001](location_code) between [March 1](start_date) and [March 5](end_date)
+    - What orders went out from location code [BANGALORE-LOC](location_code) between [June 1](start_date) and [June 3](end_date)?
+
+
+- intent: check_service_by_pincode
+  examples: |
+    - Is there delivery service in pincode [500081](pincode)?
+    - Which agent handles deliveries to [600045](pincode)?
+    - Check serviceability for pincode [110001](pincode)
+    - Do we serve location with pin code [400001](pincode)?
+    - Find the delivery agent responsible for [530016](pincode)
+    - Is the area [700001](pincode) serviceable?
+    - Can you tell if we can deliver to [641001](pincode)?
+
+- intent: delivery_report_by_duration
+  examples: |
+    - Show delivery summary for [June 2024](start_date)
+    - I need a delivery report for last [10 days](duration)
+    - Give me a report of all delivered orders from [May 1](start_date) to [May 15](end_date)
+    - Provide delivery data for the second week of [April](start_date)
+    - How many deliveries happened between [2024-06-01](start_date) and [2024-06-07](end_date)?
+    - List all successful deliveries for the past [month](duration)
+    - Show report of dispatched orders during [February](start_date)
+
+- intent: fetch_order_info_by_id
+  examples: |
+    - What is the mode of payment for order ID [WKFT000111](order_id)?
+    - Show receiver address and invoice number for order [INV123456](invoice_number)
+    - I want to know sender city and LR number for order [OLAELE04199](order_id)
+    - Tell me the full details of order ID [OLA000765](order_id)
+    - For order [INV001234](invoice_number), show sender city and mode of payment
+    - I want receiver address, payment mode and LR for [WKFT000558](order_id)
+    - Can you provide invoice number and destination address for [OLA123000](order_id)?
+
+- intent: get_pending_orders_past_days
+  examples: |
+    - What are the pending orders for [OLAELE](customer_name) in the last [7](n_days) days?
+    - Show me undelivered orders for [OLA Elec](customer_name) in past [10](n_days) days
+    - Any pending deliveries for [Wakefit](customer_name) in last [5](n_days) days?
+    - Find orders not delivered for [OLAELE](customer_name) over the previous [3](n_days) days
+    - Orders not yet delivered to [OLA Elec](customer_name) in last [4](n_days) days
+    - List pending shipments for [Wakefit](customer_name) in the last [6](n_days) days
+    - Do I have any undelivered packages in the past [2](n_days) days?
+    - Has [OLAELE](customer_name) received all packages in the last [8](n_days) days?
+
+- intent: get_top_pincodes_by_customer
+  examples: |
+    - Give me all [Wakefit](customer_name) pincodes with the highest number of orders
+    - Which pincodes have the most orders from [Wakefit](customer_name)?
+    - Show top pincodes where [Wakefit](customer_name) has maximum deliveries
+    - List [Wakefit](customer_name) highest order volume pincodes
+    - Where are most [Wakefit](customer_name) orders going?
+    - Show me the top delivery areas for [Wakefit](customer_name)
+    - What are the top-performing pincodes for [Wakefit](customer_name)?
+    - Which locations receive the most [Wakefit](customer_name) orders?
+    - Give a report on [Wakefit](customer_name) top delivery pincodes
+    - List pincodes with highest [Wakefit](customer_name) shipments
+
+
+
+- synonym: Hyderabad
+  examples: |
+    - hyd
+    - Hyd
+    - HYD
+    - hydbad
+    - hyderbad
+    - hyderabd
+    - hyderaad
+    - hyderabad
+    - hyderaaaabd
+    - haidrabad
+    - haidrbd
+
+- synonym: Visakhapatnam
+  examples: |
+    - vskp
+    - Vskp
+    - VSKP
+    - vizag
+    - Vizag
+    - VIZAG
+    - vskptnm
+    - visakapatnam
+    - visakhpatnam
+    - visakapatanam
+    - vishakhapatnam
+    - vishakapatnam
+    - visag
+    - visaga
+    - visakaptnm
+    - visptm
+
+- synonym: Vijayawada
+  examples: |
+    - vij
+    - Vij
+    - VIJ
+    - vijaywada
+    - vijayvada
+    - vijyawada
+    - vijaywad
+    - vijawada
+    - vjywada
+
+- synonym: Rajamahendravaram
+  examples: |
+    - rajahmundry
+    - Rajahmundry
+    - RAJAHMUNDRY
+    - rajmndry
+    - rajmandry
+    - rajmandari
+    - rajahmndry
+    - rajhmundry
+    - rajamundry
+
+- synonym: Tirupati
+  examples: |
+    - tpt
+    - Tpt
+    - TPT
+    - thirupati
+    - thirupathi
+    - tirupathi
+    - tirupat
+    - tirpt
+    - tirpti
+
+- synonym: Kakinada
+  examples: |
+    - kkd
+    - Kkd
+    - KKD
+    - kakinad
+    - kaknada
+    - kakinda
+    - kakinnada
+
+- synonym: Srikakulam
+  examples: |
+    - sklm
+    - Sklm
+    - SKLM
+    - srikaakulam
+    - srikaklm
+    - srikklm
+    - srikklam
+    - srikakolam
+
+- synonym: Nellore
+  examples: |
+    - nlr
+    - Nlr
+    - NLR
+    - nelore
+    - nellur
+    - nelloor
+    - nelor
+
+- synonym: Anantapur
+  examples: |
+    - atp
+    - Atp
+    - ATP
+    - ananthpur
+    - anantpoor
+    - anantpr
+    - anantapuram
+
+- synonym: Guntur
+  examples: |
+    - gnt
+    - Gnt
+    - GNT
+    - guntr
+    - gunturh
+    - guntor
+
+- synonym: Kadapa
+  examples: |
+    - yp
+    - Yp
+    - YP
+    - cuddapah
+    - Cuddapah
+    - kadpaa
+    - kadpa
+    - kadappa
+    - kadapha
+
+- synonym: Ongole
+  examples: |
+    - ogl
+    - Ogl
+    - OGL
+    - ongl
+    - onglo
+    - ongol
+    - ongle
+
+- synonym: Khammam
+  examples: |
+    - kmm
+    - Kmm
+    - KMM
+    - khamam
+    - khmmam
+    - khamamam
+    - khmm
+
+- synonym: Kothagudem
+  examples: |
+    - ktm
+    - Ktm
+    - KTM
+    - kotagudem
+    - kothgudem
+    - kotgudem
+    - kothagudam
+
+- synonym: Warangal
+  examples: |
+    - wgl
+    - Wgl
+    - WGL
+    - varangal
+    - warngal
+    - warngl
+    - warangalh
+
+- synonym: Secunderabad
+  examples: |
+    - scbd
+    - Scbd
+    - SCBD
+    - secundrabad
+    - sekunderabad
+    - secbd
+    - secndrbd
+
+- synonym: Chittoor
+  examples: |
+    - ctr
+    - Ctr
+    - CTR
+    - chittor
+    - chitor
+    - chitur
+    - chithoor
+
+- synonym: Medak
+  examples: |
+    - mdk
+    - Mdk
+    - MDK
+    - medhak
+    - medk
+    - medakk
+
+- synonym: Bhimavaram
+  examples: |
+    - bvrm
+    - Bvrm
+    - BVRM
+    - bhimvaram
+    - bheemavaram
+    - bhimvrm
+    - bhmavaram
+
+- synonym: Vizianagaram
+  examples: |
+    - vzm
+    - Vzm
+    - VZM
+    - vznm
+    - vijayanagaram
+    - vizyanagaram
+    - vijanagaram
+
+
+lookup_tables:
+
+- lookup: pickup
+  examples: |
+    Adiabad
+    Adialbad
+    Adilabad
+    Ailabad
+    Anantapur
+    Ananthpur
+    Anantpaur
+    Anqntapur
+    Beegaluru
+    Benaluru
+    Bengaluru
+    Bengaluur
+    Bhimaaram
+    Bhimaparam
+    Bhimavaam
+    Bhimavaram
+    Bomgakal
+    Bommaakl
+    Bommakal
+    Bomwakal
+    Chittmor
+    Chittoor
+    Eluru
+    Gntur
+    Guntur
+    Gunutr
+    Hanakonda
+    Hanamkonda
+    Hanamkonta
+    Hanmakonda
+    Hyderabad
+    Hydeuabad
+    Hydxrabad
+    Kadaap
+    Kadapa
+    Kadxpa
+    Kaiknada
+    Kakianda
+    Kakinada
+    Karrivani Reru
+    Karrivani Reuv
+    Karrivani Revu
+    Karrivani evu
+    Khammam
+    Khammm
+    Khammma
+    Kykinada
+    Mahbubnagar
+    Mahbubnagir
+    Mahbubnagr
+    Mahbunagar
+    Mugal
+    Mugpal
+    Mugpl
+    Nagonda
+    Nalgonda
+    Nalxonda
+    Naygonda
+    Nellore
+    Niral
+    Nirmal
+    Nlelore
+    Normal
+    Nrmal
+    Ongle
+    Ongoe
+    Ongole
+    Rajamahendraaram
+    Rajamahendravaram
+    Rajamahendrnvaram
+    Secunderabad
+    Secundrabad
+    Secundreabad
+    Tirpuati
+    Tirupati
+    Tirupti
+    Vellore
+    Vellre
+    Vijayawada
+    Vijayawqda
+    Vijaytwada
+    Vijaywaada
+    Visakhapatnam
+    Viskhapatnam
+    Vsakhapatnam
+    adapa
+    eVllore
+    eellore
+    ehittoor
+    firupati
+    hKammam
+    hittoor
+    isakhapatnam
+    lEuru
+    luru
+    mluru
+    ngole
+    pecunderabad
+    pyderabad
+    uellore
+    ugpal
+    untur
+
+- lookup: drop
+  examples: |
+    Abraharam
+    Adanki
+    Addanik
+    Addanki
+    Adilabad
+    Adilaoad
+    Adilqbad
+    Adoni
+    Agraharam
+    Agroharam
+    Akibpur
+    Akilpur
+    Akilupr
+    Akilur
+    Akkampali
+    Akkampalli
+    Akkampaqli
+    Akkampawli
+    Ambur
+    Amdur
+    Amubr
+    Anantapdr
+    Anantapru
+    Anantapur
+    Anantpaur
+    Andiatti
+    Andipatti
+    Anidpatti
+    Anmanchipalli
+    Anmuanchipalli
+    Anpipatti
+    Anumanchipali
+    Anumanchipalli
+    Aodni
+    Araharam
+    Avadi
+    Avaid
+    Avaqi
+    Avidi
+    Ayannapalem
+    Ayaynnapalem
+    Ayyannapaem
+    Ayyannapalem
+    Azhikod eNorth
+    Azhikode Norht
+    Azhikode North
+    AzhikodexNorth
+    BHIMAVARAM
+    BHIMAVRAAM
+    BHIMAVhRAM
+    BHMIAVARAM
+    Baaptla
+    Bapatla
+    Bdimavaram
+    Belagai
+    Belagasi
+    Belagavi
+    Belgaavi
+    Bengalhru
+    Bengaluru
+    Bhimavaarm
+    Bhimavalam
+    Bhimavaram
+    Bommakal
+    Bommakfl
+    Bosmakal
+    Bpaatla
+    Bpatla
+    Brahmanagudem
+    Brahmanagudme
+    Buddaram
+    Buddcram
+    Buudaram
+    CUDADPAH
+    CUDAPAH
+    CUDDAPAH
+    CUDDAPH
+    Cekkikulam
+    Cennai
+    Cheegal
+    Cheglal
+    Chekkikulam
+    Chelgal
+    Chennai
+    Chewgal
+    Chilakalripet
+    Chilakaluripet
+    Chilakalwripet
+    Chilakaulripet
+    Chintalapudi
+    Chintalpaudi
+    Chintalvpudi
+    Chiraa
+    Chirala
+    Chitnalapudi
+    Chittoor
+    Chittor
+    Chrala
+    Chriala
+    Chtitoor
+    Chzkkikulam
+    Coimbatore
+    Coimnatore
+    Dahrwad
+    Darwad
+    Dharwad
+    Dhcne
+    Dhhne
+    Dhone
+    Duepalavalasa
+    Dupalavalasa
+    Duppalaavlasa
+    Duppalavalasa
+    Edulakuna
+    Edulakunta
+    Edulakuta
+    Edulakutna
+    Elru
+    Elruu
+    Eluru
+    Eulru
+    Gadicherlapaely
+    Gadicherlapally
+    Gadicherlapaxly
+    Gella
+    Ghaziabad
+    Ghzaiabad
+    Ghziabad
+    Girdharnur Sunarasi
+    Girdharpur Sunarasi
+    Girdharupr Sunarasi
+    Glola
+    Gnutur
+    Godicherla
+    Godichkrla
+    Godichrela
+    Gola
+    Golla
+    Gopannapaem
+    Gopannapalem
+    Gopannapaqem
+    Gopdnnapalem
+    Gowrdpatnam
+    Gowripatnam
+    Gowripatnxm
+    Gowrpatnam
+    Gqntur
+    Gridharpur Sunarasi
+    Gudivada
+    Gudvada
+    Gudviada
+    Guntur
+    Gurtur
+    Hamilapr
+    Hamilapur
+    Hamilaur
+    Hanamkoda
+    Hanamkogda
+    Hanamkonda
+    Hanuman Junction
+    Hanuman ounction
+    Hanuman uJnction
+    Hasan
+    Hasran
+    Hassan
+    Haxsan
+    Hnamkonda
+    Hnuman Junction
+    Hubballi
+    Hubbclli
+    Hubbelli
+    Hubgalli
+    Hydearbad
+    Hyderabad
+    IRUPATI
+    Jaggampeta
+    Jaggamppta
+    Jaggamptea
+    Jagtial
+    Jagtila
+    Janareddigudem
+    Jangareddigudem
+    Jonnalaagdda
+    Jonnalagadda
+    Jonnalakadda
+    Jonnlagadda
+    Jzgtial
+    Kaankavalli
+    Kadapa
+    Kadiri
+    Kahakavalli
+    Kakiada
+    Kakidada
+    Kakinada
+    Kalabragi
+    Kalabruagi
+    Kalaburagi
+    Kalaburgi
+    Kamareddy
+    Kanakavalli
+    Kanakuvalli
+    Kancherlapalem
+    Kancherlapalgm
+    Kancherlapalme
+    Kancherlaplem
+    Kandur
+    Kangndi
+    Kangnudi
+    Kangundi
+    Kangunid
+    Kannur
+    Kannur 
+    Kanrur
+    Kanur
+    Kaprivani Revu
+    Karrivani Revu
+    Karrivni Revu
+    Keeeara
+    Keesara
+    Keesgra
+    Keesyra
+    Kesagapalli
+    Kesarapalli
+    Kesarapnlli
+    Khamam
+    Khammam
+    Khammfm
+    Khammm
+    Kkinada
+    Kmaareddy
+    Kmareddy
+    Knchanapalli
+    Kolakta
+    Kolkasa
+    Kolkata
+    Kolxata
+    Kona Gunturu
+    Konda Gunturu
+    Konda uGnturu
+    Konda unturu
+    Kondlaludi
+    Kondlapudi
+    Kondlaupdi
+    Kondlupudi
+    Koretla
+    Kortula
+    Korutla
+    Kothagudem
+    Kothagudm
+    Kothagudtm
+    Kothaqudem
+    Kozhikode
+    Kozhirode
+    Kozihkode
+    Kozikode
+    Kpmareddy
+    Kunchaanpalli
+    Kunchanapalli
+    Kupcam
+    Kuppam
+    Kuppm
+    Kurjool
+    Kurnool
+    Maakshi
+    Maapkshi
+    Machiipatnam
+    Machilipatnam
+    Machilpatnam
+    Machilwpatnam
+    Madanapalle
+    Madanaplale
+    Madanaplle
+    Madanapslle
+    Madhhra
+    Madhira
+    Madihra
+    Madira
+    Mahbubangar
+    Mahbubnagar
+    Mahubbnagar
+    Malkapuarm
+    Malkapuram
+    Malkcpuram
+    Mamillanalli
+    Mamillapali
+    Mamillapalli
+    Mamillapaqli
+    Mancheiral
+    Mancherial
+    Mancherifl
+    Mancheril
+    Mangaluru
+    Mangaluu
+    Manglauru
+    Mangmluru
+    Mapakshi
+    Medak
+    Medapuram
+    Medaupram
+    Medauram
+    Medk
+    Medka
+    Medxk
+    Mgpal
+    Mllkapuram
+    Moadvalasa
+    Modavalasa
+    Modavalisa
+    Movavalasa
+    Mpaakshi
+    Mphbubnagar
+    Msyuru
+    Mugal
+    Mugpal
+    Mugtal
+    Mysru
+    Mysruu
+    Mysuru
+    Nagaram
+    Nalgnda
+    Nalgonda
+    Nallayapalle
+    Nallayxpalle
+    Nandigaam
+    Nandigama
+    Nandikotkur
+    Nandikotkxr
+    Nandikotur
+    Nandyala
+    Nanigama
+    Nantigama
+    Narasa Poram
+    Narasa Pram
+    Narasa Pruam
+    Narasa Puram
+    Narasaaopeta
+    Narasaraopeta
+    Narasinga Puram
+    Narasraopeta
+    Narawinga Puram
+    Narsaaraopeta
+    Narsainga Puram
+    Narsapr
+    Narsapru
+    Narsapur
+    Narsinga Puram
+    Narsipatnam
+    Nasipatnam
+    Nasripatnam
+    Ndiadavole
+    Nellore
+    Nemam
+    New Deehi
+    New Deghi
+    New Delhi
+    Ngaaram
+    Nhndyala
+    Niamal
+    Nidadaole
+    Nidadavole
+    Nidadbvole
+    Nirmal
+    Nirmanapuram
+    Nirmanapurm
+    Nirmanpuram
+    Nizamaabd
+    Nizamaad
+    Nizamabad
+    Nizamabd
+    Nlgonda
+    Nllore
+    Nmam
+    Nmeam
+    Nndyala
+    Nobda
+    Noia
+    Noida
+    Nqgaram
+    Nrasapur
+    Nrasipatnam
+    Nrmanapuram
+    Nsmam
+    Ntlgonda
+    Nvgaram
+    Ongole
+    Ongrle
+    Ongvle
+    P N Pucur
+    P N Pudur
+    P N fudur
+    P N udur
+    Paderu
+    Palakollu
+    Palakolu
+    Palakorlu
+    Palfkollu
+    Paneru
+    Pata
+    Patan
+    Patna
+    Patoa
+    Pedapadu
+    Peddapadu
+    Peddpadu
+    Pimpfi-Chinchwad
+    Pimpri-Chinchwad
+    Pimpri-Chinhcwad
+    Pnmpri-Chinchwad
+    Poddatur
+    Prathiadu
+    Prathipadu
+    Prathivadu
+    Proddatru
+    Proddatur
+    Pune
+    Punganr
+    Punganru
+    Punganur
+    Punpanur
+    Putthr
+    Puttru
+    Puttur
+    Pxoddatur
+    Raajmpet
+    Rachur
+    Raghunadaalem
+    Raghunadaialem
+    Raghunadapalem
+    Raichur
+    Rajamahendravaram
+    Rajamahendravarm
+    Rajamahendravarma
+    Rajamahendravarnm
+    Rajamet
+    Rajampet
+    Rajamvet
+    Ramaaropet
+    Ramaguhdam
+    Ramagundam
+    Ramaraoept
+    Ramaraopet
+    Ramgaundam
+    Ramgundam
+    Rampkram
+    Rampuam
+    Rampuarm
+    Rampuram
+    Rayachoty
+    Rayalam Rual
+    Rayalam Rudal
+    Rayalam Rural
+    Rayalam Rurla
+    Rdyachoty
+    Reddipali
+    Reddipalli
+    Redeipalli
+    Repalle
+    Riichur
+    Rmmaraopet
+    Rpalle
+    Rpealle
+    Rvichur
+    Salem
+    Samarlakota
+    Samralakota
+    Samrlakota
+    Sankaam
+    Sankaram
+    Sankhampalle
+    Satilite City
+    Satilite Ctty
+    Satilite Cty
+    Scunderabad
+    Secunderabad
+    Secunderbaad
+    Secunderebad
+    Seetharampuram
+    Seetharvmpuram
+    Setharampuram
+    Shivamogga
+    Shivamogwa
+    Shuvamogga
+    Sihvamogga
+    Sikakulam
+    Sindagi
+    Sindgi
+    Sindmgi
+    Sindogi
+    Slaem
+    Smlem
+    Snakaram
+    Snkaram
+    Snlem
+    Srikakulam
+    Srikkaulam
+    Srikkulam
+    Srikrishnapatnam
+    Srikrishnapatnm
+    Srnugavarapu kota
+    Srungaarapu kota
+    Srungavarapc kota
+    Srungavarapu kota
+    Sryapet
+    Stailite City
+    Suryapet
+    Suryapt
+    Suryapte
+    Svetharampuram
+    TIRUPATI
+    TIUPATI
+    TIURPATI
+    Talpuula
+    Talupula
+    Tanuku
+    Tanuu
+    Tanuuk
+    Taulpula
+    Taupula
+    Tcruvuru
+    Teali
+    Tegkali
+    Tekkali
+    Tekklai
+    Tekkzli
+    Tenaii
+    Tenali
+    Thalassery
+    Thalassrey
+    Thalassry
+    Tiruati
+    Tirupai
+    Tirupati
+    Tirupaui
+    Tiruvuru
+    Tnauku
+    Tpnali
+    Uddr
+    Uddur
+    Udur
+    Uppaalpadu
+    Uppalaeadu
+    Uppalapadu
+    Uppalapaud
+    Utjarpara
+    Uttarpara
+    Velampalem
+    Velamqalem
+    Velgore
+    Velloe
+    Velloqe
+    Vellore
+    Viakrabad
+    Viarabad
+    Viizanagaram
+    Vijayawada
+    Vijayawdaa
+    Vijayawyda
+    Vikaarbad
+    Vikarabad
+    Vinkonda
+    Vinkuonda
+    Vinukonad
+    Vinukonda
+    Visakapatnam
+    Visakhapatnam
+    Visakhpaatnam
+    Visakhpatnam
+    Viziaagaram
+    Vizianagaram
+    Viziatagaram
+    Vrlampalem
+    Waarngal
+    Walangal
+    Warangal
+    aJggampeta
+    aJgtial
+    aKdapa
+    aKdiri
+    aNllayapalle
+    aNndyala
+    aRyachoty
+    aSnkhampalle
+    aderu
+    adiri
+    aelampalem
+    amarlakota
+    andikotkur
+    angareddigudem
+    ankhampalle
+    ayachoty
+    badapa
+    baderu
+    bhimavacam
+    bhimavakam
+    bhimavaram
+    bhkmavaram
+    coida
+    dAoni
+    dUdur
+    doni
+    eBngaluru
+    eNllore
+    ePddapadu
+    ew Delhi
+    faghunadapalem
+    gngole
+    hCennai
+    hDarwad
+    hGaziabad
+    halassery
+    hennai
+    iTruvuru
+    iengaluru
+    ijayawada
+    irmal
+    iruvuru
+    kadapa
+    kdilabad
+    kuddaram
+    lrahmanagudem
+    mallayapalle
+    mbur
+    mommakal
+    mune
+    nedapuram
+    oCimbatore
+    odicherla
+    oimbatore
+    orikrishnapatnam
+    rSikrishnapatnam
+    rahmanagudem
+    rathipadu
+    shone
+    tUtarpara
+    thekkikulam
+    ttarpara
+    uKppam
+    uKrnool
+    uPne
+    uangareddigudem
+    udivada
+    uirmal
+    une
+    uorutla
+    vamilapur
+    wuttur
+    xankhampalle
+    xarangal
+    xellore
+    yderabad
+    yyderabad
+
