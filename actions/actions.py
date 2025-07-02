@@ -8,14 +8,13 @@ from rasa_sdk import Action, Tracker
 from rasa_sdk.executor import CollectingDispatcher
 from pymongo import MongoClient
 from rapidfuzz import process, fuzz
+from datetime import datetime
 from datetime import datetime, timedelta
 from collections import Counter
 
 client = MongoClient("mongodb+srv://ordersDbAdmin:LuiQu4KLLM0KXvQX@orders-cluster.jbais.mongodb.net/")
 db = client["orders-db"]
 collection = db["SaaS_Orders"]
-FRONTEND_FILE_DIR = os.path.join(os.getcwd(), "frontend", "public", "static", "files")
-BASE_DOWNLOAD_URL = "http://51.20.18.59:8080/static/files/"
 
 sender_cities = collection.distinct("start.address.mapData.city")
 receiver_cities = collection.distinct("end.address.mapData.city")
@@ -453,12 +452,21 @@ class ActionPendingOrdersPastDays(Action):
     def name(self) -> Text:
         return "action_pending_orders_past_days"
 
-    def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        start_time = time.time()
+    def run(self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+
+        start_time = datetime.now()
         message_text = tracker.latest_message.get("text", "").lower()
         customer_input = tracker.get_slot("customer_name") or ""
 
-        # Extract number of days from user message
+        delivered_statuses = [
+            "delivered",
+            "delivered_at_security",
+            "delivered_at_neighbor",
+            "cancelled"
+        ]
+
         match = re.search(r"(\d+)\s*days?", message_text)
         if not match:
             dispatcher.utter_message("Please specify how many past days to consider.")
@@ -472,7 +480,6 @@ class ActionPendingOrdersPastDays(Action):
 
         date_cutoff = datetime.now() - timedelta(days=n_days)
 
-        # Fuzzy customer matching
         all_names = collection.distinct("start.contact.name")
         matched_customers = [name for name in all_names if customer_input.lower() in name.lower()]
 
@@ -480,65 +487,61 @@ class ActionPendingOrdersPastDays(Action):
             dispatcher.utter_message(f"No matching customers found for '{customer_input}'.")
             return []
 
-        delivered_statuses = ["delivered", "delivered_at_security", "delivered_at_neighbor", "cancelled"]
-        query = {
+        results = list(collection.find({
             "start.contact.name": {"$in": matched_customers},
             "orderStatus": {"$nin": delivered_statuses},
             "createdAt": {"$gte": date_cutoff}
-        }
-
-        results = list(collection.find(query))
+        }))
 
         if not results:
             dispatcher.utter_message(f"No pending orders found for '{customer_input}' in the past {n_days} days.")
             return []
 
-        # Prepare response
         rows = []
-        message_lines = [f"Pending orders for **{customer_input}** in the past **{n_days}** days:"]
+        message = f"Pending orders for **{customer_input}** in the past **{n_days}** days:\n"
         for order in results:
             order_id = order.get("sm_orderid", "N/A")
             status = order.get("orderStatus", "Unknown")
             created_at = order.get("createdAt")
-            created_str = created_at.strftime('%Y-%m-%d') if hasattr(created_at, "strftime") else str(created_at)
+            created_date = created_at.strftime('%Y-%m-%d') if hasattr(created_at, "strftime") else str(created_at)
             to_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
 
-            message_lines.append(f"- Order ID: {order_id} | Status: {status} | To: {to_city} | Created: {created_str}")
+            message += f"- Order ID: {order_id} | Status: {status} | To: {to_city} | Created: {created_date}\n"
+
             rows.append({
                 "Order ID": order_id,
                 "Status": status,
                 "To City": to_city,
-                "Created At": created_str
+                "Created At": created_date
             })
 
-        message_lines.append(f"\nTotal pending orders: {len(results)}")
-        dispatcher.utter_message("\n".join(message_lines))
+        message += f"\nTotal pending orders: {len(results)}"
+        dispatcher.utter_message(message)
 
-    
-        os.makedirs(FRONTEND_FILE_DIR, exist_ok=True)
-        safe_name = customer_input.replace(" ", "_").lower()
-        filename = f"pending_orders_{safe_name}_{n_days}days.xlsx"
-        filepath = os.path.join(FRONTEND_FILE_DIR, filename)
-        pd.DataFrame(rows).to_excel(filepath, index=False)
+        df = pd.DataFrame(rows)
+        os.makedirs("static/files", exist_ok=True)
+        filename = f"pending_orders_{customer_input.replace(' ', '_')}_{n_days}days.xlsx"
+        filepath = os.path.join("static/files", filename)
+        df.to_excel(filepath, index=False)
 
-        public_url = f"{BASE_DOWNLOAD_URL}{filename}"
-    
-        dispatcher.utter_message(
-            f'<a href="{public_url}" download target="_blank">'
-            f'<button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
-            f'</a>'
-        )
+        public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+        dispatcher.utter_message("Would you like to download this data as an Excel file?")
+        dispatcher.utter_message(text=f"[DOWNLOAD_LINK]{public_url}")
 
-        print(f"[TIME] action_pending_orders_past_days took {(time.time() - start_time):.2f} seconds")
+        print(f"[TIME] action_pending_orders_past_days took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
 
 class ActionTopPincodesByCustomer(Action):
     def name(self) -> Text:
         return "action_top_pincodes_by_customer"
 
-    def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+    def run(self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+
         start_time = time.time()
         customer_input = tracker.get_slot("customer_name")
+
         if not customer_input:
             dispatcher.utter_message("Please provide a customer name.")
             return []
@@ -559,43 +562,35 @@ class ActionTopPincodesByCustomer(Action):
             dispatcher.utter_message(f"No orders found for customers matching '{customer_input}'.")
             return []
 
-        
-        pincode_counter = Counter(
-            order.get("end", {}).get("address", {}).get("mapData", {}).get("pincode")
-            for order in orders
-            if order.get("end", {}).get("address", {}).get("mapData", {}).get("pincode")
-        )
+        pincode_counter = Counter()
+        for order in orders:
+            pincode = order.get("end", {}).get("address", {}).get("mapData", {}).get("pincode")
+            if pincode:
+                pincode_counter[pincode] += 1
+
         top_pincodes = pincode_counter.most_common(10)
 
         if not top_pincodes:
             dispatcher.utter_message("No destination pincodes found.")
             return []
 
-        message_lines = [
-            f"Top 10 delivery pincodes for customers matching '{customer_input}':",
-            f"Matched names: {', '.join(matched_customers)}\n"
-        ]
-
+        message = f"Top 10 delivery pincodes for customers matching '{customer_input}':\n"
+        message += f"Matched names: {', '.join(matched_customers)}\n\n"
         rows = []
         for i, (pincode, count) in enumerate(top_pincodes, start=1):
-            message_lines.append(f"{i}. Pincode: {pincode} → {count} orders")
+            message += f"{i}. Pincode: {pincode} → {count} orders\n"
             rows.append({"Pincode": pincode, "Order Count": count})
 
-        dispatcher.utter_message("\n".join(message_lines))
+        dispatcher.utter_message(message)
 
-        
-        os.makedirs(FRONTEND_FILE_DIR, exist_ok=True)
-        safe_name = customer_input.replace(" ", "_").lower()
-        filename = f"top_pincodes_{safe_name}.xlsx"
-        filepath = os.path.join(FRONTEND_FILE_DIR, filename)
-        pd.DataFrame(rows).to_excel(filepath, index=False)
+        df = pd.DataFrame(rows)
+        os.makedirs("static/files", exist_ok=True)
+        filename = f"top_pincodes_{customer_input.replace(' ', '_')}.xlsx"
+        filepath = os.path.join("static/files", filename)
+        df.to_excel(filepath, index=False)
 
-        public_url = f"{BASE_DOWNLOAD_URL}{filename}"
-        dispatcher.utter_message(
-            f'<a href="{public_url}" download target="_blank">'
-            f'<button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
-            f'</a>'
-        )
-
+        public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+        dispatcher.utter_message("Would you like to download this data as an Excel file?")
+        dispatcher.utter_message(text=f"[DOWNLOAD_LINK]{public_url}")
         print(f"[TIME] action_top_pincodes_by_customer took {(time.time() - start_time):.2f} seconds")
         return []
