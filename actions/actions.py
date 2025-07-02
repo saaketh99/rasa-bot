@@ -1,7 +1,9 @@
+import os
 import re
 import time
 from typing import Any, Text, Dict, List, Optional, Tuple
 from dateutil import parser
+import pandas as pd
 from rasa_sdk import Action, Tracker
 from rasa_sdk.executor import CollectingDispatcher
 from pymongo import MongoClient
@@ -461,10 +463,10 @@ class ActionPendingOrdersPastDays(Action):
         delivered_statuses = [
             "delivered",
             "delivered_at_security",
-            "delivered_at_neighbor"
+            "delivered_at_neighbor",
+            "cancelled"
         ]
 
-    
         match = re.search(r"(\d+)\s*days?", message_text)
         if not match:
             dispatcher.utter_message("Please specify how many past days to consider.")
@@ -478,27 +480,24 @@ class ActionPendingOrdersPastDays(Action):
 
         date_cutoff = datetime.now() - timedelta(days=n_days)
 
-    
         all_names = collection.distinct("start.contact.name")
         matched_customers = [name for name in all_names if customer_input.lower() in name.lower()]
 
         if not matched_customers:
             dispatcher.utter_message(f"No matching customers found for '{customer_input}'.")
-            print(f"[TIME] action_pending_orders_past_days took {(datetime.now() - start_time).total_seconds():.2f} seconds")
             return []
 
-        
         results = list(collection.find({
             "start.contact.name": {"$in": matched_customers},
-            "orderStatus": {"$nin": delivered_statuses + ["cancelled"]},
+            "orderStatus": {"$nin": delivered_statuses},
             "createdAt": {"$gte": date_cutoff}
         }))
 
         if not results:
             dispatcher.utter_message(f"No pending orders found for '{customer_input}' in the past {n_days} days.")
-            print(f"[TIME] action_pending_orders_past_days took {(datetime.now() - start_time).total_seconds():.2f} seconds")
             return []
 
+        rows = []
         message = f"Pending orders for **{customer_input}** in the past **{n_days}** days:\n"
         for order in results:
             order_id = order.get("sm_orderid", "N/A")
@@ -509,8 +508,27 @@ class ActionPendingOrdersPastDays(Action):
 
             message += f"- Order ID: {order_id} | Status: {status} | To: {to_city} | Created: {created_date}\n"
 
+            rows.append({
+                "Order ID": order_id,
+                "Status": status,
+                "To City": to_city,
+                "Created At": created_date
+            })
+
         message += f"\nTotal pending orders: {len(results)}"
         dispatcher.utter_message(message)
+
+        df = pd.DataFrame(rows)
+        os.makedirs("static/files", exist_ok=True)
+        filename = f"pending_orders_{customer_input.replace(' ', '_')}_{n_days}days.xlsx"
+        filepath = os.path.join("static/files", filename)
+        df.to_excel(filepath, index=False)
+
+        public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+        dispatcher.utter_message("Would you like to download this data as an Excel file?")
+        dispatcher.utter_message(f'<a href="{public_url}" download target="_blank"><button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button></a>')
+
+
         print(f"[TIME] action_pending_orders_past_days took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
 
@@ -527,18 +545,14 @@ class ActionTopPincodesByCustomer(Action):
 
         if not customer_input:
             dispatcher.utter_message("Please provide a customer name.")
-            print(f"[TIME] action_top_pincodes_by_customer took {time.time() - start_time:.2f} seconds")
             return []
 
-    
         all_names = collection.distinct("start.contact.name")
         matched_customers = [name for name in all_names if customer_input.lower() in name.lower()]
 
         if not matched_customers:
             dispatcher.utter_message(f"No matching customers found for '{customer_input}'.")
-            print(f"[TIME] action_top_pincodes_by_customer took {time.time() - start_time:.2f} seconds")
             return []
-
 
         orders = list(collection.find({
             "start.contact.name": {"$in": matched_customers},
@@ -546,11 +560,9 @@ class ActionTopPincodesByCustomer(Action):
         }))
 
         if not orders:
-            dispatcher.utter_message(f"No orders found for matching customers of '{customer_input}'.")
-            print(f"[TIME] action_top_pincodes_by_customer took {time.time() - start_time:.2f} seconds")
+            dispatcher.utter_message(f"No orders found for customers matching '{customer_input}'.")
             return []
 
-    
         pincode_counter = Counter()
         for order in orders:
             pincode = order.get("end", {}).get("address", {}).get("mapData", {}).get("pincode")
@@ -560,17 +572,28 @@ class ActionTopPincodesByCustomer(Action):
         top_pincodes = pincode_counter.most_common(10)
 
         if not top_pincodes:
-            dispatcher.utter_message(f"No destination pincodes found for the matched customers.")
-            print(f"[TIME] action_top_pincodes_by_customer took {time.time() - start_time:.2f} seconds")
+            dispatcher.utter_message("No destination pincodes found.")
             return []
 
-        
-        matched_names_str = ', '.join(matched_customers)
         message = f"Top 10 delivery pincodes for customers matching '{customer_input}':\n"
-        message += f"Matched names: {matched_names_str}\n\n"
+        message += f"Matched names: {', '.join(matched_customers)}\n\n"
+        rows = []
         for i, (pincode, count) in enumerate(top_pincodes, start=1):
-            message += f"{i}. Pincode:{pincode}--{count} orders\n"
+            message += f"{i}. Pincode: {pincode} → {count} orders\n"
+            rows.append({"Pincode": pincode, "Order Count": count})
 
         dispatcher.utter_message(message)
-        print(f"[TIME] action_top_pincodes_by_customer took {time.time() - start_time:.2f} seconds")
+
+        df = pd.DataFrame(rows)
+        os.makedirs("static/files", exist_ok=True)
+        filename = f"top_pincodes_{customer_input.replace(' ', '_')}.xlsx"
+        filepath = os.path.join("static/files", filename)
+        df.to_excel(filepath, index=False)
+
+        public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+        dispatcher.utter_message("Would you like to download this data as an Excel file?")
+        dispatcher.utter_message(f'<a href="{public_url}" download target="_blank"><button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button></a>')
+
+
+        print(f"[TIME] action_top_pincodes_by_customer took {(time.time() - start_time):.2f} seconds")
         return []
