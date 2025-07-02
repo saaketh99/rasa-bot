@@ -35,6 +35,26 @@ function ClientTime({ timestamp }: { timestamp: number }) {
   );
 }
 
+// Helper to render message text with download button if link is present
+function renderMessageText(text: string) {
+  // Regex to match the download link
+  const downloadRegex = /<a [^>]*href=["']([^"']+)["'][^>]*download[^>]*>([\s\S]*?)<\/a>/i;
+  const match = text.match(downloadRegex);
+  if (match) {
+    const url = match[1];
+    // You can customize the button style as needed
+    return (
+      <a href={url} download target="_blank" rel="noopener noreferrer">
+        <button style={{ padding: "10px 20px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "5px" }}>
+          📥 Download Excel
+        </button>
+      </a>
+    );
+  }
+  // Fallback: render as plain text
+  return <span>{text}</span>;
+}
+
 export function Chat() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -165,7 +185,7 @@ export function Chat() {
 
         <CardContent className="flex-1 min-h-0 p-0">
           <ScrollArea className="h-full min-h-0 p-4" ref={scrollAreaRef}>
-            <div className="space-y-4">
+            <div className="space-y-4 bg-white rounded-lg p-4">
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -184,7 +204,7 @@ export function Chat() {
                       message.sender === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
                     }`}
                   >
-                    <div className="whitespace-pre-wrap break-words">{message.text}</div>
+                    <div className="whitespace-pre-wrap break-words">{renderMessageText(message.text)}</div>
 
                     {message.buttons && message.buttons.length > 0 && (
                       <div className="mt-2 space-y-1">

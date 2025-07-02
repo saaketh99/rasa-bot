@@ -80,6 +80,7 @@ nlu:
     - consignments between [Rjy]{"entity": "location", "role": "pickup"} and [Hyd]{"entity": "location", "role": "drop"}
     - show all shipments from [BPTL]{"entity": "location", "role": "pickup"} to [PTR]{"entity": "location", "role": "drop"}
     - packages picked up in [Kurnl]{"entity": "location", "role": "pickup"} and dropped in [Nalgda]{"entity": "location", "role": "drop"}
+    
 - intent: orders_to_destination
   examples: |
     - Show orders sent to [Chennai]{"entity": "location", "role": "destination"} for [Wakefit]{"entity": "customer_name"}
