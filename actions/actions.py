@@ -526,7 +526,8 @@ class ActionPendingOrdersPastDays(Action):
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
         dispatcher.utter_message("Would you like to download this data as an Excel file?")
-        dispatcher.utter_message(text=f"[DOWNLOAD_LINK]{public_url}")
+        dispatcher.utter_message(f'<a href="{public_url}" download target="_blank"><button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button></a>')
+
 
         print(f"[TIME] action_pending_orders_past_days took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
@@ -591,6 +592,8 @@ class ActionTopPincodesByCustomer(Action):
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
         dispatcher.utter_message("Would you like to download this data as an Excel file?")
-        dispatcher.utter_message(text=f"[DOWNLOAD_LINK]{public_url}")
+        dispatcher.utter_message(f'<a href="{public_url}" download target="_blank"><button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button></a>')
+
+
         print(f"[TIME] action_top_pincodes_by_customer took {(time.time() - start_time):.2f} seconds")
         return []
