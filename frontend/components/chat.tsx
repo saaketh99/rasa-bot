@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -26,37 +27,32 @@ interface RasaResponse {
 }
 
 function ClientTime({ timestamp }: { timestamp: number }) {
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
-  if (!mounted) return null
-  return <>{new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</>
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+  return (
+    <>{new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</>
+  );
 }
 
-// ✅ UPDATED FUNCTION
+// Helper to render message text with download button if link is present
 function renderMessageText(text: string) {
-  const downloadTag = "[DOWNLOAD_LINK]"
-  if (text.startsWith(downloadTag)) {
-    const url = text.replace(downloadTag, "").trim()
+  // Regex to match the download link
+  const downloadRegex = /<a [^>]*href=["']([^"']+)["'][^>]*download[^>]*>([\s\S]*?)<\/a>/i;
+  const match = text.match(downloadRegex);
+  if (match) {
+    const url = match[1];
+    // You can customize the button style as needed
     return (
       <a href={url} download target="_blank" rel="noopener noreferrer">
-        <button
-          style={{
-            padding: "10px 20px",
-            backgroundColor: "#4CAF50",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-            marginTop: "5px"
-          }}
-        >
+        <button style={{ padding: "10px 20px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "5px" }}>
           📥 Download Excel
         </button>
       </a>
-    )
+    );
   }
-
-  return <span>{text}</span>
+  // Fallback: render as plain text
+  return <span>{text}</span>;
 }
 
 export function Chat() {
@@ -129,6 +125,7 @@ export function Chat() {
         if (botMessages.length > 0) {
           setMessages((prev) => [...prev, ...botMessages])
         } else {
+          // Fallback if no valid responses
           setMessages((prev) => [
             ...prev,
             {
