@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
     const { message, sender = "user" } = await req.json()
 
     // Send message to Rasa server
-    const rasaResponse = await fetch("http://51.20.18.59:5005/webhooks/rest/webhook", {
+    const rasaResponse = await fetch("http://localhost:5005/webhooks/rest/webhook", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

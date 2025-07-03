@@ -9,6 +9,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Send, Bot, User, Loader2 } from "lucide-react"
+import * as XLSX from "xlsx"
+// @ts-ignore
+import { saveAs } from "file-saver"
 
 interface ChatMessage {
   id: string
@@ -42,14 +45,15 @@ function renderMessageText(text: string) {
   const match = text.match(downloadRegex);
   if (match) {
     const url = match[1];
-    // You can customize the button style as needed
-    return (
-      <a href={url} download target="_blank" rel="noopener noreferrer">
-        <button style={{ padding: "10px 20px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "5px" }}>
-          📥 Download Excel
-        </button>
-      </a>
-    );
+    // Instead of rendering a button, just render the link text or nothing
+    // return (
+    //   <a href={url} download target="_blank" rel="noopener noreferrer">
+    //     <button style={{ padding: "10px 20px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "5px" }}>
+    //       📥 Download Excel
+    //     </button>
+    //   </a>
+    // );
+    return null; // or return <span />; if you want to show nothing
   }
   // Fallback: render as plain text
   return <span>{text}</span>;
@@ -61,7 +65,7 @@ export function Chat() {
       id: "1",
       text: "Hello! I'm your order management assistant. I can help you track orders, check delivery status, find orders by customer, date, location, and much more. How can I assist you today?",
       sender: "bot",
-      timestamp: Date.now(),
+      timestamp: 0,
     },
   ])
   const [input, setInput] = useState("")
@@ -81,6 +85,15 @@ export function Chat() {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  // Set initial timestamp on client to avoid hydration error
+  useEffect(() => {
+    setMessages((msgs) =>
+      msgs.map((msg) =>
+        msg.timestamp === 0 ? { ...msg, timestamp: Date.now() } : msg
+      )
+    );
+  }, []);
 
   const sendMessage = async (messageText: string) => {
     if (!messageText.trim() || isLoading) return
@@ -172,6 +185,54 @@ export function Chat() {
     sendMessage(payload)
   }
 
+  // Helper to extract pincode/order data from a message string
+  function extractPincodeOrders(text: string) {
+    const regex = /Pincode:\s*(\d+)\s*→\s*(\d+) orders/g;
+    const result = [];
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      result.push({ Pincode: match[1], Orders: parseInt(match[2], 10) });
+    }
+    return result;
+  }
+
+  // Helper to extract order details from a message string
+  function extractOrderDetails(text: string) {
+    // Matches lines like: - Order ID: OLAELE04656 | Status: at_lm_agent_hub | To: Jangareddigudem | Created: 2025-06-13
+    const regex = /- Order ID: ([^|]+) \| Status: ([^|]+) \| To: ([^|]+) \| Created: ([^\n]+)/g;
+    const result = [];
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      result.push({
+        "Order ID": match[1].trim(),
+        "Status": match[2].trim(),
+        "To": match[3].trim(),
+        "Created": match[4].trim(),
+      });
+    }
+    return result;
+  }
+
+  // Download handler (now supports both pincode/orders and order details)
+  const handleDownloadExcel = () => {
+    // Find the latest bot message with either pincode/order data or order details
+    const lastBotMsg = [...messages].reverse().find(m => m.sender === "bot" && (/Pincode:/i.test(m.text) || /- Order ID:/i.test(m.text)));
+    if (!lastBotMsg) return;
+    let data: any[] = extractPincodeOrders(lastBotMsg.text);
+    let sheetName = "Pincodes";
+    if (!data.length) {
+      data = extractOrderDetails(lastBotMsg.text);
+      sheetName = "Orders";
+    }
+    if (!data.length) return;
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const file = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(file, sheetName === "Pincodes" ? "top_pincodes.xlsx" : "pending_orders.xlsx");
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <Card className="w-full max-w-4xl h-[80vh] flex flex-col shadow-xl">
@@ -186,66 +247,86 @@ export function Chat() {
         <CardContent className="flex-1 min-h-0 p-0">
           <ScrollArea className="h-full min-h-0 p-4" ref={scrollAreaRef}>
             <div className="space-y-4 bg-white rounded-lg p-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex gap-3 ${message.sender === "user" ? "justify-end" : "justify-start"}`}
-                >
-                  {message.sender === "bot" && (
-                    <Avatar className="h-8 w-8 bg-blue-100">
-                      <AvatarFallback>
-                        <Bot className="h-4 w-4 text-blue-600" />
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-
+              {messages
+                .filter(message => !(message.sender === "bot" && (!message.text || !message.text.trim())))
+                .map((message, idx) => (
                   <div
-                    className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                      message.sender === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
-                    }`}
+                    key={message.id}
+                    className={`flex gap-3 ${message.sender === "user" ? "justify-end" : "justify-start"}`}
                   >
-                    <div className="whitespace-pre-wrap break-words">{renderMessageText(message.text)}</div>
+                    {message.sender === "bot" && (
+                      <Avatar className="h-8 w-8 bg-blue-100">
+                        <AvatarFallback>
+                          <Bot className="h-4 w-4 text-blue-600" />
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
 
-                    {message.buttons && message.buttons.length > 0 && (
-                      <div className="mt-2 space-y-1">
-                        {message.buttons.map((button, index) => (
-                          <Button
-                            key={index}
-                            variant="outline"
-                            size="sm"
-                            className="mr-2 mb-1 bg-transparent"
-                            onClick={() => handleButtonClick(button.payload, button.title)}
+                    <div
+                      className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                        message.sender === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
+                      }`}
+                    >
+                      <div className="whitespace-pre-wrap break-words">{renderMessageText(message.text)}</div>
+
+                      {message.buttons && message.buttons.length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          {message.buttons.map((button, index) => (
+                            <Button
+                              key={index}
+                              variant="outline"
+                              size="sm"
+                              className="mr-2 mb-1 bg-transparent"
+                              onClick={() => handleButtonClick(button.payload, button.title)}
+                            >
+                              {button.title}
+                            </Button>
+                          ))}
+                        </div>
+                      )}
+
+                      {message.image && (
+                        <div className="mt-2">
+                          <img
+                            src={message.image || "/placeholder.svg"}
+                            alt="Bot response"
+                            className="max-w-full h-auto rounded"
+                          />
+                        </div>
+                      )}
+
+                      {/* Download Excel button: only show for the last bot message with pincode/order or order details data */}
+                      {(() => {
+                        // Only show for the last bot message with pincode/order or order details data
+                        const isLastBotMsgWithData =
+                          message.sender === "bot" &&
+                          (/Pincode:/i.test(message.text) || /- Order ID:/i.test(message.text)) &&
+                          messages.slice(idx + 1).every(m => !(m.sender === "bot" && (/Pincode:/i.test(m.text) || /- Order ID:/i.test(m.text))));
+                        if (!isLastBotMsgWithData) return null;
+                        return (
+                          <button
+                            onClick={handleDownloadExcel}
+                            style={{ marginTop: 12, padding: "10px 20px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}
                           >
-                            {button.title}
-                          </Button>
-                        ))}
-                      </div>
-                    )}
+                            📥 Download Excel
+                          </button>
+                        );
+                      })()}
 
-                    {message.image && (
-                      <div className="mt-2">
-                        <img
-                          src={message.image || "/placeholder.svg"}
-                          alt="Bot response"
-                          className="max-w-full h-auto rounded"
-                        />
+                      <div className={`text-xs mt-1 ${message.sender === "user" ? "text-blue-200" : "text-gray-500"}`}>
+                        <ClientTime timestamp={message.timestamp} />
                       </div>
-                    )}
-
-                    <div className={`text-xs mt-1 ${message.sender === "user" ? "text-blue-200" : "text-gray-500"}`}>
-                      <ClientTime timestamp={message.timestamp} />
                     </div>
-                  </div>
 
-                  {message.sender === "user" && (
-                    <Avatar className="h-8 w-8 bg-blue-600">
-                      <AvatarFallback>
-                        <User className="h-4 w-4 text-white" />
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                </div>
-              ))}
+                    {message.sender === "user" && (
+                      <Avatar className="h-8 w-8 bg-blue-600">
+                        <AvatarFallback>
+                          <User className="h-4 w-4 text-white" />
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                  </div>
+                ))}
 
               {isLoading && (
                 <div className="flex gap-3 justify-start">
