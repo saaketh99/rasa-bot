@@ -953,7 +953,7 @@ class ActionPendingOrdersBeforeLastTwoDays(Action):
         message += f"\nTotal pending orders: {len(results)}"
         dispatcher.utter_message(message)
 
-        # Save to Excel
+
         df = pd.DataFrame(rows)
         os.makedirs("static/files", exist_ok=True)
         filename = f"pending_orders_before_2days_all.xlsx"
@@ -972,7 +972,7 @@ class ActionPendingOrdersBeforeLastTwoDays(Action):
 
 class ActionOrderDetailsByID(Action):
     def name(self) -> Text:
-        return "action_order_details_by_id"
+        return "action_fetch_order_info_by_id"
 
     def run(self, dispatcher: CollectingDispatcher,
             tracker: Tracker,

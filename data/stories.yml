@@ -71,7 +71,7 @@ stories:
 - story: Delivery report by date range
   steps:
     - intent: delivery_report_by_duration
-    - action: action_delivery_report_by_duration
+    - action: action_delivery_report_by_date_range
 
 - story: Fetch order info by order ID
   steps:
