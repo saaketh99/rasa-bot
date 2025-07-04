@@ -58,4 +58,29 @@ stories:
   - intent: get_top_pincodes_by_customer
   - action: action_top_pincodes_by_customer
 
+- story: Orders by location and duration story
+  steps:
+    - intent: orders_by_location_duration
+    - action: action_orders_by_location_duration
+
+- story: Check service availability by pincode
+  steps:
+    - intent: check_service_by_pincode
+    - action: action_check_service_by_pincode
+
+- story: Delivery report by date range
+  steps:
+    - intent: delivery_report_by_duration
+    - action: action_delivery_report_by_duration
+
+- story: Fetch order info by order ID
+  steps:
+    - intent: fetch_order_info_by_id
+    - action: action_fetch_order_info_by_id
+
+- story: Track order by invoice number
+  steps:
+    - intent: track_order_by_invoice
+    - action: action_order_status_by_invoice
+
 

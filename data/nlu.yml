@@ -170,8 +170,6 @@ nlu:
     - Is [ABC09876](order_id) delivered yet?
     - Check if [ORD102938](order_id) has been delivered
 
-
-
 - intent: track_order_by_invoice
   examples: |
     - What is the status of invoice number [INV998877](invoice_number)?
@@ -270,6 +268,27 @@ nlu:
     - Give a report on [Wakefit](customer_name) top delivery pincodes
     - List pincodes with highest [Wakefit](customer_name) shipments
 
+- intent: pending_orders_before_last_two_days
+  examples: |
+    - Show me all pending orders before last two days
+    - List undelivered orders older than 2 days
+    - I want to see pending orders from earlier this week
+    - Orders pending beyond the last two days
+    - Get all delayed orders older than 2 days
+    - Show orders not delivered before 2 days
+    - Show long pending orders
+    - List aging orders
+    - What are the aging orders in the system?
+    - Show pending shipments older than two days
+    - Can you tell me which orders are long pending?
+    - Aging orders before the last 2 days
+    - Show me aged orders
+    - Orders that are not delivered since last 2 days
+    - Tell me the pending orders which are older
+    - List all backlog orders before 2 days
+    - Give all long pending deliveries
+    - Undelivered orders aging for more than two days
+    - What orders are in pending state for a long time?
 
 
 - synonym: Hyderabad
