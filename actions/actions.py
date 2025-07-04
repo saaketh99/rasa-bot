@@ -673,100 +673,74 @@ class ActionDynamicOrderQuery(Action):
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
 
         import time
-        from datetime import timedelta
-        import os
-        import pandas as pd
+        from datetime import datetime, timedelta
 
         start_time = time.time()
         user_text = tracker.latest_message.get("text", "").lower()
-        print(f"[DEBUG] User input: {user_text}")
 
+        
         delivery_keywords = [
             "delivered", "delivery report", "delivery summary", "delivered shipments",
             "orders delivered", "shipment summary", "delivered report", "completed orders"
         ]
 
+        
         location_code = extract_location_code_from_text(user_text)
         start_date_str, end_date_str = extract_dates_from_text(user_text)
 
-        print(f"[DEBUG] Extracted location code: {location_code}")
-        print(f"[DEBUG] Extracted date strings: start={start_date_str}, end={end_date_str}")
-
+        
         try:
             start_dt = parser.parse(start_date_str) if start_date_str else None
             end_dt = parser.parse(end_date_str) + timedelta(days=1) if end_date_str else None
-            print(f"[DEBUG] Parsed date range: {start_dt} to {end_dt}")
-        except Exception as e:
-            print(f"[ERROR] Date parsing failed: {e}")
+        except:
             dispatcher.utter_message("Invalid date format. Please try again.")
             return []
 
-        is_delivery_query = any(keyword in user_text for keyword in delivery_keywords)
+        
+        is_delivery_report = any(kw in user_text for kw in delivery_keywords)
+        is_location_query = bool(location_code)
+
+        if (not is_location_query and is_delivery_report) or (not is_location_query and start_dt and end_dt):
+            is_delivery_report = True
+
         rows = []
         filename = ""
         message = ""
 
-        if is_delivery_query and start_dt and end_dt:
-            print("[DEBUG] Executing delivery report logic.")
-
-            base_query = {
+        if is_delivery_report and start_dt and end_dt:
+            query = {
                 "orderStatus": {"$in": ["delivered", "delivered_at_security", "delivered_at_neighbor"]},
                 "createdAt": {"$gte": start_dt, "$lt": end_dt}
             }
-
-            if location_code:
-                base_query["$or"] = [
-                    {"shipperUid": {"$regex": f"^{location_code}$", "$options": "i"}},
-                    {"firstMile.shipperUid": {"$regex": f"^{location_code}$", "$options": "i"}},
-                    {"midMile.shipperUid": {"$regex": f"^{location_code}$", "$options": "i"}},
-                    {"lastMile.shipperUid": {"$regex": f"^{location_code}$", "$options": "i"}},
-                ]
-                print(f"[DEBUG] Location filter also applied to delivery query: {location_code}")
-
-            print(f"[DEBUG] Delivery report query: {base_query}")
-            results = list(collection.find(base_query))
-            print(f"[DEBUG] Retrieved {len(results)} delivery records")
+            results = list(collection.find(query))
 
             if not results:
-                dispatcher.utter_message(
-                    f"No delivered orders found between **{start_date_str}** and **{end_date_str}**"
-                    + (f" for **{location_code}**." if location_code else ".")
-                )
+                dispatcher.utter_message(f"No delivered orders found between **{start_date_str}** and **{end_date_str}**.")
                 return []
 
-            message = f"📦 **Delivered Orders between {start_date_str} and {end_date_str}**"
-            if location_code:
-                message += f" for **{location_code}**"
-            message += "\n"
-
+            message = f"📦 **Delivered Orders between {start_date_str} and {end_date_str}**\n"
             for order in results:
-                rows.append({
-                    "Order ID": order.get("sm_orderid", "N/A"),
-                    "Status": order.get("orderStatus", "Delivered")
-                })
+                order_id = order.get("sm_orderid", "N/A")
+                status = order.get("orderStatus", "Delivered")
+                rows.append({"Order ID": order_id, "Status": status})
 
-            filename = f"delivered_orders_{location_code or 'all'}_{start_date_str}_to_{end_date_str}.xlsx"
+            filename = f"delivered_orders_{start_date_str}_to_{end_date_str}.xlsx"
 
-        elif location_code and start_dt and end_dt:
-            print("[DEBUG] Executing location-based report logic.")
 
+        elif is_location_query and start_dt and end_dt:
             query = {
                 "$and": [
                     {
                         "$or": [
-                            {"shipperUid": {"$regex": f"^{location_code}$", "$options": "i"}},
                             {"firstMile.shipperUid": {"$regex": f"^{location_code}$", "$options": "i"}},
                             {"midMile.shipperUid": {"$regex": f"^{location_code}$", "$options": "i"}},
-                            {"lastMile.shipperUid": {"$regex": f"^{location_code}$", "$options": "i"}}
+                            {"lastMile.shipperUid": {"$regex": f"^{location_code}$", "$options": "i"}},
                         ]
                     },
                     {"createdAt": {"$gte": start_dt, "$lt": end_dt}}
                 ]
             }
-
-            print(f"[DEBUG] Location-based order query: {query}")
             results = list(collection.find(query))
-            print(f"[DEBUG] Retrieved {len(results)} orders for location {location_code}")
 
             if not results:
                 dispatcher.utter_message(
@@ -774,53 +748,45 @@ class ActionDynamicOrderQuery(Action):
                 )
                 return []
 
-            message = f"**Orders from {location_code} between {start_date_str} and {end_date_str}**\n"
+            message = f"📍 **Orders from {location_code} between {start_date_str} and {end_date_str}**\n"
             for order in results:
-                created_at = order.get("createdAt")
-                created_str = created_at.strftime("%Y-%m-%d") if hasattr(created_at, "strftime") else str(created_at)
+                order_id = order.get("sm_orderid", "N/A")
+                status = order.get("orderStatus", "unknown")
+                created = order.get("createdAt")
+                created_str = created.strftime('%Y-%m-%d') if hasattr(created, 'strftime') else str(created)
+
                 rows.append({
-                    "Order ID": order.get("sm_orderid", "N/A"),
-                    "Status": order.get("orderStatus", "Unknown"),
+                    "Order ID": order_id,
+                    "Status": status,
                     "Created At": created_str
                 })
 
             filename = f"orders_{location_code}_{start_date_str}_to_{end_date_str}.xlsx"
 
-    
-        else:
-            print("[DEBUG] Neither delivery nor location query criteria matched.")
-            dispatcher.utter_message("Please provide either delivery report keywords or a valid location ID along with a date range.")
-            return []
 
-    
         for row in rows[:10]:
             message += "- " + " | ".join(f"{k}: {v}" for k, v in row.items()) + "\n"
-        message += f"\n**Total Records**: {len(rows)}"
+        message += f"\n📄 **Total Records**: {len(rows)}"
+
         dispatcher.utter_message(message)
 
+        
+        df = pd.DataFrame(rows)
+        os.makedirs("static/files", exist_ok=True)
+        filename = filename.replace(" ", "_").replace(":", "-")
+        filepath = os.path.join("static/files", filename)
+        df.to_excel(filepath, index=False)
 
-        try:
-            df = pd.DataFrame(rows)
-            os.makedirs("static/files", exist_ok=True)
-            filename = filename.replace(" ", "_").replace(":", "-")
-            filepath = os.path.join("static/files", filename)
-            print(f"[DEBUG] Saving Excel at: {filepath}")
-            df.to_excel(filepath, index=False)
-
-            public_url = f"http://51.20.18.59:8080/static/files/{filename}"
-            dispatcher.utter_message(
-                f'<a href="{public_url}" download target="_blank">'
-                f'<button style="padding: 10px 20px; background-color: #4CAF50; '
-                f'color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
-                f'</a>'
-            )
-        except Exception as e:
-            print(f"[ERROR] Failed to generate Excel: {e}")
-            dispatcher.utter_message("Failed to generate Excel file.")
+        public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+        dispatcher.utter_message(
+            f'<a href="{public_url}" download target="_blank">'
+            f'<button style="padding: 10px 20px; background-color: #4CAF50; '
+            f'color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
+            f'</a>'
+        )
 
         print(f"[TIME] action_dynamic_order_query took {(time.time() - start_time):.2f} seconds")
         return []
-
 class ActionOrderStatusByInvoice(Action):
     def name(self) -> Text:
         return "action_order_status_by_invoice"
