@@ -48,7 +48,6 @@ responses:
   - text: "Bye"
 
 actions:
- - action_cx_date
  - action_route
  - action_cx_destination
  - action_get_orders_by_status 
@@ -58,10 +57,9 @@ actions:
  - action_pending_orders_past_days
  - action_top_pincodes_by_customer
  - action_default_fallback
- - action_orders_by_location_duration
  - action_order_status_by_invoice
  - action_check_service_by_pincode
- - action_delivery_report_by_date_range
+ - action_dynamic_order_query
  - action_fetch_order_info_by_id
  - action_pending_orders_before_last_two_days
 

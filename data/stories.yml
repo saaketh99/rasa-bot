@@ -12,10 +12,7 @@ stories:
     - intent: goodbye
     - action: utter_goodbye
 
-- story: cx date orders story
-  steps: 
-    - intent: cx_date_orders
-    - action: action_cx_date
+
 
 - story: shipment route between locations story
   steps:
@@ -61,7 +58,7 @@ stories:
 - story: Orders by location and duration story
   steps:
     - intent: orders_by_location_duration
-    - action: action_orders_by_location_duration
+    - action: action_dynamic_order_query
 
 - story: Check service availability by pincode
   steps:
@@ -71,7 +68,7 @@ stories:
 - story: Delivery report by date range
   steps:
     - intent: delivery_report_by_duration
-    - action: action_delivery_report_by_date_range
+    - action: action_dynamic_order_query
 
 - story: Fetch order info by order ID
   steps:
@@ -82,5 +79,10 @@ stories:
   steps:
     - intent: track_order_by_invoice
     - action: action_order_status_by_invoice
+
+- story: story aging orders
+  steps:
+    - intent: pending_orders_before_last_two_days
+    - action: action_pending_orders_before_last_two_days
 
 

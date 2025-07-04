@@ -12,6 +12,7 @@ from datetime import datetime
 from datetime import datetime, timedelta
 from collections import Counter
 
+
 client = MongoClient("mongodb+srv://ordersDbAdmin:LuiQu4KLLM0KXvQX@orders-cluster.jbais.mongodb.net/")
 db = client["orders-db"]
 collection = db["SaaS_Orders"]
@@ -93,6 +94,67 @@ def extract_timestamp(raw_ts):
         elif isinstance(raw_ts, datetime):
             return raw_ts
     except Exception:
+        return None
+
+def get_all_unique_shipper_uids():
+    print("[DEBUG] Fetching all unique shipperUids from root and nested fields...")
+    pipeline = [
+        {
+            "$project": {
+                "root": "$shipperUid",
+                "mid": "$midMile.shipperUid",
+                "last": "$lastMile.shipperUid"
+            }
+        },
+        {
+            "$project": {
+                "uids": {
+                    "$setUnion": [
+                        {"$cond": [{"$ne": ["$root", None]}, ["$root"], []]},
+                        {"$cond": [{"$ne": ["$mid", None]}, ["$mid"], []]},
+                        {"$cond": [{"$ne": ["$last", None]}, ["$last"], []]}
+                    ]
+                }
+            }
+        },
+        {"$unwind": "$uids"},
+        {"$group": {"_id": None, "all_uids": {"$addToSet": "$uids"}}}
+    ]
+
+    result = list(collection.aggregate(pipeline))
+    all_uids = result[0]["all_uids"] if result else []
+    print(f"[DEBUG] Unique shipperUids from DB: {all_uids}")
+    return all_uids
+
+
+def extract_location_code_from_text(user_text: str) -> Optional[str]:
+    print(f"[DEBUG] Raw user text: {user_text}")
+
+    
+    cleaned_text = re.sub(r'[^a-zA-Z\s]', ' ', user_text)
+    tokens = cleaned_text.lower().split()
+    print(f"[DEBUG] Cleaned tokens: {tokens}")
+
+    
+    shipper_uids = get_all_unique_shipper_uids()
+
+    if not shipper_uids:
+        print("[DEBUG] No shipperUids found in DB.")
+        return None
+
+    
+    best_match = None
+    best_score = 0
+    for token in tokens:
+        result = process.extractOne(token, shipper_uids, scorer=fuzz.ratio)
+        if result and result[1] > best_score:
+            best_match, best_score = result[0], result[1]
+
+    if best_score > 60:
+        print(f"[DEBUG] Best fuzzy match: {best_match} (score: {best_score})")
+        return best_match
+    else:
+        print(f"[DEBUG] No fuzzy match above threshold. Best score: {best_score}")
         return None
 
 
@@ -179,55 +241,6 @@ class ActionFordestination(Action):
         print(f"[TIME] action_cx_destination took {time.time() - start_time:.2f} seconds")
         return []
 
-class ActionCxOrder(Action):
-    def name(self) -> Text:
-        return "action_cx_date"
-
-    def run(self, dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        
-        start_time = time.time()
-        customer_input = tracker.get_slot("customer_name")
-        message_text = tracker.latest_message.get("text", "")
-        s_date, e_date = extract_dates_from_text(message_text)
-
-        if not customer_input or not s_date or not e_date:
-            dispatcher.utter_message("Please provide both customer name and valid start/end dates.")
-            print(f"[TIME] action_cx_date took {time.time() - start_time:.2f} seconds")
-            return []
-
-        all_names = collection.distinct("start.contact.name")
-        matched_customers = [name for name in all_names if customer_input.lower() in name.lower()]
-
-        if not matched_customers:
-            dispatcher.utter_message(f"No matching customers found for '{customer_input}'.")
-            print(f"[TIME] action_cx_date took {time.time() - start_time:.2f} seconds")
-            return []
-
-        matched_orders = list(collection.find({
-            "start.contact.name": {"$in": matched_customers},
-            "createdAt": {"$gte": s_date, "$lte": e_date}
-        }))
-
-        if not matched_orders:
-            dispatcher.utter_message("No orders found for the given customer in the provided date range.")
-            print(f"[TIME] action_cx_date took {time.time() - start_time:.2f} seconds")
-            return []
-
-        message = f" Orders for **{customer_input}** from **{s_date}** to **{e_date}**:\n"
-        for order in matched_orders:
-            order_id = order.get("sm_orderid", "N/A")
-            sender_city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
-            recipient_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
-
-            message += f"- Order ID: {order_id} | {sender_city} → {recipient_city}\n"
-
-        message += f"\n Total orders: {len(matched_orders)}"
-        dispatcher.utter_message(message)
-        print(f"[TIME] action_cx_date took {time.time() - start_time:.2f} seconds")
-        return []
-
 class ActionGetOrdersByStatus(Action):
     def name(self) -> Text:
         return "action_get_orders_by_status"
@@ -295,41 +308,6 @@ class ActionGetOrdersByStatus(Action):
         print(f"[TIME] action_get_orders_by_status took {time.time() - start_time:.2f} seconds")
         return []
 
-class ActionFetchByMetadata(Action):
-    def name(self) -> Text:
-        return "action_fetch_by_metadata"
-
-    def run(self, dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        
-        start_time = time.time()
-        message = tracker.latest_message.get("text", "").lower()
-
-        if "inserted by" in message:
-            inserted_by = message.split("inserted by")[-1].strip()
-        else:
-            dispatcher.utter_message("Please specify who inserted the data.")
-            print(f"[TIME] action_fetch_by_metadata took {time.time() - start_time:.2f} seconds")
-            return []
-
-        matched_orders = list(collection.find({
-            "metadata.inserted_by": {"$regex": f"^{inserted_by}$", "$options": "i"}
-        }))
-
-        if not matched_orders:
-            dispatcher.utter_message(f"No orders found inserted by '{inserted_by}'.")
-            print(f"[TIME] action_fetch_by_metadata took {time.time() - start_time:.2f} seconds")
-            return []
-
-        response = f"Orders inserted by '{inserted_by}':\n"
-        for order in matched_orders:
-            response += f"- Order ID: {order['Order ID']} | Sender: {order['Sender Name']}\n"
-
-        dispatcher.utter_message(response)
-        print(f"[TIME] action_fetch_by_metadata took {time.time() - start_time:.2f} seconds")
-        return []
-
 class ActionGetOrderStatus(Action):
     def name(self) -> Text:
         return "action_get_order_status"
@@ -337,51 +315,129 @@ class ActionGetOrderStatus(Action):
     def run(self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        
-        start_time = time.time()
-        order_id = None
-        for ent in tracker.latest_message.get("entities", []):
-            if ent.get("entity") == "order_id":
-                order_id = ent.get("value")
-                break
 
+        start_time = time.time()
+
+        order_id = next(tracker.get_latest_entity_values("order_id"), None)
+
+        
         if not order_id:
             dispatcher.utter_message("Please provide the order ID to check its status.")
             print(f"[TIME] action_get_order_status took {time.time() - start_time:.2f} seconds")
             return []
 
+        
         order = collection.find_one({
-            "$or": [{"sm_orderid": order_id}, {"Order ID": order_id}]
+            "$or": [
+                {"sm_orderid": order_id},
+                {"Order ID": order_id}
+            ]
         })
 
+    
         if not order:
             dispatcher.utter_message(f"No order found with ID {order_id}.")
             print(f"[TIME] action_get_order_status took {time.time() - start_time:.2f} seconds")
             return []
 
-        status = order.get("orderStatus", order.get("Order Status", "Unknown"))
+        
+        status = order.get("orderStatus") or order.get("Order Status") or "Unknown"
         message = f"Status of order ID {order_id}: {status}"
 
+        
         if status.lower() == "delivered":
-            delivery_event = next((e for e in order.get("orderStatusEvents", []) 
-                                   if e.get("status", "").lower() == "delivered"), None)
+            delivery_event = next(
+                (event for event in order.get("orderStatusEvents", [])
+                 if event.get("status", "").lower() == "delivered"),
+                None
+            )
             if delivery_event:
                 timestamp = delivery_event.get("timeStamp", {})
                 try:
-                    if "$date" in timestamp and "$numberLong" in timestamp["$date"]:
-                        ts = int(timestamp["$date"]["$numberLong"])
-                        delivery_date = datetime.fromtimestamp(ts / 1000).strftime('%Y-%m-%d')
-                        message += f". It was delivered on {delivery_date}."
-                    else:
-                        message += f". Delivery date: {timestamp}"
+                    ts = int(timestamp.get("$date", {}).get("$numberLong", 0))
+                    delivery_date = datetime.fromtimestamp(ts / 1000).strftime('%Y-%m-%d')
+                    message += f". It was delivered on {delivery_date}."
                 except Exception:
-                    message += f". Delivery date: {timestamp}"
+                    message += ". Delivery date format is invalid."
             else:
-                message += ". Delivery date not recorded."
+                message += ". Delivery date not available."
 
+        
         dispatcher.utter_message(message)
         print(f"[TIME] action_get_order_status took {time.time() - start_time:.2f} seconds")
         return []
+
+class ActionGetOrdersByTAT(Action):
+    def name(self) -> Text:
+        return "action_get_orders_by_tat"
+
+    def run(self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+        
+        start_time = time.time()
+        message = tracker.latest_message.get("text", "").lower()
+        match = re.search(r"\b(\d+)\s*(day|days)?\b", message)
+
+        if not match:
+            dispatcher.utter_message("Please specify the number of days to match TAT.")
+            print(f"[TIME] action_get_orders_by_tat took {time.time() - start_time:.2f} seconds")
+            return []
+
+        try:
+            tat_days = int(match.group(1))
+        except ValueError:
+            dispatcher.utter_message("Invalid number of days provided.")
+            print(f"[TIME] action_get_orders_by_tat took {time.time() - start_time:.2f} seconds")
+            return []
+
+        delivered_orders = list(collection.find({
+            "orderStatus": {"$regex": "^delivered$", "$options": "i"}
+        }))
+        total_delivered = len(delivered_orders)
+        matching_orders = []
+
+        for order in delivered_orders:
+            paid_at_raw = order.get("paymentInfo", [{}])[0].get("paidAt")
+            booking_ts = extract_timestamp(paid_at_raw)
+
+            delivery_ts = None
+            for mutation in order.get("mutations", []):
+                if mutation.get("eventType") == "order_delivered":
+                    delivery_ts_raw = mutation.get("eventTimeStamp")
+                    delivery_ts = extract_timestamp(delivery_ts_raw)
+                    break
+
+            if booking_ts and delivery_ts:
+                tat = (delivery_ts - booking_ts).days
+                if tat == tat_days:
+                    matching_orders.append({
+                        "order_id": order.get("sm_orderid"),
+                        "sender": order.get("start", {}).get("contact", {}).get("name"),
+                        "booking_date": booking_ts.strftime('%Y-%m-%d'),
+                        "delivery_date": delivery_ts.strftime('%Y-%m-%d'),
+                        "tat": tat
+                    })
+
+        message = (
+            f"Total delivered orders in DB: {total_delivered}\n"
+            f"Delivered in {tat_days} days: {len(matching_orders)}\n\n"
+        )
+
+        for o in matching_orders:
+            message += (
+                f"Order ID: {o['order_id']} | Sender: {o['sender']} | "
+                f"Booking: {o['booking_date']} | Delivered: {o['delivery_date']} | "
+                f"TAT: {o['tat']} days\n"
+            )
+
+        if not matching_orders:
+            message += "No orders found matching the given TAT."
+
+        dispatcher.utter_message(message)
+        print(f"[TIME] action_get_orders_by_tat took {time.time() - start_time:.2f} seconds")
+        return []
+    
 
 class ActionGetOrdersByTAT(Action):
     def name(self) -> Text:
@@ -608,86 +664,161 @@ class ActionTopPincodesByCustomer(Action):
         print(f"[TIME] action_top_pincodes_by_customer took {(time.time() - start_time):.2f} seconds")
         return []
 
-class ActionOrdersByLocationDuration(Action):
+class ActionDynamicOrderQuery(Action):
     def name(self) -> Text:
-        return "action_orders_by_location_duration"
+        return "action_dynamic_order_query"
 
-    def run(self,
-            dispatcher: CollectingDispatcher,
+    def run(self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
 
-        start_time = time.time()
-        location_code = tracker.get_slot("location_code")
-        start_date = tracker.get_slot("start_date")
-        end_date = tracker.get_slot("end_date")
+        import time
+        from datetime import timedelta
+        import os
+        import pandas as pd
 
-        if not location_code or not start_date or not end_date:
-            dispatcher.utter_message("Please provide location code and valid date range.")
-            return []
+        start_time = time.time()
+        user_text = tracker.latest_message.get("text", "").lower()
+        print(f"[DEBUG] User input: {user_text}")
+
+        delivery_keywords = [
+            "delivered", "delivery report", "delivery summary", "delivered shipments",
+            "orders delivered", "shipment summary", "delivered report", "completed orders"
+        ]
+
+        location_code = extract_location_code_from_text(user_text)
+        start_date_str, end_date_str = extract_dates_from_text(user_text)
+
+        print(f"[DEBUG] Extracted location code: {location_code}")
+        print(f"[DEBUG] Extracted date strings: start={start_date_str}, end={end_date_str}")
 
         try:
-            start_ts = parser.parse(start_date)
-            end_ts = parser.parse(end_date)
+            start_dt = parser.parse(start_date_str) if start_date_str else None
+            end_dt = parser.parse(end_date_str) + timedelta(days=1) if end_date_str else None
+            print(f"[DEBUG] Parsed date range: {start_dt} to {end_dt}")
         except Exception as e:
-            dispatcher.utter_message("Date parsing failed. Please provide valid date formats.")
+            print(f"[ERROR] Date parsing failed: {e}")
+            dispatcher.utter_message("Invalid date format. Please try again.")
             return []
 
-        location_filter = {
-            "$or": [
-                {"firstMile.start.address.apsrtcStationCity": location_code},
-                {"firstMile.end.address.apsrtcStationCity": location_code},
-                {"midMile.start.address.apsrtcStationCity": location_code},
-                {"midMile.end.address.apsrtcStationCity": location_code},
-                {"lastMile.start.address.apsrtcStationCity": location_code},
-                {"lastMile.end.address.apsrtcStationCity": location_code},
-            ]
-        }
-
-        query = {
-            "$and": [
-                location_filter,
-                {"createdAt": {"$gte": start_ts, "$lte": end_ts}}
-            ]
-        }
-
-        results = list(collection.find(query))
-
-        if not results:
-            dispatcher.utter_message(f"No orders found involving location '{location_code}' between {start_date} and {end_date}.")
-            return []
-
+        is_delivery_query = any(keyword in user_text for keyword in delivery_keywords)
         rows = []
-        message = f"Orders involving '{location_code}' from {start_date} to {end_date}:"
+        filename = ""
+        message = ""
 
-        for order in results:
-            order_id = order.get("sm_orderid", "N/A")
-            status = order.get("orderStatus", "unknown")
-            created_date = order.get("createdAt")
-            created_str = created_date.strftime('%Y-%m-%d') if hasattr(created_date, 'strftime') else str(created_date)
+        if is_delivery_query and start_dt and end_dt:
+            print("[DEBUG] Executing delivery report logic.")
 
-            message += f"- Order ID: {order_id} | Status: {status} | Created At: {created_str}\n"
-            rows.append({
-                "Order ID": order_id,
-                "Status": status,
-                "Created At": created_str
-            })
+            base_query = {
+                "orderStatus": {"$in": ["delivered", "delivered_at_security", "delivered_at_neighbor"]},
+                "createdAt": {"$gte": start_dt, "$lt": end_dt}
+            }
 
-        df = pd.DataFrame(rows)
-        os.makedirs("static/files", exist_ok=True)
-        filename = f"orders_{location_code}_{start_date}_to_{end_date}.xlsx".replace(" ", "_").replace(":", "-")
-        filepath = os.path.join("static/files", filename)
-        df.to_excel(filepath, index=False)
+            if location_code:
+                base_query["$or"] = [
+                    {"shipperUid": {"$regex": f"^{location_code}$", "$options": "i"}},
+                    {"firstMile.shipperUid": {"$regex": f"^{location_code}$", "$options": "i"}},
+                    {"midMile.shipperUid": {"$regex": f"^{location_code}$", "$options": "i"}},
+                    {"lastMile.shipperUid": {"$regex": f"^{location_code}$", "$options": "i"}},
+                ]
+                print(f"[DEBUG] Location filter also applied to delivery query: {location_code}")
 
-        public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+            print(f"[DEBUG] Delivery report query: {base_query}")
+            results = list(collection.find(base_query))
+            print(f"[DEBUG] Retrieved {len(results)} delivery records")
+
+            if not results:
+                dispatcher.utter_message(
+                    f"No delivered orders found between **{start_date_str}** and **{end_date_str}**"
+                    + (f" for **{location_code}**." if location_code else ".")
+                )
+                return []
+
+            message = f"📦 **Delivered Orders between {start_date_str} and {end_date_str}**"
+            if location_code:
+                message += f" for **{location_code}**"
+            message += "\n"
+
+            for order in results:
+                rows.append({
+                    "Order ID": order.get("sm_orderid", "N/A"),
+                    "Status": order.get("orderStatus", "Delivered")
+                })
+
+            filename = f"delivered_orders_{location_code or 'all'}_{start_date_str}_to_{end_date_str}.xlsx"
+
+        elif location_code and start_dt and end_dt:
+            print("[DEBUG] Executing location-based report logic.")
+
+            query = {
+                "$and": [
+                    {
+                        "$or": [
+                            {"shipperUid": {"$regex": f"^{location_code}$", "$options": "i"}},
+                            {"firstMile.shipperUid": {"$regex": f"^{location_code}$", "$options": "i"}},
+                            {"midMile.shipperUid": {"$regex": f"^{location_code}$", "$options": "i"}},
+                            {"lastMile.shipperUid": {"$regex": f"^{location_code}$", "$options": "i"}}
+                        ]
+                    },
+                    {"createdAt": {"$gte": start_dt, "$lt": end_dt}}
+                ]
+            }
+
+            print(f"[DEBUG] Location-based order query: {query}")
+            results = list(collection.find(query))
+            print(f"[DEBUG] Retrieved {len(results)} orders for location {location_code}")
+
+            if not results:
+                dispatcher.utter_message(
+                    f"No orders found for location ID **{location_code}** between **{start_date_str}** and **{end_date_str}**."
+                )
+                return []
+
+            message = f"**Orders from {location_code} between {start_date_str} and {end_date_str}**\n"
+            for order in results:
+                created_at = order.get("createdAt")
+                created_str = created_at.strftime("%Y-%m-%d") if hasattr(created_at, "strftime") else str(created_at)
+                rows.append({
+                    "Order ID": order.get("sm_orderid", "N/A"),
+                    "Status": order.get("orderStatus", "Unknown"),
+                    "Created At": created_str
+                })
+
+            filename = f"orders_{location_code}_{start_date_str}_to_{end_date_str}.xlsx"
+
+    
+        else:
+            print("[DEBUG] Neither delivery nor location query criteria matched.")
+            dispatcher.utter_message("Please provide either delivery report keywords or a valid location ID along with a date range.")
+            return []
+
+    
+        for row in rows[:10]:
+            message += "- " + " | ".join(f"{k}: {v}" for k, v in row.items()) + "\n"
+        message += f"\n**Total Records**: {len(rows)}"
         dispatcher.utter_message(message)
-        dispatcher.utter_message(
-            f'<a href="{public_url}" download target="_blank">'
-            f'<button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">\ud83d\udcc5 Download Excel</button>'
-            f'</a>'
-        )
 
-        print(f"[TIME] action_orders_by_location_duration took {(time.time() - start_time):.2f} seconds")
+
+        try:
+            df = pd.DataFrame(rows)
+            os.makedirs("static/files", exist_ok=True)
+            filename = filename.replace(" ", "_").replace(":", "-")
+            filepath = os.path.join("static/files", filename)
+            print(f"[DEBUG] Saving Excel at: {filepath}")
+            df.to_excel(filepath, index=False)
+
+            public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+            dispatcher.utter_message(
+                f'<a href="{public_url}" download target="_blank">'
+                f'<button style="padding: 10px 20px; background-color: #4CAF50; '
+                f'color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
+                f'</a>'
+            )
+        except Exception as e:
+            print(f"[ERROR] Failed to generate Excel: {e}")
+            dispatcher.utter_message("Failed to generate Excel file.")
+
+        print(f"[TIME] action_dynamic_order_query took {(time.time() - start_time):.2f} seconds")
         return []
 
 class ActionOrderStatusByInvoice(Action):
@@ -699,17 +830,17 @@ class ActionOrderStatusByInvoice(Action):
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
 
         start_time = time.time()
-        invoice_number = None
 
-        for ent in tracker.latest_message.get("entities", []):
-            if ent.get("entity") == "invoice_number":
-                invoice_number = ent.get("value")
-                break
+        
+        invoice_number = next(tracker.get_latest_entity_values("invoice_number"), None)
 
+        
         if not invoice_number:
-            dispatcher.utter_message("Please provide a valid invoice number.")
+            dispatcher.utter_message("Please provide a valid invoice number to check the order status.")
+            print(f"[TIME] action_order_status_by_invoice took {time.time() - start_time:.2f} seconds")
             return []
 
+        
         matched_orders = list(collection.find({
             "$or": [
                 {"Invoice Number": {"$regex": f"^{invoice_number}$", "$options": "i"}},
@@ -717,21 +848,25 @@ class ActionOrderStatusByInvoice(Action):
             ]
         }))
 
+        
         if not matched_orders:
             dispatcher.utter_message(f"No orders found with invoice number {invoice_number}.")
+            print(f"[TIME] action_order_status_by_invoice took {time.time() - start_time:.2f} seconds")
             return []
 
-    
-        message = f"Order(s) with invoice number {invoice_number}:\n"
+        
         rows = []
+        message = f"Order(s) with invoice number **{invoice_number}**:\n"
+
         for order in matched_orders:
-            order_id = order.get("sm_orderid", order.get("Order ID", "N/A"))
-            status = order.get("orderStatus", order.get("Order Status", "Unknown"))
+            order_id = order.get("sm_orderid") or order.get("Order ID", "N/A")
+            status = order.get("orderStatus") or order.get("Order Status", "Unknown")
             created = order.get("createdAt")
-            booking_date = created.strftime('%Y-%m-%d') if hasattr(created, "strftime") else str(created)
+            booking_date = created.strftime('%Y-%m-%d') if hasattr(created, 'strftime') else str(created)
             customer_name = order.get("start", {}).get("contact", {}).get("name", "Unknown")
 
-            message += f"- Order ID: {order_id} | Status: {status} | Date: {booking_date} | Customer: {customer_name}\n"
+            message += f"- **Order ID**: {order_id} | **Status**: {status} | **Date**: {booking_date} | **Customer**: {customer_name}\n"
+
             rows.append({
                 "Order ID": order_id,
                 "Invoice Number": invoice_number,
@@ -740,16 +875,17 @@ class ActionOrderStatusByInvoice(Action):
                 "Booking Date": booking_date
             })
 
-        message += f"\nTotal orders: {len(rows)}"
+        message += f"\n**Total orders found**: {len(rows)}"
         dispatcher.utter_message(message)
 
-
+        
         df = pd.DataFrame(rows)
         os.makedirs("static/files", exist_ok=True)
-        filename = f"order_status_invoice_{invoice_number}.xlsx"
+        filename = f"order_status_invoice_{invoice_number}.xlsx".replace(" ", "_").replace(":", "-")
         filepath = os.path.join("static/files", filename)
         df.to_excel(filepath, index=False)
 
+        
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
         dispatcher.utter_message(
             f'<a href="{public_url}" download target="_blank">'
@@ -769,136 +905,40 @@ class ActionCheckServiceByPincode(Action):
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
 
         start_time = time.time()
-        pincode = None
 
-        
-        for ent in tracker.latest_message.get("entities", []):
-            if ent.get("entity") == "pincode":
-                pincode = ent.get("value")
-                break
+        pincode = next(tracker.get_latest_entity_values("pincode"), None)
 
         if not pincode:
-            dispatcher.utter_message("Please provide a valid pincode.")
+            dispatcher.utter_message("Please provide a valid pincode to check service availability.")
+            print(f"[TIME] action_check_service_by_pincode took {time.time() - start_time:.2f} seconds")
             return []
 
-    
         matched_orders = list(collection.find({
             "end.address.mapData.pincode": {"$regex": f"^{pincode}$", "$options": "i"}
         }))
 
         if not matched_orders:
-            dispatcher.utter_message(f"Sorry, we currently do not provide service in pincode **{pincode}**.")
+            dispatcher.utter_message(f"Sorry, we currently do **not** provide service in pincode **{pincode}**.")
+            print(f"[TIME] action_check_service_by_pincode took {time.time() - start_time:.2f} seconds")
             return []
 
-        message = f" Service is available in {pincode}.\n"
-        rows = []
+        
         agent_names = set()
-
         for order in matched_orders:
-            order_id = order.get("sm_orderid", order.get("Order ID", "N/A"))
-            customer = order.get("start", {}).get("contact", {}).get("name", "Unknown")
-            assigned_agent = order.get("deliveryAgent", {}).get("assignedTo", "Not Assigned")
-            agent_names.add(assigned_agent)
-
-            message += f"- Order ID: {order_id} | Customer: {customer} | Agent: {assigned_agent}\n"
-
-            rows.append({
-                "Order ID": order_id,
-                "Customer Name": customer,
-                "Assigned Agent": assigned_agent,
-                "Pincode": pincode
-            })
+            agent = order.get("deliveryAgent", {}).get("assignedTo")
+            if agent:
+                agent_names.add(agent)
 
         if agent_names:
-            message += f"\n Assigned Delivery Agent(s): {', '.join(agent_names)}"
-        message += f"\n\nTotal serviced orders: {len(rows)}"
+            agent_list = ', '.join(agent_names)
+            dispatcher.utter_message(f"Service is **available** in pincode **{pincode}**.\n Assigned delivery agent(s): **{agent_list}**.")
+        else:
+            dispatcher.utter_message(f"Service is **available** in pincode **{pincode}**, but no delivery agent has been assigned yet.")
 
-        dispatcher.utter_message(message)
+        print(f"[TIME] action_check_service_by_pincode took {time.time() - start_time:.2f} seconds")
+        return []
 
     
-        df = pd.DataFrame(rows)
-        os.makedirs("static/files", exist_ok=True)
-        filename = f"service_pincode_{pincode}.xlsx"
-        filepath = os.path.join("static/files", filename)
-        df.to_excel(filepath, index=False)
-
-        public_url = f"http://51.20.18.59:8080/static/files/{filename}"
-        dispatcher.utter_message(
-            f'<a href="{public_url}" download target="_blank">'
-            f'<button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
-            f'</a>'
-        )
-
-        print(f"[TIME] action_check_service_by_pincode took {(time.time() - start_time):.2f} seconds")
-        return []
-
-class ActionDeliveryReportByDateRange(Action):
-    def name(self) -> Text:
-        return "action_delivery_report_by_date_range"
-
-    def run(self, dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-
-        start_time = time.time()
-        message_text = tracker.latest_message.get("text", "")
-
-        start_date, end_date = extract_dates_from_text(message_text)
-
-        if not start_date or not end_date:
-            dispatcher.utter_message("Please provide a valid start and end date.")
-            print(f"[TIME] action_delivery_report_by_date_range took {time.time() - start_time:.2f} seconds")
-            return []
-
-        try:
-            start_dt = datetime.fromisoformat(start_date)
-            end_dt = datetime.fromisoformat(end_date) + timedelta(days=1)
-        except Exception as e:
-            dispatcher.utter_message("Failed to parse the provided dates.")
-            print(f"[DEBUG] Date parsing error: {e}")
-            return []
-
-        delivered_orders = list(collection.find({"orderStatus": {"$in": ["delivered", "delivered_at_security", "delivered_at_neighbor"]},
-         "createdAt": {"$gte": start_dt, "$lt": end_dt}
-         }))
-
-
-        if not delivered_orders:
-            dispatcher.utter_message(f"No delivered orders found between **{start_date}** and **{end_date}**.")
-            print(f"[TIME] action_delivery_report_by_date_range took {time.time() - start_time:.2f} seconds")
-            return []
-
-        message = f"Delivered Orders between **{start_date}** and **{end_date}**:\n"
-        rows = []
-
-        for order in delivered_orders:
-            order_id = order.get("sm_orderid", order.get("Order ID", "N/A"))
-            status = order.get("orderStatus", order.get("Order Status", "Delivered"))
-            message += f"- Order ID: {order_id} | Status: {status}\n"
-
-            rows.append({
-                "Order ID": order_id,
-                "Status": status
-            })
-
-        message += f"\n Total delivered orders: {len(delivered_orders)}"
-        dispatcher.utter_message(message)
-
-        df = pd.DataFrame(rows)
-        os.makedirs("static/files", exist_ok=True)
-        filename = f"delivered_orders_{start_date}_to_{end_date}.xlsx".replace(":", "-")
-        filepath = os.path.join("static/files", filename)
-        df.to_excel(filepath, index=False)
-
-        public_url = f"http://51.20.18.59:8080/static/files/{filename}"
-        dispatcher.utter_message(
-            f'<a href="{public_url}" download target="_blank">'
-            f'<button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
-            f'</a>'
-        )
-
-        print(f"[TIME] action_delivery_report_by_date_range took {(time.time() - start_time):.2f} seconds")
-        return []
 
 class ActionPendingOrdersBeforeLastTwoDays(Action):
     def name(self) -> Text:
@@ -979,46 +1019,45 @@ class ActionOrderDetailsByID(Action):
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
 
         start_time = time.time()
-        order_id = None
 
-        for ent in tracker.latest_message.get("entities", []):
-            if ent.get("entity") == "order_id":
-                order_id = ent.get("value")
-                break
+        order_id = next(tracker.get_latest_entity_values("order_id"), None)
 
+        
         if not order_id:
             dispatcher.utter_message("Please provide a valid order ID.")
-            print(f"[TIME] action_order_details_by_id took {time.time() - start_time:.2f} seconds")
+            print(f"[TIME] action_fetch_order_info_by_id took {time.time() - start_time:.2f} seconds")
             return []
 
+        
         order = collection.find_one({
             "$or": [{"sm_orderid": order_id}, {"Order ID": order_id}]
         })
 
+        
         if not order:
-            dispatcher.utter_message(f"No order found with ID {order_id}.")
-            print(f"[TIME] action_order_details_by_id took {time.time() - start_time:.2f} seconds")
+            dispatcher.utter_message(f"No order found with ID **{order_id}**.")
+            print(f"[TIME] action_fetch_order_info_by_id took {time.time() - start_time:.2f} seconds")
             return []
 
-    
+        
         sender_city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
         receiver_address = order.get("end", {}).get("address", {}).get("mapData", {}).get("address", "Unknown")
-        invoice_number = order.get("invoiceNumber", "N/A")
+        invoice_number = order.get("invoiceNumber", order.get("Invoice Number", "N/A"))
         payment_mode = order.get("paymentInfo", [{}])[0].get("paymentMode", "N/A")
         lr_number = order.get("LR Number", order.get("lrNumber", "N/A"))
 
-    
+        
         message = (
-            f" Order Details for **{order_id}**:\n"
+            f"**Order Details for {order_id}**:\n"
             f"- Sender City: {sender_city}\n"
             f"- Receiver Address: {receiver_address}\n"
             f"- Invoice Number: {invoice_number}\n"
-            f"- Mode of Payment: {payment_mode}\n"
-            f"- LR Number: {lr_number}"
+            f"- Payment Mode: {payment_mode}\n"
+            f"-  LR Number: {lr_number}"
         )
-
         dispatcher.utter_message(message)
 
+        
         df = pd.DataFrame([{
             "Order ID": order_id,
             "Sender City": sender_city,
@@ -1029,20 +1068,20 @@ class ActionOrderDetailsByID(Action):
         }])
 
         os.makedirs("static/files", exist_ok=True)
-        filename = f"order_details_{order_id}.xlsx"
+        filename = f"order_details_{order_id}.xlsx".replace(" ", "_").replace(":", "-")
         filepath = os.path.join("static/files", filename)
         df.to_excel(filepath, index=False)
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
         dispatcher.utter_message(
             f'<a href="{public_url}" download target="_blank">'
-            f'<button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
+            f'<button style="padding: 10px 20px; background-color: #4CAF50; '
+            f'color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
             f'</a>'
         )
 
-        print(f"[TIME] action_order_details_by_id took {time.time() - start_time:.2f} seconds")
+        print(f"[TIME] action_fetch_order_info_by_id took {(time.time() - start_time):.2f} seconds")
         return []
-
 
 class ActionDefaultFallback(Action):
     def name(self):

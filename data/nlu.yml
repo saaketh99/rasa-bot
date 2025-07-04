@@ -30,18 +30,6 @@ nlu:
     - bye bye
     - see you later
 
-- intent: cx_date_orders
-  examples: |
-    - show me orders from [OLAELE](customer_name) between [2024-12-01](start_date) and [2024-12-31](end_date)
-    - get [Wakefit](customer_name) orders from [2024-11-01](start_date) to [2024-11-15](end_date)
-    - list all [OLA Elec](customer_name) deliveries between [2025-01-10](start_date) and [2025-01-20](end_date)
-    - give me orders booked by [OLAELE](customer_name) from [2024-10-01](start_date) to [2024-10-31](end_date)
-    - fetch [Wakefit](customer_name) shipments from [2024-09-01](start_date) through [2024-09-10](end_date)
-    - what are the orders of [OLA Elec](customer_name) from [2025-03-01](start_date) to [2025-03-05](end_date)
-    - get me all orders from [OLAELE](customer_name) between [2025-01-01](start_date) and [2025-01-15](end_date)
-    - find orders of [Wakefit](customer_name) dated from [2024-12-15](start_date) to [2024-12-20](end_date)
-    - any shipments by [OLA Elec](customer_name) between [2024-11-01](start_date) and [2024-11-10](end_date)?
-    - check [OLAELE](customer_name) orders placed from [2025-02-01](start_date) till [2025-02-15](end_date)
 
 - intent: route_orders
   examples: |
@@ -128,7 +116,7 @@ nlu:
     - get all orders marked as [pending](delivery_status)
     - I need the [in transit](delivery_status) orders
     - are there any orders that were [delivered](delivery_status)?
-    - pull up [pending](delivery_status) shipments
+    - pull up [pending](delivery_status) shipmentsb
     - how many orders are [in transit](delivery_status)?
     - list the [delivered](delivery_status) ones
     - give me a report on [pending](delivery_status) orders
@@ -136,16 +124,6 @@ nlu:
     - check for [delivered](delivery_status) shipments
     - retrieve all [pending](delivery_status) consignments
 
-- intent: fetch_by_metadata
-  examples: |
-    - Show orders inserted by user_1
-    - Get all orders inserted by user_2
-    - I want records added by user_3
-    - Orders uploaded by user_4
-    - What are the orders inserted by user_5
-    - Fetch all entries inserted by user_6
-    - Can you get orders entered by user_10
-    - Please retrieve orders inserted by user_8
 
 - intent: track_order_by_id
   examples: |
@@ -162,7 +140,7 @@ nlu:
     - Please update me on the order [ORD90876](order_id)
     - Is order [ABC123](order_id) delivered?
     - Has my order [XZY999](order_id) been delivered?
-    - I placed an order with ID [QWERTY001](order_id), what’s the status?
+    - I placed an order with ID [QWERTY001](order_id), whats the status?
     - What happened to order number [789654](order_id)?
     - Is [ORD112233](order_id) on the way?
     - Where is my order [DEL8899](order_id)?
@@ -172,12 +150,32 @@ nlu:
 
 - intent: track_order_by_invoice
   examples: |
-    - What is the status of invoice number [INV998877](invoice_number)?
-    - Track order using invoice [INV45678](invoice_number)
-    - I want delivery details for invoice [INV00055](invoice_number)
-    - Where is the package with invoice number [INV001122](invoice_number)?
-    - Can you get the POD for invoice [INV008888](invoice_number)?
-    - Please provide details for invoice number [INV100002](invoice_number)
+    - Check the status of invoice [INV123456](invoice_number)
+    - I need tracking information for invoice [INV789101](invoice_number)
+    - Show me the delivery status for invoice [INV111213](invoice_number)
+    - What happened to invoice [INV141516](invoice_number)?
+    - Can you find invoice [INV171819](invoice_number)?
+    - Provide shipment details for invoice number [INV202122](invoice_number)
+    - Where can I find the delivery info of invoice [INV232425](invoice_number)?
+    - Give me the order status for invoice [INV262728](invoice_number)
+    - I'm checking the delivery of invoice [INV293031](invoice_number)
+    - What's the progress of invoice number [INV323334](invoice_number)?
+    - I would like to know the tracking details of invoice [INV353637](invoice_number)
+    - Tell me if invoice [INV383940](invoice_number) has been delivered
+    - Has the package for invoice [INV414243](invoice_number) been shipped?
+    - What's the POD for invoice [INV444546](invoice_number)?
+    - When was invoice [INV474849](invoice_number) delivered?
+    - Is there any update on invoice [INV505152](invoice_number)?
+    - Track invoice [INV535455](invoice_number)
+    - Lookup invoice [INV565758](invoice_number)
+    - Invoice [INV596061](invoice_number) status please
+    - Could you give me the delivery report for [INV626364](invoice_number)?
+    - Please fetch tracking data for invoice [INV656667](invoice_number)
+    - Any updates for invoice [INV686970](invoice_number)?
+    - Show invoice status [INV717273](invoice_number)
+    - I need the delivery timeline for invoice [INV747576](invoice_number)
+    - What's the shipping status of invoice [INV777879](invoice_number)?
+
 
 - intent: get_orders_by_tat
   examples: |
@@ -205,34 +203,74 @@ nlu:
 
 - intent: orders_by_location_duration
   examples: |
-    - Show orders from location code [HYD001](location_code) between [May 1st](start_date) and [May 10th](end_date)
-    - I want all orders sent from location code [CHN123](location_code) from [01-04-2024](start_date) to [10-04-2024](end_date)
-    - Get shipments from location code [BLR456](location_code) in the first week of [June](start_date)
-    - Orders moved from [DELHI-LC007](location_code) between [April 10](start_date) and [April 15](end_date)
-    - Provide all orders sent from location code [MUM005](location_code) during [July](start_date)
-    - Give me data of orders from [VIS001](location_code) between [March 1](start_date) and [March 5](end_date)
-    - What orders went out from location code [BANGALORE-LOC](location_code) between [June 1](start_date) and [June 3](end_date)?
-
+    - Get all orders that were dispatched from location code [HYD003](location_code) between [2024-05-01](start_date) and [2024-05-15](end_date)
+    - Retrieve all shipments sent from [CHN-LOC9](location_code) from [April 5](start_date) to [April 9](end_date)
+    - What shipments went out from dispatch center [BLR789](location_code) between [March 10th](start_date) and [March 20th](end_date)
+    - Show me shipments originating from [MUM-LOC10](location_code) in [May](start_date)
+    - Can you list all orders routed through location code [DEL999](location_code) between [1st June](start_date) and [10th June](end_date)?
+    - List shipments from operations hub [VIZAG-LC12](location_code) between [Feb 1, 2024](start_date) and [Feb 7, 2024](end_date)
+    - Pull order records where dispatch location is [KOL456](location_code) from [April 10th](start_date) to [April 20th](end_date)
+    - Show me all bookings that left [GOA101](location_code) from [July 1](start_date) to [July 10](end_date)
+    - Give me all records of shipments processed at [TRI789](location_code) between [June 5](start_date) and [June 12](end_date)
+    - Provide the order list initiated from location [INDORE-LC](location_code) from [2024-06-01](start_date) to [2024-06-07](end_date)
 
 - intent: check_service_by_pincode
   examples: |
-    - Is there delivery service in pincode [500081](pincode)?
-    - Which agent handles deliveries to [600045](pincode)?
-    - Check serviceability for pincode [110001](pincode)
-    - Do we serve location with pin code [400001](pincode)?
-    - Find the delivery agent responsible for [530016](pincode)
-    - Is the area [700001](pincode) serviceable?
-    - Can you tell if we can deliver to [641001](pincode)?
+    - Do we have delivery coverage in [500001](pincode)?
+    - Is [600032](pincode) within our delivery zone?
+    - Can you check if [700045](pincode) is serviceable?
+    - Tell me if [110044](pincode) is a valid delivery location
+    - Please verify service availability for [400076](pincode)
+    - Is there delivery available in the area [500072](pincode)?
+    - Can you confirm delivery options for [302001](pincode)?
+    - Does our network cover [560100](pincode)?
+    - Is [411001](pincode) part of our delivery network?
+    - Could you check if [390011](pincode) is in the serviceable list?
+    - I want to know if [682001](pincode) is covered
+    - Do we serve the pincode [781001](pincode)?
+    - Are deliveries possible to [831001](pincode)?
+    - Is [144001](pincode) under our service area?
+    - Which delivery agent serves [500015](pincode)?
+    - Find who handles deliveries in [641602](pincode)
+    - Can you provide service info for [517501](pincode)?
+    - Whats the delivery status for area [834001](pincode)?
+    - Is [500070](pincode) supported?
+    - Tell me about delivery availability in [695014](pincode)
+    - Are shipments allowed to [380015](pincode)?
+    - Can you look up pincode [755001](pincode) for delivery service?
+    - Check whether [600100](pincode) falls under delivery coverage
+    - Is [570001](pincode) included in our service list?
+    - Let me know if delivery is possible to [676123](pincode)
+    - Do you deliver to [141001](pincode)?
+    - Is [793001](pincode) part of the coverage zone?
+
 
 - intent: delivery_report_by_duration
   examples: |
-    - Show delivery summary for [June 2024](start_date)
-    - I need a delivery report for last [10 days](duration)
-    - Give me a report of all delivered orders from [May 1](start_date) to [May 15](end_date)
-    - Provide delivery data for the second week of [April](start_date)
-    - How many deliveries happened between [2024-06-01](start_date) and [2024-06-07](end_date)?
-    - List all successful deliveries for the past [month](duration)
-    - Show report of dispatched orders during [February](start_date)
+    - Give me a delivery report from [May 1](start_date) to [May 10](end_date)
+    - Show all deliveries between [2024-06-01](start_date) and [2024-06-15](end_date)
+    - I want the delivery summary from [March 5](start_date) until [March 20](end_date)
+    - Pull delivery data between [January 1st](start_date) and [January 31st](end_date)
+    - Can you generate a report for deliveries from [February 10](start_date) to [February 28](end_date)?
+    - List deliveries that occurred between [April 1](start_date) and [April 15](end_date)
+    - Retrieve orders delivered from [July 1, 2024](start_date) through [July 7, 2024](end_date)
+    - Show the report of all delivered orders from [June 10](start_date) to [June 17](end_date)
+    - I need delivery stats from [August 5](start_date) to [August 15](end_date)
+    - Generate delivery summary between [September 1st](start_date) and [September 30th](end_date)
+    - Get delivery details from [October 10](start_date) to [October 20](end_date)
+    - Provide shipment report from [November 1](start_date) to [November 10](end_date)
+    - Report of deliveries made from [March 15](start_date) to [March 25](end_date)
+    - Fetch delivery data from [2024-05-01](start_date) till [2024-05-15](end_date)
+    - What deliveries were done between [2024-02-01](start_date) and [2024-02-07](end_date)?
+    - Id like delivery records from [June 1st](start_date) through [June 30th](end_date)
+    - Please show me the delivery report from [April 15](start_date) to [April 22](end_date)
+    - Generate a report from [January 10](start_date) until [January 20](end_date)
+    - How many orders were delivered from [December 1](start_date) to [December 10](end_date)?
+    - I want to analyze deliveries between [May 3](start_date) and [May 8](end_date)
+    - Delivery summary from [June 18](start_date) to [June 25](end_date)
+    - Get the delivery data from [March 10, 2024](start_date) to [March 17, 2024](end_date)
+    - Please pull data of delivered orders from [2024-07-01](start_date) to [2024-07-07](end_date)
+
 
 - intent: fetch_order_info_by_id
   examples: |
@@ -243,6 +281,25 @@ nlu:
     - For order [INV001234](invoice_number), show sender city and mode of payment
     - I want receiver address, payment mode and LR for [WKFT000558](order_id)
     - Can you provide invoice number and destination address for [OLA123000](order_id)?
+    - What is the LR number and sender name for [OLAELE00221](order_id)?
+    - Give me all the details related to order ID [WKFT001999](order_id)
+    - For order [INV900001](invoice_number), I need the payment method and dispatch city
+    - Show me the delivery address and payment type for [OLA456789](order_id)
+    - I want to check the invoice number and payment info of [OLAELE000654](order_id)
+    - What are the sender and receiver cities for order ID [WKFT008888](order_id)?
+    - Can you tell me LR number and mode of payment for order [OLA999999](order_id)?
+    - Show dispatch and delivery addresses of order [INV007001](invoice_number)
+    - Get me the LR number and invoice number of [OLAELE00987](order_id)
+    - I'd like to know everything about [WKFT010000](order_id)
+    - Please provide the payment type and LR number for [INV445566](invoice_number)
+    - Order [WKFT004321](order_id) — fetch all core details including invoice
+    - Find me sender and receiver names for [OLA567890](order_id)
+    - What is the destination and payment mode of order [WKFT000001](order_id)?
+    - I need invoice info and payment details for [INV888888](invoice_number)
+    - For [OLA999111](order_id), provide LR and dispatch city
+    - Fetch receiver address and LR of [WKFT009999](order_id)
+    - What city was [OLAELE005432](order_id) sent from and what is the payment method?
+
 
 - intent: get_pending_orders_past_days
   examples: |
@@ -270,1006 +327,29 @@ nlu:
 
 - intent: pending_orders_before_last_two_days
   examples: |
-    - Show me all pending orders before last two days
-    - List undelivered orders older than 2 days
-    - I want to see pending orders from earlier this week
-    - Orders pending beyond the last two days
-    - Get all delayed orders older than 2 days
-    - Show orders not delivered before 2 days
-    - Show long pending orders
-    - List aging orders
-    - What are the aging orders in the system?
-    - Show pending shipments older than two days
-    - Can you tell me which orders are long pending?
-    - Aging orders before the last 2 days
-    - Show me aged orders
-    - Orders that are not delivered since last 2 days
-    - Tell me the pending orders which are older
-    - List all backlog orders before 2 days
-    - Give all long pending deliveries
-    - Undelivered orders aging for more than two days
-    - What orders are in pending state for a long time?
-
-
-- synonym: Hyderabad
-  examples: |
-    - hyd
-    - Hyd
-    - HYD
-    - hydbad
-    - hyderbad
-    - hyderabd
-    - hyderaad
-    - hyderabad
-    - hyderaaaabd
-    - haidrabad
-    - haidrbd
-
-- synonym: Visakhapatnam
-  examples: |
-    - vskp
-    - Vskp
-    - VSKP
-    - vizag
-    - Vizag
-    - VIZAG
-    - vskptnm
-    - visakapatnam
-    - visakhpatnam
-    - visakapatanam
-    - vishakhapatnam
-    - vishakapatnam
-    - visag
-    - visaga
-    - visakaptnm
-    - visptm
-
-- synonym: Vijayawada
-  examples: |
-    - vij
-    - Vij
-    - VIJ
-    - vijaywada
-    - vijayvada
-    - vijyawada
-    - vijaywad
-    - vijawada
-    - vjywada
-
-- synonym: Rajamahendravaram
-  examples: |
-    - rajahmundry
-    - Rajahmundry
-    - RAJAHMUNDRY
-    - rajmndry
-    - rajmandry
-    - rajmandari
-    - rajahmndry
-    - rajhmundry
-    - rajamundry
-
-- synonym: Tirupati
-  examples: |
-    - tpt
-    - Tpt
-    - TPT
-    - thirupati
-    - thirupathi
-    - tirupathi
-    - tirupat
-    - tirpt
-    - tirpti
-
-- synonym: Kakinada
-  examples: |
-    - kkd
-    - Kkd
-    - KKD
-    - kakinad
-    - kaknada
-    - kakinda
-    - kakinnada
-
-- synonym: Srikakulam
-  examples: |
-    - sklm
-    - Sklm
-    - SKLM
-    - srikaakulam
-    - srikaklm
-    - srikklm
-    - srikklam
-    - srikakolam
-
-- synonym: Nellore
-  examples: |
-    - nlr
-    - Nlr
-    - NLR
-    - nelore
-    - nellur
-    - nelloor
-    - nelor
-
-- synonym: Anantapur
-  examples: |
-    - atp
-    - Atp
-    - ATP
-    - ananthpur
-    - anantpoor
-    - anantpr
-    - anantapuram
-
-- synonym: Guntur
-  examples: |
-    - gnt
-    - Gnt
-    - GNT
-    - guntr
-    - gunturh
-    - guntor
-
-- synonym: Kadapa
-  examples: |
-    - yp
-    - Yp
-    - YP
-    - cuddapah
-    - Cuddapah
-    - kadpaa
-    - kadpa
-    - kadappa
-    - kadapha
-
-- synonym: Ongole
-  examples: |
-    - ogl
-    - Ogl
-    - OGL
-    - ongl
-    - onglo
-    - ongol
-    - ongle
-
-- synonym: Khammam
-  examples: |
-    - kmm
-    - Kmm
-    - KMM
-    - khamam
-    - khmmam
-    - khamamam
-    - khmm
-
-- synonym: Kothagudem
-  examples: |
-    - ktm
-    - Ktm
-    - KTM
-    - kotagudem
-    - kothgudem
-    - kotgudem
-    - kothagudam
-
-- synonym: Warangal
-  examples: |
-    - wgl
-    - Wgl
-    - WGL
-    - varangal
-    - warngal
-    - warngl
-    - warangalh
-
-- synonym: Secunderabad
-  examples: |
-    - scbd
-    - Scbd
-    - SCBD
-    - secundrabad
-    - sekunderabad
-    - secbd
-    - secndrbd
-
-- synonym: Chittoor
-  examples: |
-    - ctr
-    - Ctr
-    - CTR
-    - chittor
-    - chitor
-    - chitur
-    - chithoor
-
-- synonym: Medak
-  examples: |
-    - mdk
-    - Mdk
-    - MDK
-    - medhak
-    - medk
-    - medakk
-
-- synonym: Bhimavaram
-  examples: |
-    - bvrm
-    - Bvrm
-    - BVRM
-    - bhimvaram
-    - bheemavaram
-    - bhimvrm
-    - bhmavaram
-
-- synonym: Vizianagaram
-  examples: |
-    - vzm
-    - Vzm
-    - VZM
-    - vznm
-    - vijayanagaram
-    - vizyanagaram
-    - vijanagaram
-
-
-lookup_tables:
-
-- lookup: pickup
-  examples: |
-    Adiabad
-    Adialbad
-    Adilabad
-    Ailabad
-    Anantapur
-    Ananthpur
-    Anantpaur
-    Anqntapur
-    Beegaluru
-    Benaluru
-    Bengaluru
-    Bengaluur
-    Bhimaaram
-    Bhimaparam
-    Bhimavaam
-    Bhimavaram
-    Bomgakal
-    Bommaakl
-    Bommakal
-    Bomwakal
-    Chittmor
-    Chittoor
-    Eluru
-    Gntur
-    Guntur
-    Gunutr
-    Hanakonda
-    Hanamkonda
-    Hanamkonta
-    Hanmakonda
-    Hyderabad
-    Hydeuabad
-    Hydxrabad
-    Kadaap
-    Kadapa
-    Kadxpa
-    Kaiknada
-    Kakianda
-    Kakinada
-    Karrivani Reru
-    Karrivani Reuv
-    Karrivani Revu
-    Karrivani evu
-    Khammam
-    Khammm
-    Khammma
-    Kykinada
-    Mahbubnagar
-    Mahbubnagir
-    Mahbubnagr
-    Mahbunagar
-    Mugal
-    Mugpal
-    Mugpl
-    Nagonda
-    Nalgonda
-    Nalxonda
-    Naygonda
-    Nellore
-    Niral
-    Nirmal
-    Nlelore
-    Normal
-    Nrmal
-    Ongle
-    Ongoe
-    Ongole
-    Rajamahendraaram
-    Rajamahendravaram
-    Rajamahendrnvaram
-    Secunderabad
-    Secundrabad
-    Secundreabad
-    Tirpuati
-    Tirupati
-    Tirupti
-    Vellore
-    Vellre
-    Vijayawada
-    Vijayawqda
-    Vijaytwada
-    Vijaywaada
-    Visakhapatnam
-    Viskhapatnam
-    Vsakhapatnam
-    adapa
-    eVllore
-    eellore
-    ehittoor
-    firupati
-    hKammam
-    hittoor
-    isakhapatnam
-    lEuru
-    luru
-    mluru
-    ngole
-    pecunderabad
-    pyderabad
-    uellore
-    ugpal
-    untur
-
-- lookup: drop
-  examples: |
-    Abraharam
-    Adanki
-    Addanik
-    Addanki
-    Adilabad
-    Adilaoad
-    Adilqbad
-    Adoni
-    Agraharam
-    Agroharam
-    Akibpur
-    Akilpur
-    Akilupr
-    Akilur
-    Akkampali
-    Akkampalli
-    Akkampaqli
-    Akkampawli
-    Ambur
-    Amdur
-    Amubr
-    Anantapdr
-    Anantapru
-    Anantapur
-    Anantpaur
-    Andiatti
-    Andipatti
-    Anidpatti
-    Anmanchipalli
-    Anmuanchipalli
-    Anpipatti
-    Anumanchipali
-    Anumanchipalli
-    Aodni
-    Araharam
-    Avadi
-    Avaid
-    Avaqi
-    Avidi
-    Ayannapalem
-    Ayaynnapalem
-    Ayyannapaem
-    Ayyannapalem
-    Azhikod eNorth
-    Azhikode Norht
-    Azhikode North
-    AzhikodexNorth
-    BHIMAVARAM
-    BHIMAVRAAM
-    BHIMAVhRAM
-    BHMIAVARAM
-    Baaptla
-    Bapatla
-    Bdimavaram
-    Belagai
-    Belagasi
-    Belagavi
-    Belgaavi
-    Bengalhru
-    Bengaluru
-    Bhimavaarm
-    Bhimavalam
-    Bhimavaram
-    Bommakal
-    Bommakfl
-    Bosmakal
-    Bpaatla
-    Bpatla
-    Brahmanagudem
-    Brahmanagudme
-    Buddaram
-    Buddcram
-    Buudaram
-    CUDADPAH
-    CUDAPAH
-    CUDDAPAH
-    CUDDAPH
-    Cekkikulam
-    Cennai
-    Cheegal
-    Cheglal
-    Chekkikulam
-    Chelgal
-    Chennai
-    Chewgal
-    Chilakalripet
-    Chilakaluripet
-    Chilakalwripet
-    Chilakaulripet
-    Chintalapudi
-    Chintalpaudi
-    Chintalvpudi
-    Chiraa
-    Chirala
-    Chitnalapudi
-    Chittoor
-    Chittor
-    Chrala
-    Chriala
-    Chtitoor
-    Chzkkikulam
-    Coimbatore
-    Coimnatore
-    Dahrwad
-    Darwad
-    Dharwad
-    Dhcne
-    Dhhne
-    Dhone
-    Duepalavalasa
-    Dupalavalasa
-    Duppalaavlasa
-    Duppalavalasa
-    Edulakuna
-    Edulakunta
-    Edulakuta
-    Edulakutna
-    Elru
-    Elruu
-    Eluru
-    Eulru
-    Gadicherlapaely
-    Gadicherlapally
-    Gadicherlapaxly
-    Gella
-    Ghaziabad
-    Ghzaiabad
-    Ghziabad
-    Girdharnur Sunarasi
-    Girdharpur Sunarasi
-    Girdharupr Sunarasi
-    Glola
-    Gnutur
-    Godicherla
-    Godichkrla
-    Godichrela
-    Gola
-    Golla
-    Gopannapaem
-    Gopannapalem
-    Gopannapaqem
-    Gopdnnapalem
-    Gowrdpatnam
-    Gowripatnam
-    Gowripatnxm
-    Gowrpatnam
-    Gqntur
-    Gridharpur Sunarasi
-    Gudivada
-    Gudvada
-    Gudviada
-    Guntur
-    Gurtur
-    Hamilapr
-    Hamilapur
-    Hamilaur
-    Hanamkoda
-    Hanamkogda
-    Hanamkonda
-    Hanuman Junction
-    Hanuman ounction
-    Hanuman uJnction
-    Hasan
-    Hasran
-    Hassan
-    Haxsan
-    Hnamkonda
-    Hnuman Junction
-    Hubballi
-    Hubbclli
-    Hubbelli
-    Hubgalli
-    Hydearbad
-    Hyderabad
-    IRUPATI
-    Jaggampeta
-    Jaggamppta
-    Jaggamptea
-    Jagtial
-    Jagtila
-    Janareddigudem
-    Jangareddigudem
-    Jonnalaagdda
-    Jonnalagadda
-    Jonnalakadda
-    Jonnlagadda
-    Jzgtial
-    Kaankavalli
-    Kadapa
-    Kadiri
-    Kahakavalli
-    Kakiada
-    Kakidada
-    Kakinada
-    Kalabragi
-    Kalabruagi
-    Kalaburagi
-    Kalaburgi
-    Kamareddy
-    Kanakavalli
-    Kanakuvalli
-    Kancherlapalem
-    Kancherlapalgm
-    Kancherlapalme
-    Kancherlaplem
-    Kandur
-    Kangndi
-    Kangnudi
-    Kangundi
-    Kangunid
-    Kannur
-    Kannur 
-    Kanrur
-    Kanur
-    Kaprivani Revu
-    Karrivani Revu
-    Karrivni Revu
-    Keeeara
-    Keesara
-    Keesgra
-    Keesyra
-    Kesagapalli
-    Kesarapalli
-    Kesarapnlli
-    Khamam
-    Khammam
-    Khammfm
-    Khammm
-    Kkinada
-    Kmaareddy
-    Kmareddy
-    Knchanapalli
-    Kolakta
-    Kolkasa
-    Kolkata
-    Kolxata
-    Kona Gunturu
-    Konda Gunturu
-    Konda uGnturu
-    Konda unturu
-    Kondlaludi
-    Kondlapudi
-    Kondlaupdi
-    Kondlupudi
-    Koretla
-    Kortula
-    Korutla
-    Kothagudem
-    Kothagudm
-    Kothagudtm
-    Kothaqudem
-    Kozhikode
-    Kozhirode
-    Kozihkode
-    Kozikode
-    Kpmareddy
-    Kunchaanpalli
-    Kunchanapalli
-    Kupcam
-    Kuppam
-    Kuppm
-    Kurjool
-    Kurnool
-    Maakshi
-    Maapkshi
-    Machiipatnam
-    Machilipatnam
-    Machilpatnam
-    Machilwpatnam
-    Madanapalle
-    Madanaplale
-    Madanaplle
-    Madanapslle
-    Madhhra
-    Madhira
-    Madihra
-    Madira
-    Mahbubangar
-    Mahbubnagar
-    Mahubbnagar
-    Malkapuarm
-    Malkapuram
-    Malkcpuram
-    Mamillanalli
-    Mamillapali
-    Mamillapalli
-    Mamillapaqli
-    Mancheiral
-    Mancherial
-    Mancherifl
-    Mancheril
-    Mangaluru
-    Mangaluu
-    Manglauru
-    Mangmluru
-    Mapakshi
-    Medak
-    Medapuram
-    Medaupram
-    Medauram
-    Medk
-    Medka
-    Medxk
-    Mgpal
-    Mllkapuram
-    Moadvalasa
-    Modavalasa
-    Modavalisa
-    Movavalasa
-    Mpaakshi
-    Mphbubnagar
-    Msyuru
-    Mugal
-    Mugpal
-    Mugtal
-    Mysru
-    Mysruu
-    Mysuru
-    Nagaram
-    Nalgnda
-    Nalgonda
-    Nallayapalle
-    Nallayxpalle
-    Nandigaam
-    Nandigama
-    Nandikotkur
-    Nandikotkxr
-    Nandikotur
-    Nandyala
-    Nanigama
-    Nantigama
-    Narasa Poram
-    Narasa Pram
-    Narasa Pruam
-    Narasa Puram
-    Narasaaopeta
-    Narasaraopeta
-    Narasinga Puram
-    Narasraopeta
-    Narawinga Puram
-    Narsaaraopeta
-    Narsainga Puram
-    Narsapr
-    Narsapru
-    Narsapur
-    Narsinga Puram
-    Narsipatnam
-    Nasipatnam
-    Nasripatnam
-    Ndiadavole
-    Nellore
-    Nemam
-    New Deehi
-    New Deghi
-    New Delhi
-    Ngaaram
-    Nhndyala
-    Niamal
-    Nidadaole
-    Nidadavole
-    Nidadbvole
-    Nirmal
-    Nirmanapuram
-    Nirmanapurm
-    Nirmanpuram
-    Nizamaabd
-    Nizamaad
-    Nizamabad
-    Nizamabd
-    Nlgonda
-    Nllore
-    Nmam
-    Nmeam
-    Nndyala
-    Nobda
-    Noia
-    Noida
-    Nqgaram
-    Nrasapur
-    Nrasipatnam
-    Nrmanapuram
-    Nsmam
-    Ntlgonda
-    Nvgaram
-    Ongole
-    Ongrle
-    Ongvle
-    P N Pucur
-    P N Pudur
-    P N fudur
-    P N udur
-    Paderu
-    Palakollu
-    Palakolu
-    Palakorlu
-    Palfkollu
-    Paneru
-    Pata
-    Patan
-    Patna
-    Patoa
-    Pedapadu
-    Peddapadu
-    Peddpadu
-    Pimpfi-Chinchwad
-    Pimpri-Chinchwad
-    Pimpri-Chinhcwad
-    Pnmpri-Chinchwad
-    Poddatur
-    Prathiadu
-    Prathipadu
-    Prathivadu
-    Proddatru
-    Proddatur
-    Pune
-    Punganr
-    Punganru
-    Punganur
-    Punpanur
-    Putthr
-    Puttru
-    Puttur
-    Pxoddatur
-    Raajmpet
-    Rachur
-    Raghunadaalem
-    Raghunadaialem
-    Raghunadapalem
-    Raichur
-    Rajamahendravaram
-    Rajamahendravarm
-    Rajamahendravarma
-    Rajamahendravarnm
-    Rajamet
-    Rajampet
-    Rajamvet
-    Ramaaropet
-    Ramaguhdam
-    Ramagundam
-    Ramaraoept
-    Ramaraopet
-    Ramgaundam
-    Ramgundam
-    Rampkram
-    Rampuam
-    Rampuarm
-    Rampuram
-    Rayachoty
-    Rayalam Rual
-    Rayalam Rudal
-    Rayalam Rural
-    Rayalam Rurla
-    Rdyachoty
-    Reddipali
-    Reddipalli
-    Redeipalli
-    Repalle
-    Riichur
-    Rmmaraopet
-    Rpalle
-    Rpealle
-    Rvichur
-    Salem
-    Samarlakota
-    Samralakota
-    Samrlakota
-    Sankaam
-    Sankaram
-    Sankhampalle
-    Satilite City
-    Satilite Ctty
-    Satilite Cty
-    Scunderabad
-    Secunderabad
-    Secunderbaad
-    Secunderebad
-    Seetharampuram
-    Seetharvmpuram
-    Setharampuram
-    Shivamogga
-    Shivamogwa
-    Shuvamogga
-    Sihvamogga
-    Sikakulam
-    Sindagi
-    Sindgi
-    Sindmgi
-    Sindogi
-    Slaem
-    Smlem
-    Snakaram
-    Snkaram
-    Snlem
-    Srikakulam
-    Srikkaulam
-    Srikkulam
-    Srikrishnapatnam
-    Srikrishnapatnm
-    Srnugavarapu kota
-    Srungaarapu kota
-    Srungavarapc kota
-    Srungavarapu kota
-    Sryapet
-    Stailite City
-    Suryapet
-    Suryapt
-    Suryapte
-    Svetharampuram
-    TIRUPATI
-    TIUPATI
-    TIURPATI
-    Talpuula
-    Talupula
-    Tanuku
-    Tanuu
-    Tanuuk
-    Taulpula
-    Taupula
-    Tcruvuru
-    Teali
-    Tegkali
-    Tekkali
-    Tekklai
-    Tekkzli
-    Tenaii
-    Tenali
-    Thalassery
-    Thalassrey
-    Thalassry
-    Tiruati
-    Tirupai
-    Tirupati
-    Tirupaui
-    Tiruvuru
-    Tnauku
-    Tpnali
-    Uddr
-    Uddur
-    Udur
-    Uppaalpadu
-    Uppalaeadu
-    Uppalapadu
-    Uppalapaud
-    Utjarpara
-    Uttarpara
-    Velampalem
-    Velamqalem
-    Velgore
-    Velloe
-    Velloqe
-    Vellore
-    Viakrabad
-    Viarabad
-    Viizanagaram
-    Vijayawada
-    Vijayawdaa
-    Vijayawyda
-    Vikaarbad
-    Vikarabad
-    Vinkonda
-    Vinkuonda
-    Vinukonad
-    Vinukonda
-    Visakapatnam
-    Visakhapatnam
-    Visakhpaatnam
-    Visakhpatnam
-    Viziaagaram
-    Vizianagaram
-    Viziatagaram
-    Vrlampalem
-    Waarngal
-    Walangal
-    Warangal
-    aJggampeta
-    aJgtial
-    aKdapa
-    aKdiri
-    aNllayapalle
-    aNndyala
-    aRyachoty
-    aSnkhampalle
-    aderu
-    adiri
-    aelampalem
-    amarlakota
-    andikotkur
-    angareddigudem
-    ankhampalle
-    ayachoty
-    badapa
-    baderu
-    bhimavacam
-    bhimavakam
-    bhimavaram
-    bhkmavaram
-    coida
-    dAoni
-    dUdur
-    doni
-    eBngaluru
-    eNllore
-    ePddapadu
-    ew Delhi
-    faghunadapalem
-    gngole
-    hCennai
-    hDarwad
-    hGaziabad
-    halassery
-    hennai
-    iTruvuru
-    iengaluru
-    ijayawada
-    irmal
-    iruvuru
-    kadapa
-    kdilabad
-    kuddaram
-    lrahmanagudem
-    mallayapalle
-    mbur
-    mommakal
-    mune
-    nedapuram
-    oCimbatore
-    odicherla
-    oimbatore
-    orikrishnapatnam
-    rSikrishnapatnam
-    rahmanagudem
-    rathipadu
-    shone
-    tUtarpara
-    thekkikulam
-    ttarpara
-    uKppam
-    uKrnool
-    uPne
-    uangareddigudem
-    udivada
-    uirmal
-    une
-    uorutla
-    vamilapur
-    wuttur
-    xankhampalle
-    xarangal
-    xellore
-    yderabad
-    yyderabad
+    - Show me orders that are pending for more than 2 days
+    - Get a list of orders not yet delivered since 48 hours ago
+    - Display all shipments that are stuck for the past two days
+    - Fetch pending orders that haven't moved for over 2 days
+    - What are the unshipped orders older than two days?
+    - List all incomplete deliveries before the last two days
+    - Provide backlog data for orders not processed in the last 2 days
+    - Retrieve aging orders that have not been delivered for more than two days
+    - Which orders have been pending since before two days ago?
+    - Orders that remain unfulfilled for more than 48 hours
+    - Show delayed shipments from over two days back
+    - Give me a summary of orders delayed more than two days
+    - Can you show all pending dispatches older than 2 days?
+    - Pull undelivered order records from before two days ago
+    - Show me everything pending for more than two days
+    - List all orders that haven’t been dispatched since 2 days ago
+    - Which orders are overdue and older than 2 days?
+    - Identify long-pending shipments as of 2 days ago
+    - Provide all open orders not touched in the last two days
+    - Any incomplete orders pending since 48 hours back?
+    - Show me shipment backlogs beyond two days
+    - Get orders that were supposed to be shipped before the last 2 days
+    - List orders still pending and created before 2 days back
+    - Display pending delivery requests older than 2 days
+    - Which customer orders are still open for more than 2 days?
 
