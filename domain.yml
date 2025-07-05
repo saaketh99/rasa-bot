@@ -18,6 +18,7 @@ intents:
   - get_pending_orders_past_days
   - get_top_pincodes_by_customer
   - pending_orders_before_last_two_days
+  - citywise_delivered_order_distribution
   - nlu_fallback
 
 
@@ -63,6 +64,7 @@ actions:
  - action_dynamic_order_query
  - action_fetch_order_info_by_id
  - action_pending_orders_before_last_two_days
+ - action_citywise_delivered_order_distribution
 
   
 slots:

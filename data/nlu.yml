@@ -365,3 +365,42 @@ nlu:
     - Display pending delivery requests older than 2 days
     - Which customer orders are still open for more than 2 days?
 
+
+- intent: citywise_delivered_order_distribution
+  examples: |
+    - Show delivered orders distributed across cities
+    - How many delivered orders are there in each city?
+    - Provide city-wise delivered order count
+    - I want to see delivered orders by city
+    - Give me a city-wise report of delivered shipments
+    - Delivered orders grouped by delivery city
+    - Report of delivered orders by destination city
+    - What are the delivered order counts per city?
+    - Show me cities with the most delivered orders
+    - How are delivered orders distributed across cities?
+    - City-wise delivery summary
+    - Distribution of delivered orders city-wise
+    - Generate report for delivered orders by city
+    - City-wise delivered shipment report
+    - Show top cities by number of deliveries
+    - Give me cities with the highest delivered shipments
+    - Show me delivered orders for [Ola](customer_name)
+    - Get delivery distribution by city for [Wakefit](customer_name)
+    - Delivered report across cities for [Ola ELE](customer_name)
+    - [Ola](customer_name) delivery report city-wise
+    - For [Wakefit](customer_name), show orders by city
+    - Can you show city-wise delivery for [Ola ELE](customer_name)?
+    - Delivery summary by city for [Ola](customer_name)
+    - Group delivered orders by city for [Wakefit](customer_name)
+    - Are there any delivered orders for [Ola ELE](customer_name)?
+    - How many orders of [Ola](customer_name) were delivered in each city?
+    - What's the city-wise delivery count for [Wakefit](customer_name)?
+    - Find city-wise delivery info of [Ola ELE](customer_name)
+    - Group deliveries by city customer is [Wakefit](customer_name)
+    - [Ola ELE](customer_name) orders summary across cities
+    - I want a breakdown of delivered orders by city for [Ola](customer_name)
+    - Delivered orders from [Wakefit](customer_name), show city-wise stats
+    - City-wise delivery performance of [Ola](customer_name)
+    - Delivered shipment summary for [Ola ELE](customer_name)
+    - Do we have city-level report for [Wakefit](customer_name)?
+    - City distribution of orders belonging to [Ola ELE](customer_name)

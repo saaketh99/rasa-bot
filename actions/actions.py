@@ -1134,6 +1134,99 @@ class ActionOrderDetailsByID(Action):
         print(f"[TIME] action_fetch_order_info_by_id took {(time.time() - start_time):.2f} seconds")
         return []
 
+
+class ActionCitywiseDeliveredOrderDistribution(Action):
+    def name(self) -> Text:
+        return "action_citywise_delivered_order_distribution"
+
+    def run(self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+
+        import pandas as pd
+        from collections import Counter
+        from bson.regex import Regex
+        import os
+
+        start_time = time.time()
+
+        
+        customer_name = next(tracker.get_latest_entity_values("customer_name"), None)
+
+    
+        query_filter = {
+            "orderStatus": {"$in": ["delivered", "delivered_at_security", "delivered_at_neighbor"]}
+        }
+
+        if customer_name:
+            query_filter["start.contact.name"] = Regex(customer_name, "i")
+
+        results = list(collection.find(query_filter))
+
+        if not results:
+            msg = f"No delivered orders found"
+            if customer_name:
+                msg += f" for customer **{customer_name}**."
+            else:
+                msg += "."
+            dispatcher.utter_message(msg)
+            return []
+
+
+        city_counts = Counter()
+        filtered_orders = []
+
+        for order in results:
+            city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
+            order_id = order.get("sm_orderid", "N/A")
+            status = order.get("orderStatus", "delivered")
+            customer = order.get("start", {}).get("contact", {}).get("name", "Unknown")
+            city_counts[city] += 1
+            filtered_orders.append({
+                "Order ID": order_id,
+                "City": city,
+                "Customer": customer,
+                "Status": status
+            })
+
+        sorted_city_data = sorted(city_counts.items(), key=lambda x: x[1], reverse=True)
+
+        
+        message = f" **Delivered Orders Distribution by City**"
+        if customer_name:
+            message += f" for customer **{customer_name}**:\n"
+        else:
+            message += ":\n"
+
+        for city, count in sorted_city_data:
+            message += f"- {city}: {count} orders\n"
+
+        message += f"\n📄 **Total Delivered Orders**: {len(filtered_orders)}"
+        dispatcher.utter_message(message)
+
+        
+        df = pd.DataFrame(filtered_orders)
+        os.makedirs("static/files", exist_ok=True)
+        filename = f"citywise_delivered_orders"
+        if customer_name:
+            filename += f"_{customer_name.replace(' ', '_')}"
+        filename += ".xlsx"
+
+        filepath = os.path.join("static/files", filename)
+        df.to_excel(filepath, index=False)
+
+        public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+        dispatcher.utter_message(
+            f'<a href="{public_url}" download target="_blank">'
+            f'<button style="padding: 10px 20px; background-color: #4CAF50; '
+            f'color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
+            f'</a>'
+        )
+
+        print(f"[TIME] action_citywise_delivered_order_distribution took {(time.time() - start_time):.2f} seconds")
+        return []
+
+
 class ActionDefaultFallback(Action):
     def name(self):
         return "action_default_fallback"

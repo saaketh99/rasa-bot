@@ -89,4 +89,7 @@ stories:
     - intent: pending_orders_before_last_two_days
     - action: action_pending_orders_before_last_two_days
 
-
+- story: Delivered orders distribution by city
+  steps:
+  - intent: citywise_delivered_order_distribution
+  - action: action_citywise_delivered_order_distribution
