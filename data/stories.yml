@@ -12,6 +12,10 @@ stories:
     - intent: goodbye
     - action: utter_goodbye
 
+- story: cx date orders story
+  steps: 
+    - intent: cx_date_orders
+    - action: action_dynamic_order_query
 
 
 - story: shipment route between locations story

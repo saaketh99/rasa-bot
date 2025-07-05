@@ -30,6 +30,18 @@ nlu:
     - bye bye
     - see you later
 
+- intent: cx_date_orders
+  examples: |
+    - show me orders from [OLAELE](customer_name) between [2024-12-01](start_date) and [2024-12-31](end_date)
+    - get [Wakefit](customer_name) orders from [2024-11-01](start_date) to [2024-11-15](end_date)
+    - list all [OLA Elec](customer_name) deliveries between [2025-01-10](start_date) and [2025-01-20](end_date)
+    - give me orders booked by [OLAELE](customer_name) from [2024-10-01](start_date) to [2024-10-31](end_date)
+    - fetch [Wakefit](customer_name) shipments from [2024-09-01](start_date) through [2024-09-10](end_date)
+    - what are the orders of [OLA Elec](customer_name) from [2025-03-01](start_date) to [2025-03-05](end_date)
+    - get me all orders from [OLAELE](customer_name) between [2025-01-01](start_date) and [2025-01-15](end_date)
+    - find orders of [Wakefit](customer_name) dated from [2024-12-15](start_date) to [2024-12-20](end_date)
+    - any shipments by [OLA Elec](customer_name) between [2024-11-01](start_date) and [2024-11-10](end_date)?
+    - check [OLAELE](customer_name) orders placed from [2025-02-01](start_date) till [2025-02-15](end_date)
 
 - intent: route_orders
   examples: |
