@@ -718,7 +718,7 @@ class ActionDynamicOrderQuery(Action):
                 dispatcher.utter_message(f"No delivered orders found between **{start_date_str}** and **{end_date_str}**.")
                 return []
 
-            message = f"📦 **Delivered Orders between {start_date_str} and {end_date_str}**\n"
+            message = f" **Delivered Orders between {start_date_str} and {end_date_str}**\n"
             for order in results:
                 order_id = order.get("sm_orderid", "N/A")
                 status = order.get("orderStatus", "Delivered")
@@ -748,7 +748,7 @@ class ActionDynamicOrderQuery(Action):
                 )
                 return []
 
-            message = f"📍 **Orders from {location_code} between {start_date_str} and {end_date_str}**\n"
+            message = f"**Orders from {location_code} between {start_date_str} and {end_date_str}**\n"
             for order in results:
                 order_id = order.get("sm_orderid", "N/A")
                 status = order.get("orderStatus", "unknown")
@@ -764,9 +764,9 @@ class ActionDynamicOrderQuery(Action):
             filename = f"orders_{location_code}_{start_date_str}_to_{end_date_str}.xlsx"
 
 
-        for row in rows[:10]:
+        for row in rows:
             message += "- " + " | ".join(f"{k}: {v}" for k, v in row.items()) + "\n"
-        message += f"\n📄 **Total Records**: {len(rows)}"
+        message += f"\n**Total Records**: {len(rows)}"
 
         dispatcher.utter_message(message)
 

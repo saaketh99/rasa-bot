@@ -60,6 +60,7 @@ function renderMessageText(text: string) {
 }
 
 export function Chat() {
+  const [mounted, setMounted] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "1",
@@ -72,6 +73,11 @@ export function Chat() {
   const [isLoading, setIsLoading] = useState(false)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // Ensure component only renders on client side
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
@@ -88,12 +94,14 @@ export function Chat() {
 
   // Set initial timestamp on client to avoid hydration error
   useEffect(() => {
-    setMessages((msgs) =>
-      msgs.map((msg) =>
-        msg.timestamp === 0 ? { ...msg, timestamp: Date.now() } : msg
-      )
-    );
-  }, []);
+    if (mounted) {
+      setMessages((msgs) =>
+        msgs.map((msg) =>
+          msg.timestamp === 0 ? { ...msg, timestamp: Date.now() } : msg
+        )
+      );
+    }
+  }, [mounted]);
 
   const sendMessage = async (messageText: string) => {
     if (!messageText.trim() || isLoading) return
@@ -198,17 +206,27 @@ export function Chat() {
 
   // Helper to extract order details from a message string
   function extractOrderDetails(text: string) {
-    // Matches lines like: - Order ID: OLAELE04656 | Status: at_lm_agent_hub | To: Jangareddigudem | Created: 2025-06-13
-    const regex = /- Order ID: ([^|]+) \| Status: ([^|]+) \| To: ([^|]+) \| Created: ([^\n]+)/g;
+    // Matches lines like: - Order ID: ... | Status: ... | To: ... | Created: ...
+    const fullRegex = /- Order ID: ([^|]+) \| Status: ([^|]+) \| To: ([^|]+) \| Created: ([^\n]+)/g;
+    // Matches lines like: - Order ID: ... | Status: ...
+    const simpleRegex = /- Order ID: ([^|]+) \| Status: ([^\n]+)/g;
     const result = [];
     let match;
-    while ((match = regex.exec(text)) !== null) {
+    while ((match = fullRegex.exec(text)) !== null) {
       result.push({
         "Order ID": match[1].trim(),
         "Status": match[2].trim(),
         "To": match[3].trim(),
         "Created": match[4].trim(),
       });
+    }
+    if (result.length === 0) {
+      while ((match = simpleRegex.exec(text)) !== null) {
+        result.push({
+          "Order ID": match[1].trim(),
+          "Status": match[2].trim(),
+        });
+      }
     }
     return result;
   }
@@ -232,6 +250,17 @@ export function Chat() {
     const file = new Blob([excelBuffer], { type: "application/octet-stream" });
     saveAs(file, sheetName === "Pincodes" ? "top_pincodes.xlsx" : "pending_orders.xlsx");
   };
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading chat interface...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -348,7 +377,7 @@ export function Chat() {
         </CardContent>
 
         <CardFooter className="border-t bg-gray-50">
-          <form onSubmit={handleSubmit} className="flex w-full gap-2">
+          <form onSubmit={handleSubmit} className="flex w-full gap-2" suppressHydrationWarning>
             <Input
               ref={inputRef}
               value={input}
