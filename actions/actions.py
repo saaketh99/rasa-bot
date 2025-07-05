@@ -157,6 +157,90 @@ def extract_location_code_from_text(user_text: str) -> Optional[str]:
         print(f"[DEBUG] No fuzzy match above threshold. Best score: {best_score}")
         return None
 
+class ActionCxOrder(Action):
+    def name(self) -> Text:
+        return "action_cx_date"
+
+    def run(self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+
+        import time
+        start_time = time.time()
+
+    
+        customer_input = tracker.get_slot("customer_name")
+        message_text = tracker.latest_message.get("text", "")
+        print(f"[DEBUG] Incoming message text: {message_text}")
+        print(f"[DEBUG] Extracted customer_name slot: {customer_input}")
+
+        s_date_str, e_date_str = extract_dates_from_text(message_text)
+        print(f"[DEBUG] Extracted start_date: {s_date_str}, end_date: {e_date_str}")
+
+        try:
+            s_date = parser.parse(s_date_str) if s_date_str else None
+            e_date = parser.parse(e_date_str) if e_date_str else None
+        except Exception as e:
+            dispatcher.utter_message("Invalid date format. Please try again.")
+            print(f"[ERROR] Date parsing failed: {e}")
+            return []
+
+        
+        if s_date and e_date:
+            e_date_plus = e_date + timedelta(days=1)
+        else:
+            dispatcher.utter_message("Start or end date missing.")
+            return []
+
+        if not customer_input or not s_date or not e_date:
+            dispatcher.utter_message("Please provide both customer name and valid start/end dates.")
+            print(f"[TIME] action_cx_date took {time.time() - start_time:.2f} seconds")
+            return []
+
+        all_names = collection.distinct("start.contact.name")
+        print(f"[DEBUG] All distinct customer names fetched from DB: {len(all_names)} entries")
+        
+    
+        matched_customers = [name for name in all_names if customer_input.lower() in name.lower()]
+        print(f"[DEBUG] Matched customers: {matched_customers}")
+        
+        if not matched_customers:
+            dispatcher.utter_message(f"No matching customers found for '{customer_input}'.")
+            print(f"[TIME] action_cx_date took {time.time() - start_time:.2f} seconds")
+            return []
+        
+
+        regex_conditions = [{"start.contact.name": {"$regex": name.strip(), "$options": "i"}} for name in matched_customers]
+
+        query = {
+         "$and": [
+        {"$or": regex_conditions},
+        {"createdAt": {"$gte": s_date, "$lt": e_date_plus}}]}
+
+        matched_orders = list(collection.find(query))
+        print(f"[DEBUG] Query used: {query}")
+        print(f"[DEBUG] Number of matched orders: {len(matched_orders)}")
+
+
+        if not matched_orders:
+            dispatcher.utter_message("No orders found for the given customer in the provided date range.")
+            print(f"[TIME] action_cx_date took {time.time() - start_time:.2f} seconds")
+            return []
+
+        message = f" Orders for **{customer_input}** from **{s_date}** to **{e_date}**:\n"
+        for order in matched_orders:
+            order_id = order.get("sm_orderid", "N/A")
+            sender_city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
+            recipient_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
+
+            message += f"- Order ID: {order_id} | {sender_city} → {recipient_city}\n"
+
+        message += f"\n Total orders: {len(matched_orders)}"
+        dispatcher.utter_message(message)
+
+        print(f"[TIME] action_cx_date took {time.time() - start_time:.2f} seconds")
+        return []
+
 
 class ActionrouteOrder(Action):
     def name(self) -> Text:
@@ -673,31 +757,22 @@ class ActionDynamicOrderQuery(Action):
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
 
         import time
-        import os
-        import pandas as pd
-        from datetime import timedelta
-        from dateutil import parser
-        from rapidfuzz import fuzz
+        from datetime import datetime, timedelta
 
         start_time = time.time()
         user_text = tracker.latest_message.get("text", "").lower()
 
+        
         delivery_keywords = [
             "delivered", "delivery report", "delivery summary", "delivered shipments",
             "orders delivered", "shipment summary", "delivered report", "completed orders"
         ]
 
-
-
-        def detect_customer_keyword(text, customer_list, threshold=80):
-            for customer in customer_list:
-                if fuzz.partial_ratio(text.lower(), customer.lower()) >= threshold:
-                    return customer
-            return None
-
-        start_date_str, end_date_str = extract_dates_from_text(user_text)
+        
         location_code = extract_location_code_from_text(user_text)
+        start_date_str, end_date_str = extract_dates_from_text(user_text)
 
+        
         try:
             start_dt = parser.parse(start_date_str) if start_date_str else None
             end_dt = parser.parse(end_date_str) + timedelta(days=1) if end_date_str else None
@@ -706,47 +781,17 @@ class ActionDynamicOrderQuery(Action):
             return []
 
         
-        all_customers = collection.distinct("start.contact.name")
-        matched_customer_keyword = detect_customer_keyword(user_text, all_customers)
-
-        is_customer_query = bool(matched_customer_keyword)
         is_delivery_report = any(kw in user_text for kw in delivery_keywords)
         is_location_query = bool(location_code)
+
+        if (not is_location_query and is_delivery_report) or (not is_location_query and start_dt and end_dt):
+            is_delivery_report = True
 
         rows = []
         filename = ""
         message = ""
 
-        if is_customer_query and start_dt and end_dt:
-    
-            customer_matches = [name for name in all_customers if matched_customer_keyword.lower() in name.lower()]
-            matched_orders = list(collection.find({
-                "start.contact.name": {"$in": customer_matches},
-                "createdAt": {"$gte": start_dt, "$lt": end_dt}
-            }))
-
-            if not matched_orders:
-                dispatcher.utter_message(
-                    f"No orders found for **{matched_customer_keyword}** between **{start_date_str}** and **{end_date_str}**."
-                )
-                return []
-
-            message = f" Orders for **{matched_customer_keyword}** from **{start_date_str}** to **{end_date_str}**:\n"
-            for order in matched_orders:
-                order_id = order.get("sm_orderid", "N/A")
-                sender_city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
-                recipient_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
-                rows.append({
-                    "Order ID": order_id,
-                    "From": sender_city,
-                    "To": recipient_city
-                })
-                message += f"- Order ID: {order_id} | {sender_city} → {recipient_city}\n"
-
-            filename = f"customer_orders_{matched_customer_keyword}_{start_date_str}_to_{end_date_str}.xlsx"
-            message += f"\n**Total Records**: {len(rows)}"
-
-        elif is_delivery_report and start_dt and end_dt:
+        if is_delivery_report and start_dt and end_dt:
             query = {
                 "orderStatus": {"$in": ["delivered", "delivered_at_security", "delivered_at_neighbor"]},
                 "createdAt": {"$gte": start_dt, "$lt": end_dt}
@@ -762,10 +807,8 @@ class ActionDynamicOrderQuery(Action):
                 order_id = order.get("sm_orderid", "N/A")
                 status = order.get("orderStatus", "Delivered")
                 rows.append({"Order ID": order_id, "Status": status})
-                message += f"- Order ID: {order_id} | Status: {status}\n"
 
             filename = f"delivered_orders_{start_date_str}_to_{end_date_str}.xlsx"
-            message += f"\n **Total Records**: {len(rows)}"
 
 
         elif is_location_query and start_dt and end_dt:
@@ -789,7 +832,7 @@ class ActionDynamicOrderQuery(Action):
                 )
                 return []
 
-            message = f" **Orders from {location_code} between {start_date_str} and {end_date_str}**\n"
+            message = f"**Orders from {location_code} between {start_date_str} and {end_date_str}**\n"
             for order in results:
                 order_id = order.get("sm_orderid", "N/A")
                 status = order.get("orderStatus", "unknown")
@@ -801,16 +844,17 @@ class ActionDynamicOrderQuery(Action):
                     "Status": status,
                     "Created At": created_str
                 })
-                message += f"- Order ID: {order_id} | Status: {status} | Created At: {created_str}\n"
 
             filename = f"orders_{location_code}_{start_date_str}_to_{end_date_str}.xlsx"
-            message += f"\n **Total Records**: {len(rows)}"
 
-        else:
-            dispatcher.utter_message("Couldn't identify your query type. Please include a location, delivery status, or customer name.")
-            return []
 
-    
+        for row in rows:
+            message += "- " + " | ".join(f"{k}: {v}" for k, v in row.items()) + "\n"
+        message += f"\n**Total Records**: {len(rows)}"
+
+        dispatcher.utter_message(message)
+
+        
         df = pd.DataFrame(rows)
         os.makedirs("static/files", exist_ok=True)
         filename = filename.replace(" ", "_").replace(":", "-")
@@ -818,7 +862,6 @@ class ActionDynamicOrderQuery(Action):
         df.to_excel(filepath, index=False)
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
-        dispatcher.utter_message(message)
         dispatcher.utter_message(
             f'<a href="{public_url}" download target="_blank">'
             f'<button style="padding: 10px 20px; background-color: #4CAF50; '
@@ -828,7 +871,7 @@ class ActionDynamicOrderQuery(Action):
 
         print(f"[TIME] action_dynamic_order_query took {(time.time() - start_time):.2f} seconds")
         return []
-
+    
 class ActionOrderStatusByInvoice(Action):
     def name(self) -> Text:
         return "action_order_status_by_invoice"

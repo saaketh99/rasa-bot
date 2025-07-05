@@ -48,6 +48,7 @@ responses:
   - text: "Bye"
 
 actions:
+ - action_cx_date
  - action_route
  - action_cx_destination
  - action_get_orders_by_status 
