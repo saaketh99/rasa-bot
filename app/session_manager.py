@@ -6,10 +6,10 @@ SESSION_TIMEOUT_SECONDS = 300  # 5 minutes
 
 class SessionManager:
     def __init__(self):
-        self.sessions = {}  # Store messages here: {session_id: {"messages": [...], "last_active": timestamp}}
-        self.lock = Lock()  # Ensures thread-safe access
+        self.sessions = {}  # {session_id: {"messages": [...], "last_active": timestamp}}
+        self.lock = Lock()
         self.monitor_thread = Thread(target=self.monitor_idle_sessions, daemon=True)
-        self.monitor_thread.start()  # Start background thread to watch for idle users
+        self.monitor_thread.start()
 
     def add_message(self, session_id, message):
         with self.lock:
@@ -20,7 +20,7 @@ class SessionManager:
 
     def monitor_idle_sessions(self):
         while True:
-            time.sleep(60)  # Check every 60 seconds
+            time.sleep(60)
             now = time.time()
             with self.lock:
                 expired_sessions = [
@@ -36,5 +36,13 @@ class SessionManager:
                     })
                     del self.sessions[sid]
 
-# Create a global instance
+    # ✅ ADD THIS METHOD for /save-session route
+    def store_session(self, session_id, messages):
+        sessions_collection.insert_one({
+            "session_id": session_id,
+            "messages": messages,
+            "saved_at": time.time()
+        })
+
+# Global instance
 session_manager = SessionManager()
