@@ -2,16 +2,16 @@ import { type NextRequest, NextResponse } from "next/server"
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, sender = "user" } = await req.json()
+    const { message, sender = "user", session_id = "default-session" } = await req.json()
 
     // Send message to Rasa server
-    const rasaResponse = await fetch("http://51.20.18.59:8000/api/message", {
+    const rasaResponse = await fetch("http://51.20.18.59:5005/webhooks/rest/webhook", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        sender: sender,
+        sender: session_id, // use consistent session_id across chats
         message: message,
       }),
     })
@@ -22,11 +22,11 @@ export async function POST(req: NextRequest) {
 
     const rasaData = await rasaResponse.json()
 
-    // Ensure the response is always treated as an array
-    const responsesArray = Array.isArray(rasaData) ? rasaData : [rasaData]
+    // Ensure response is always treated as an array
+    const responseArray = Array.isArray(rasaData) ? rasaData : [rasaData]
 
     // Extract bot responses
-    const botResponses = responsesArray.map((response: any) => ({
+    const botResponses = responseArray.map((response: any) => ({
       text: response.text || "",
       buttons: response.buttons || [],
       image: response.image || null,
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
           },
         ],
       },
-      { status: 500 },
+      { status: 500 }
     )
   }
 }
