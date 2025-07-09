@@ -69,7 +69,6 @@ export function Chat() {
       sessionStorage.setItem("session_id", newId)
       return newId
     }
-    // fallback during SSR
     return uuidv4()
   })
 
