@@ -254,9 +254,122 @@ export function Chat() {
   }
 
 return (
-  <div>
-    <h1>Hello from Chat Component</h1>
+  <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <Card className="w-full max-w-4xl h-[80vh] flex flex-col shadow-xl">
+      <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg">
+        <CardTitle className="flex items-center gap-2">
+          <Bot className="h-6 w-6" />
+          Order Management Assistant
+        </CardTitle>
+        <p className="text-blue-100 text-sm">Ask me about orders, delivery status, customer information, and more</p>
+      </CardHeader>
+
+      <CardContent className="flex-1 min-h-0 p-0">
+        <ScrollArea className="h-full min-h-0 p-4" ref={scrollAreaRef}>
+          <div className="space-y-4 bg-white rounded-lg p-4">
+            {messages
+              .filter(message => !(message.sender === "bot" && (!message.text || !message.text.trim())))
+              .map((message, idx) => (
+                <div key={message.id} className={`flex gap-3 ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
+                  {message.sender === "bot" && (
+                    <Avatar className="h-8 w-8 bg-blue-100">
+                      <AvatarFallback>
+                        <Bot className="h-4 w-4 text-blue-600" />
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+
+                  <div className={`max-w-[70%] rounded-lg px-4 py-2 ${message.sender === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"}`}>
+                    <div className="whitespace-pre-wrap break-words">{renderMessageText(message.text)}</div>
+
+                    {message.buttons && message.buttons.length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        {message.buttons.map((button, index) => (
+                          <Button
+                            key={index}
+                            variant="outline"
+                            size="sm"
+                            className="mr-2 mb-1 bg-transparent"
+                            onClick={() => handleButtonClick(button.payload, button.title)}
+                          >
+                            {button.title}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+
+                    {message.image && (
+                      <div className="mt-2">
+                        <img src={message.image || "/placeholder.svg"} alt="Bot response" className="max-w-full h-auto rounded" />
+                      </div>
+                    )}
+
+                    {(() => {
+                      const isLastBotMsgWithData =
+                        message.sender === "bot" &&
+                        (/Pincode:/i.test(message.text) || /- Order ID:/i.test(message.text)) &&
+                        messages.slice(idx + 1).every(m => !(m.sender === "bot" && (/Pincode:/i.test(m.text) || /- Order ID:/i.test(m.text))));
+                      if (!isLastBotMsgWithData) return null;
+                      return (
+                        <button
+                          onClick={handleDownloadExcel}
+                          style={{ marginTop: 12, padding: "10px 20px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}
+                        >
+                          📥 Download Excel
+                        </button>
+                      );
+                    })()}
+
+                    <div className={`text-xs mt-1 ${message.sender === "user" ? "text-blue-200" : "text-gray-500"}`}>
+                      <ClientTime timestamp={message.timestamp} />
+                    </div>
+                  </div>
+
+                  {message.sender === "user" && (
+                    <Avatar className="h-8 w-8 bg-blue-600">
+                      <AvatarFallback>
+                        <User className="h-4 w-4 text-white" />
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                </div>
+              ))}
+
+            {isLoading && (
+              <div className="flex gap-3 justify-start">
+                <Avatar className="h-8 w-8 bg-blue-100">
+                  <AvatarFallback>
+                    <Bot className="h-4 w-4 text-blue-600" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="bg-gray-100 rounded-lg px-4 py-2">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-gray-600">Thinking...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </CardContent>
+
+      <CardFooter className="border-t bg-gray-50">
+        <form onSubmit={handleSubmit} className="flex w-full gap-2" suppressHydrationWarning>
+          <Input
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask about orders, delivery status, customers..."
+            className="flex-1"
+            disabled={isLoading}
+          />
+          <Button type="submit" disabled={isLoading || !input.trim()} className="bg-blue-600 hover:bg-blue-700">
+            <Send className="h-4 w-4" />
+          </Button>
+        </form>
+      </CardFooter>
+    </Card>
   </div>
 );
-
 }
