@@ -62,12 +62,17 @@ export function Chat() {
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const [sessionId] = useState(() => {
-    const existing = sessionStorage.getItem("session_id")
-    if (existing) return existing
-    const newId = uuidv4()
-    sessionStorage.setItem("session_id", newId)
-    return newId
+    if (typeof window !== "undefined") {
+      const existing = sessionStorage.getItem("session_id")
+      if (existing) return existing
+      const newId = uuidv4()
+      sessionStorage.setItem("session_id", newId)
+      return newId
+    }
+    // fallback during SSR
+    return uuidv4()
   })
+
 
   useEffect(() => {
     setMounted(true)
