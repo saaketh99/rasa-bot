@@ -249,9 +249,10 @@ export function Chat() {
     );
   }
 
-  return (
-    // UI rendering part remains unchanged
-    // This message is trimmed here for brevity
-    // Your original JSX code continues...
-    )
+return (
+  <div>
+    <h1>Hello from Chat Component</h1>
+  </div>
+);
+
 }
