@@ -22,8 +22,11 @@ export async function POST(req: NextRequest) {
 
     const rasaData = await rasaResponse.json()
 
+    // Ensure the response is always treated as an array
+    const responsesArray = Array.isArray(rasaData) ? rasaData : [rasaData]
+
     // Extract bot responses
-    const botResponses = rasaData.map((response: any) => ({
+    const botResponses = responsesArray.map((response: any) => ({
       text: response.text || "",
       buttons: response.buttons || [],
       image: response.image || null,
@@ -40,7 +43,11 @@ export async function POST(req: NextRequest) {
       {
         error: "Failed to communicate with chat bot",
         success: false,
-        responses: [{ text: "Sorry, I'm having trouble connecting to the chat service. Please try again." }],
+        responses: [
+          {
+            text: "Sorry, I'm having trouble connecting to the chat service. Please try again.",
+          },
+        ],
       },
       { status: 500 },
     )
