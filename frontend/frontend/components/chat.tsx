@@ -100,15 +100,14 @@ export function Chat() {
   const [mounted, setMounted] = useState(false)
   const [conversations, setConversations] = useState<ConversationMeta[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
-  // Show bot welcome message in UI, but do not save to backend
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "1",
-      text: "Hello! I'm your order management assistant. I can help you track orders, check delivery status, find orders by customer, date, location, and much more. How can I assist you today?",
-      sender: "bot",
-      timestamp: Date.now(),
-    },
-  ]);
+  // Show bot welcome message in UI only, not in backend
+  const BOT_WELCOME: ChatMessage = {
+    id: "1",
+    text: "Hello! I'm your order management assistant. I can help you track orders, check delivery status, find orders by customer, date, location, and much more. How can I assist you today?",
+    sender: "bot",
+    timestamp: Date.now(),
+  };
+  const [messages, setMessages] = useState<ChatMessage[]>([BOT_WELCOME]);
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
@@ -116,8 +115,8 @@ export function Chat() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([])
   const sessionId = getOrCreateSessionId();
-  const [availableSessions, setAvailableSessions] = useState<{session_id: string, last_updated: number|null}[]>([]);
-  const [currentSessionId, setCurrentSessionId] = useState<string>(sessionId);
+  // Remove availableSessions, setAvailableSessions, and session-related useEffect/UI
+  // Only keep conversation-related logic and UI
 
   // Ensure component only renders on client side
   useEffect(() => {
@@ -133,6 +132,10 @@ export function Chat() {
       });
   }, []);
 
+  // Remove all logic that generates random conversation IDs in the frontend.
+  // Only set currentConversationId after receiving a valid ObjectId from the backend (after POST /conversations).
+  // When '+ New Conversation' is clicked, do not set any ID—just show the bot welcome message.
+  // Only use backend-provided IDs for loading and appending messages.
   // Load a conversation by ID
   const loadConversation = (id: string) => {
     fetch(`http://51.20.18.59:8000/conversations/${id}`)
@@ -156,7 +159,7 @@ export function Chat() {
       .then(data => {
         if (data.success && data.conversation_id) {
           setCurrentConversationId(data.conversation_id);
-          setMessages(prev => [prev[0], firstUserMessage]); // bot welcome + user message
+          setMessages([BOT_WELCOME, firstUserMessage]); // UI: bot welcome + user message
           // Refresh conversation list
           fetch("http://51.20.18.59:8000/conversations")
             .then(res => res.json())
@@ -188,13 +191,7 @@ export function Chat() {
   // On first mount, start a new conversation
   useEffect(() => {
     if (conversations.length === 0 && !currentConversationId) {
-      const welcomeMsg: ChatMessage = {
-        id: "1",
-        text: "Hello! I'm your order management assistant. I can help you track orders, check delivery status, find orders by customer, date, location, and much more. How can I assist you today?",
-        sender: "bot",
-        timestamp: Date.now(),
-      };
-      startNewConversation(welcomeMsg);
+      startNewConversation(BOT_WELCOME);
     }
   }, [conversations, currentConversationId]);
 
@@ -218,47 +215,14 @@ export function Chat() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        session_id: currentSessionId,
+        session_id: sessionId,
         messages,
       })
     }).catch(() => {});
-  }, [messages, mounted, currentSessionId]);
+  }, [messages, mounted, sessionId]);
 
-  // Fetch available sessions on mount
-  useEffect(() => {
-    fetch("http://51.20.18.59:8000/list-sessions")
-      .then(res => res.json())
-      .then(data => {
-        if (data.sessions) setAvailableSessions(data.sessions);
-      });
-  }, []);
-
-  // When user selects a session, load its messages
-  const loadSession = (sid: string) => {
-    if (sid === 'new') {
-      const newId = Math.random().toString(36).substr(2, 9) + Date.now();
-      setMessages([
-        {
-          id: "1",
-          text: "Hello! I'm your order management assistant. I can help you track orders, check delivery status, find orders by customer, date, location, and much more. How can I assist you today?",
-          sender: "bot",
-          timestamp: Date.now(),
-        },
-      ]);
-      setCurrentSessionId(newId);
-      localStorage.setItem('chat_session_id', newId);
-      return;
-    }
-    fetch(`http://51.20.18.59:8000/get-session/${sid}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.messages)) {
-          setMessages(data.messages);
-          setCurrentSessionId(sid);
-          localStorage.setItem('chat_session_id', sid);
-        }
-      });
-  };
+  // Remove availableSessions, setAvailableSessions, and session-related useEffect/UI
+  // Only keep conversation-related logic and UI
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
@@ -461,42 +425,41 @@ export function Chat() {
   }
 
   return (
-    <div className="flex min-h-screen">
-      <div className="w-64 bg-gray-100 dark:bg-gray-900 p-4 overflow-y-auto">
+    <div className="flex min-h-screen w-full h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      {/* Sidebar */}
+      <aside className="w-72 bg-gray-900 text-white flex flex-col p-4 space-y-4 overflow-y-auto border-r border-gray-800">
         <button
-          className="w-full mb-4 p-2 bg-blue-600 text-white rounded"
+          className="w-full mb-2 p-2 bg-blue-600 text-white rounded font-semibold hover:bg-blue-700 transition"
           onClick={() => {
             setCurrentConversationId(null);
-            setMessages([
-              {
-                id: "1",
-                text: "Hello! I'm your order management assistant. I can help you track orders, check delivery status, find orders by customer, date, location, and much more. How can I assist you today?",
-                sender: "bot",
-                timestamp: Date.now(),
-              },
-            ]);
+            setMessages([BOT_WELCOME]);
           }}
         >
           + New Conversation
         </button>
-        {conversations.map(conv => (
-          <div
-            key={conv.id}
-            className={`p-2 mb-2 rounded cursor-pointer ${currentConversationId === conv.id ? 'bg-blue-200 dark:bg-blue-800' : 'hover:bg-gray-200 dark:hover:bg-gray-800'}`}
-            onClick={() => loadConversation(conv.id)}
-          >
-            <div className="font-semibold truncate">{conv.title}</div>
-            <div className="text-xs text-gray-500">{conv.updated_at ? new Date(conv.updated_at).toLocaleString() : ''}</div>
-          </div>
-        ))}
-      </div>
-      <Card className="w-full max-w-4xl h-[80vh] flex flex-col shadow-xl">
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-gray-800 dark:to-gray-900 text-white rounded-t-lg flex flex-row items-center justify-between">
+        <div className="flex-1 overflow-y-auto space-y-2">
+          {conversations.map(conv => (
+            <div
+              key={conv.id}
+              className={`p-3 rounded cursor-pointer truncate ${currentConversationId === conv.id ? 'bg-blue-800 text-white' : 'hover:bg-gray-800'}`}
+              onClick={() => loadConversation(conv.id)}
+              title={conv.title}
+            >
+              <div className="font-medium truncate">{conv.title}</div>
+              <div className="text-xs text-gray-400">{conv.updated_at ? new Date(conv.updated_at).toLocaleString() : ''}</div>
+            </div>
+          ))}
+        </div>
+      </aside>
+      {/* Main Chat Area */}
+      <main className="flex-1 flex flex-col h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        {/* Header */}
+        <header className="flex items-center justify-between px-8 py-6 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-gray-800 dark:to-gray-900 text-white shadow">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <Bot className="h-6 w-6" />
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <Bot className="h-7 w-7" />
               Order Management Assistant
-            </CardTitle>
+            </h1>
             <p className="text-blue-100 text-sm dark:text-gray-300">Ask me about orders, delivery status, customer information, and more</p>
           </div>
           <button
@@ -506,118 +469,116 @@ export function Chat() {
           >
             {theme === 'dark' ? <Sun className="h-5 w-5 text-yellow-300" /> : <Moon className="h-5 w-5 text-gray-200" />}
           </button>
-        </CardHeader>
+        </header>
+        {/* Chat Content */}
+        <section className="flex-1 flex flex-col px-8 py-6 overflow-y-auto">
+          <div className="space-y-4 bg-white rounded-lg p-4">
+            <AnimatePresence initial={false}>
+              {messages
+                .filter(message => !(message.sender === "bot" && (!message.text || !message.text.trim())))
+                .map((message, idx) => (
+                  <motion.div
+                    key={message.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ duration: 0.3 }}
+                    className={`flex gap-3 ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+                  >
+                    {message.sender === "bot" && (
+                      <Avatar className="h-8 w-8 bg-blue-100">
+                        <AvatarFallback>
+                          <Bot className="h-4 w-4 text-blue-600" />
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
 
-        <CardContent className="flex-1 min-h-0 p-0">
-          <ScrollArea className="h-full min-h-0 p-4" ref={scrollAreaRef}>
-            <div className="space-y-4 bg-white rounded-lg p-4">
-              <AnimatePresence initial={false}>
-                {messages
-                  .filter(message => !(message.sender === "bot" && (!message.text || !message.text.trim())))
-                  .map((message, idx) => (
-                    <motion.div
-                      key={message.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 20 }}
-                      transition={{ duration: 0.3 }}
-                      className={`flex gap-3 ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+                    <div
+                      className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                        message.sender === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
+                      }`}
                     >
-                      {message.sender === "bot" && (
-                        <Avatar className="h-8 w-8 bg-blue-100">
-                          <AvatarFallback>
-                            <Bot className="h-4 w-4 text-blue-600" />
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
+                      <div className="whitespace-pre-wrap break-words">{renderMessageText(message.text)}</div>
 
-                      <div
-                        className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                          message.sender === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
-                        }`}
-                      >
-                        <div className="whitespace-pre-wrap break-words">{renderMessageText(message.text)}</div>
-
-                        {message.buttons && message.buttons.length > 0 && (
-                          <div className="mt-2 space-y-1">
-                            {message.buttons.map((button, index) => (
-                              <Button
-                                key={index}
-                                variant="outline"
-                                size="sm"
-                                className="mr-2 mb-1 bg-transparent"
-                                onClick={() => handleButtonClick(button.payload, button.title)}
-                              >
-                                {button.title}
-                              </Button>
-                            ))}
-                          </div>
-                        )}
-
-                        {message.image && (
-                          <div className="mt-2">
-                            <img
-                              src={message.image || "/placeholder.svg"}
-                              alt="Bot response"
-                              className="max-w-full h-auto rounded"
-                            />
-                          </div>
-                        )}
-
-                        {/* Download Excel button: only show for the last bot message with pincode/order or order details data */}
-                        {(() => {
-                          // Only show for the last bot message with pincode/order or order details data
-                          const isLastBotMsgWithData =
-                            message.sender === "bot" &&
-                            (/Pincode:/i.test(message.text) || /- Order ID:/i.test(message.text)) &&
-                            messages.slice(idx + 1).every(m => !(m.sender === "bot" && (/Pincode:/i.test(m.text) || /- Order ID:/i.test(m.text))));
-                          if (!isLastBotMsgWithData) return null;
-                          return (
-                            <button
-                              onClick={handleDownloadExcel}
-                              style={{ marginTop: 12, padding: "10px 20px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}
+                      {message.buttons && message.buttons.length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          {message.buttons.map((button, index) => (
+                            <Button
+                              key={index}
+                              variant="outline"
+                              size="sm"
+                              className="mr-2 mb-1 bg-transparent"
+                              onClick={() => handleButtonClick(button.payload, button.title)}
                             >
-                              📥 Download Excel
-                            </button>
-                          );
-                        })()}
-
-                        <div className={`text-xs mt-1 ${message.sender === "user" ? "text-blue-200" : "text-gray-500"}`}>
-                          <ClientTime timestamp={message.timestamp} />
+                              {button.title}
+                            </Button>
+                          ))}
                         </div>
-                      </div>
-
-                      {message.sender === "user" && (
-                        <Avatar className="h-8 w-8 bg-blue-600">
-                          <AvatarFallback>
-                            <User className="h-4 w-4 text-white" />
-                          </AvatarFallback>
-                        </Avatar>
                       )}
-                    </motion.div>
-                  ))}
-              </AnimatePresence>
 
-              {isLoading && (
-                <div className="flex gap-3 justify-start">
-                  <Avatar className="h-8 w-8 bg-blue-100">
-                    <AvatarFallback>
-                      <Bot className="h-4 w-4 text-blue-600" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="bg-gray-100 rounded-lg px-4 py-2">
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="text-gray-600">Thinking...</span>
+                      {message.image && (
+                        <div className="mt-2">
+                          <img
+                            src={message.image || "/placeholder.svg"}
+                            alt="Bot response"
+                            className="max-w-full h-auto rounded"
+                          />
+                        </div>
+                      )}
+
+                      {/* Download Excel button: only show for the last bot message with pincode/order or order details data */}
+                      {(() => {
+                        // Only show for the last bot message with pincode/order or order details data
+                        const isLastBotMsgWithData =
+                          message.sender === "bot" &&
+                          (/Pincode:/i.test(message.text) || /- Order ID:/i.test(message.text)) &&
+                          messages.slice(idx + 1).every(m => !(m.sender === "bot" && (/Pincode:/i.test(m.text) || /- Order ID:/i.test(m.text))));
+                        if (!isLastBotMsgWithData) return null;
+                        return (
+                          <button
+                            onClick={handleDownloadExcel}
+                            style={{ marginTop: 12, padding: "10px 20px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}
+                          >
+                            📥 Download Excel
+                          </button>
+                        );
+                      })()}
+
+                      <div className={`text-xs mt-1 ${message.sender === "user" ? "text-blue-200" : "text-gray-500"}`}>
+                        <ClientTime timestamp={message.timestamp} />
+                      </div>
                     </div>
+
+                    {message.sender === "user" && (
+                      <Avatar className="h-8 w-8 bg-blue-600">
+                        <AvatarFallback>
+                          <User className="h-4 w-4 text-white" />
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                  </motion.div>
+                ))}
+            </AnimatePresence>
+
+            {isLoading && (
+              <div className="flex gap-3 justify-start">
+                <Avatar className="h-8 w-8 bg-blue-100">
+                  <AvatarFallback>
+                    <Bot className="h-4 w-4 text-blue-600" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="bg-gray-100 rounded-lg px-4 py-2">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-gray-600">Thinking...</span>
                   </div>
                 </div>
-              )}
-            </div>
-          </ScrollArea>
-        </CardContent>
-
-        <CardFooter className="border-t bg-gray-50 dark:bg-gray-900">
+              </div>
+            )}
+          </div>
+        </section>
+        {/* Input Area */}
+        <footer className="px-8 py-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
           <form onSubmit={handleSubmit} className="flex w-full gap-2" suppressHydrationWarning>
             <div className="relative flex-1 flex items-center">
               <Input
@@ -668,8 +629,8 @@ export function Chat() {
               <Send className="h-4 w-4" />
             </Button>
           </form>
-        </CardFooter>
-      </Card>
+        </footer>
+      </main>
     </div>
   )
 }
