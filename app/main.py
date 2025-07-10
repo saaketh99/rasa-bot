@@ -1,5 +1,7 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from app.db import client
+from .db import client
 from pydantic import BaseModel
 from typing import List, Dict
 from bson import ObjectId
@@ -73,6 +75,10 @@ def get_conversation(conversation_id: str):
         return {"success": False, "error": "Conversation not found"}
     c["id"] = str(c["_id"])
     del c["_id"]
+
+    return jsonable_encoder(c) 
+
+
     return jsonable_encoder(c)
 
 # ----------------------
