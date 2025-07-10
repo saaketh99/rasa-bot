@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.db import client
+from .db import client
 from bson import ObjectId
 from fastapi.encoders import jsonable_encoder
 import time

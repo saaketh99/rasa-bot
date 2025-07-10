@@ -100,7 +100,15 @@ export function Chat() {
   const [mounted, setMounted] = useState(false)
   const [conversations, setConversations] = useState<ConversationMeta[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // Show bot welcome message in UI, but do not save to backend
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: "1",
+      text: "Hello! I'm your order management assistant. I can help you track orders, check delivery status, find orders by customer, date, location, and much more. How can I assist you today?",
+      sender: "bot",
+      timestamp: Date.now(),
+    },
+  ]);
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
@@ -137,18 +145,18 @@ export function Chat() {
       });
   };
 
-  // Create a new conversation
-  const startNewConversation = (firstMessage: ChatMessage) => {
+  // Create a new conversation (only on first user message)
+  const startNewConversation = (firstUserMessage: ChatMessage) => {
     fetch("http://51.20.18.59:8000/conversations", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: firstMessage })
+      body: JSON.stringify({ message: firstUserMessage })
     })
       .then(res => res.json())
       .then(data => {
         if (data.success && data.conversation_id) {
           setCurrentConversationId(data.conversation_id);
-          setMessages([firstMessage]);
+          setMessages(prev => [prev[0], firstUserMessage]); // bot welcome + user message
           // Refresh conversation list
           fetch("http://51.20.18.59:8000/conversations")
             .then(res => res.json())
@@ -289,16 +297,17 @@ export function Chat() {
   // Send message handler
   const sendMessage = async (messageText: string) => {
     if (!messageText.trim() || isLoading) return;
-
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       text: messageText,
       sender: "user",
       timestamp: Date.now(),
     };
-
     if (!currentConversationId) {
+      // Only now create the conversation in the backend
       startNewConversation(userMessage);
+      setInput("");
+      setIsLoading(true);
       return;
     }
     appendMessage(userMessage);
@@ -457,13 +466,15 @@ export function Chat() {
         <button
           className="w-full mb-4 p-2 bg-blue-600 text-white rounded"
           onClick={() => {
-            const welcomeMsg: ChatMessage = {
-              id: "1",
-              text: "Hello! I'm your order management assistant. I can help you track orders, check delivery status, find orders by customer, date, location, and much more. How can I assist you today?",
-              sender: "bot",
-              timestamp: Date.now(),
-            };
-            startNewConversation(welcomeMsg);
+            setCurrentConversationId(null);
+            setMessages([
+              {
+                id: "1",
+                text: "Hello! I'm your order management assistant. I can help you track orders, check delivery status, find orders by customer, date, location, and much more. How can I assist you today?",
+                sender: "bot",
+                timestamp: Date.now(),
+              },
+            ]);
           }}
         >
           + New Conversation
