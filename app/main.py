@@ -1,21 +1,10 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from app.db import client
-from .db import client
-from pydantic import BaseModel
-from typing import List, Dict
-from bson import ObjectId
-from fastapi.encoders import jsonable_encoder
-import time
-from .db import client  # Make sure this connects to your MongoDB Atlas
+from .db import sessions_collection
 
 app = FastAPI()
 
-# MongoDB setup
-db = client["orders-db"]
-conversations_collection = db["user_sessions"]
-
-# CORS setup
+# Allow CORS for all origins (customize in production)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -24,105 +13,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ----------------------
-# Conversation Endpoints
-# ----------------------
-
-@app.post("/conversations")
-async def create_conversation(request: Request):
-    data = await request.json()
-    first_message = data.get("message")
-    if not first_message:
-        return {"success": False, "error": "Missing first message"}
-    now = int(time.time() * 1000)
-    conversation = {
-        "title": first_message.get("text", "New Conversation"),
-        "created_at": now,
-        "updated_at": now,
-        "messages": [first_message],
-    }
-    result = conversations_collection.insert_one(conversation)
-    return {"success": True, "conversation_id": str(result.inserted_id)}
-
-@app.post("/conversations/{conversation_id}/messages")
-async def append_message(conversation_id: str, request: Request):
-    data = await request.json()
-    message = data.get("message")
-    if not message:
-        return {"success": False, "error": "Missing message"}
-    now = int(time.time() * 1000)
-    result = conversations_collection.update_one(
-        {"_id": ObjectId(conversation_id)},
-        {"$push": {"messages": message}, "$set": {"updated_at": now}}
-    )
-    if result.matched_count == 0:
-        return {"success": False, "error": "Conversation not found"}
-    return {"success": True}
-
-@app.get("/conversations")
-def list_conversations():
-    conversations = conversations_collection.find({}, {"title": 1, "created_at": 1, "updated_at": 1})
-    return {"conversations": [
-        {"id": str(c["_id"]), "title": c.get("title", "Untitled"),
-         "created_at": c.get("created_at"), "updated_at": c.get("updated_at")}
-        for c in conversations
-    ]}
-
-@app.get("/conversations/{conversation_id}")
-def get_conversation(conversation_id: str):
-    c = conversations_collection.find_one({"_id": ObjectId(conversation_id)})
-    if not c:
-        return {"success": False, "error": "Conversation not found"}
-    c["id"] = str(c["_id"])
-    del c["_id"]
-
-    return jsonable_encoder(c) 
-
-
-    return jsonable_encoder(c)
-
-# ----------------------
-# Session Endpoints
-# ----------------------
-
-class SaveSessionRequest(BaseModel):
-    session_id: str
-    messages: List[Dict]
-    timestamp: str
-
 @app.post("/save-session")
-async def save_session(session: SaveSessionRequest):
-    result = conversations_collection.update_one(
-        {"_id": ObjectId(session.session_id)},
-        {
-            "$set": {
-                "messages": session.messages,
-                "updated_at": int(time.time() * 1000),
-                "timestamp": session.timestamp,
-            }
-        }
+async def save_session(request: Request):
+    data = await request.json()
+    session_id = data.get("session_id")
+    messages = data.get("messages")
+    if not session_id or messages is None:
+        return {"success": False, "error": "Missing session_id or messages"}
+    sessions_collection.update_one(
+        {"session_id": session_id},
+        {"$set": {"messages": messages}},
+        upsert=True
     )
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Session not found")
     return {"success": True}
 
 @app.get("/get-session/{session_id}")
-async def get_session(session_id: str):
-    c = conversations_collection.find_one({"_id": ObjectId(session_id)})
-    if not c:
-        raise HTTPException(status_code=404, detail="Session not found")
-    c["id"] = str(c["_id"])
-    del c["_id"]
-    return jsonable_encoder(c)
+def get_session(session_id: str):
+    session = sessions_collection.find_one({"session_id": session_id})
+    if not session:
+        return {"success": False, "error": "Session not found"}
+    return {"success": True, "messages": session["messages"]}
 
 @app.get("/list-sessions")
-async def list_sessions():
-    conversations = conversations_collection.find({}, {"_id": 1, "updated_at": 1})
-    return {
-        "sessions": [
-            {
-                "session_id": str(c["_id"]),
-                "updated_at": c.get("updated_at")
-            } for c in conversations
-        ]
-    }
+def list_sessions():
+    sessions = sessions_collection.find({}, {"session_id": 1, "messages": 1, "_id": 0})
+    session_list = []
+    for s in sessions:
+        # Get last message timestamp if available
+        last_msg = s.get("messages", [])[-1] if s.get("messages") else None
+        last_updated = last_msg.get("timestamp") if last_msg else None
+        session_list.append({
+            "session_id": s["session_id"],
+            "last_updated": last_updated
+        })
+    # Sort by last_updated descending (most recent first)
+    session_list.sort(key=lambda x: x["last_updated"] or 0, reverse=True)
+    return {"sessions": session_list} 
