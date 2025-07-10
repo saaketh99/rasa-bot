@@ -102,7 +102,7 @@ export function Chat() {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   // Show bot welcome message in UI only, not in backend
   const BOT_WELCOME: ChatMessage = {
-    id: "1",
+    id: "bot-welcome", // unique id for React keys
     text: "Hello! I'm your order management assistant. I can help you track orders, check delivery status, find orders by customer, date, location, and much more. How can I assist you today?",
     sender: "bot",
     timestamp: Date.now(),
@@ -142,7 +142,7 @@ export function Chat() {
       .then(res => res.json())
       .then(data => {
         if (data.messages) {
-          setMessages(data.messages);
+          setMessages(data.messages); // Only backend messages
           setCurrentConversationId(id);
         }
       });
@@ -159,7 +159,7 @@ export function Chat() {
       .then(data => {
         if (data.success && data.conversation_id) {
           setCurrentConversationId(data.conversation_id);
-          setMessages([BOT_WELCOME, firstUserMessage]); // UI: bot welcome + user message
+          setMessages([firstUserMessage]); // Only user message, not bot welcome
           // Refresh conversation list
           fetch("http://51.20.18.59:8000/conversations")
             .then(res => res.json())
@@ -198,7 +198,7 @@ export function Chat() {
   // Load session from backend on mount
   useEffect(() => {
     if (!mounted) return;
-    fetch(`http://51.20.18.59:8000/get-session/${sessionId}`)
+    fetch(`http://51.20.18.59:8000/conversations/${sessionId}`)
       .then(res => res.json())
       .then(data => {
         if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
@@ -211,7 +211,7 @@ export function Chat() {
   // Save session to backend whenever messages change (after mount)
   useEffect(() => {
     if (!mounted) return;
-    fetch("http://51.20.18.59:8000/save-session", {
+    fetch("http://51.20.18.59:8000/conversations", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -262,7 +262,7 @@ export function Chat() {
   const sendMessage = async (messageText: string) => {
     if (!messageText.trim() || isLoading) return;
     const userMessage: ChatMessage = {
-      id: Date.now().toString(),
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 5), // ensure uniqueness
       text: messageText,
       sender: "user",
       timestamp: Date.now(),
@@ -472,110 +472,110 @@ export function Chat() {
         </header>
         {/* Chat Content */}
         <section className="flex-1 flex flex-col px-8 py-6 overflow-y-auto">
-          <div className="space-y-4 bg-white rounded-lg p-4">
-            <AnimatePresence initial={false}>
-              {messages
-                .filter(message => !(message.sender === "bot" && (!message.text || !message.text.trim())))
-                .map((message, idx) => (
-                  <motion.div
-                    key={message.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.3 }}
-                    className={`flex gap-3 ${message.sender === "user" ? "justify-end" : "justify-start"}`}
-                  >
-                    {message.sender === "bot" && (
-                      <Avatar className="h-8 w-8 bg-blue-100">
-                        <AvatarFallback>
-                          <Bot className="h-4 w-4 text-blue-600" />
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-
-                    <div
-                      className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                        message.sender === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
-                      }`}
+            <div className="space-y-4 bg-white rounded-lg p-4">
+              <AnimatePresence initial={false}>
+                {messages
+                  .filter(message => !(message.sender === "bot" && (!message.text || !message.text.trim())))
+                  .map((message, idx) => (
+                    <motion.div
+                      key={message.id ? message.id + '-' + idx : idx}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 20 }}
+                      transition={{ duration: 0.3 }}
+                      className={`flex gap-3 ${message.sender === "user" ? "justify-end" : "justify-start"}`}
                     >
-                      <div className="whitespace-pre-wrap break-words">{renderMessageText(message.text)}</div>
+                      {message.sender === "bot" && (
+                        <Avatar className="h-8 w-8 bg-blue-100">
+                          <AvatarFallback>
+                            <Bot className="h-4 w-4 text-blue-600" />
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
 
-                      {message.buttons && message.buttons.length > 0 && (
-                        <div className="mt-2 space-y-1">
-                          {message.buttons.map((button, index) => (
-                            <Button
-                              key={index}
-                              variant="outline"
-                              size="sm"
-                              className="mr-2 mb-1 bg-transparent"
-                              onClick={() => handleButtonClick(button.payload, button.title)}
+                      <div
+                        className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                          message.sender === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
+                        }`}
+                      >
+                        <div className="whitespace-pre-wrap break-words">{renderMessageText(message.text)}</div>
+
+                        {message.buttons && message.buttons.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {message.buttons.map((button, index) => (
+                              <Button
+                                key={index}
+                                variant="outline"
+                                size="sm"
+                                className="mr-2 mb-1 bg-transparent"
+                                onClick={() => handleButtonClick(button.payload, button.title)}
+                              >
+                                {button.title}
+                              </Button>
+                            ))}
+                          </div>
+                        )}
+
+                        {message.image && (
+                          <div className="mt-2">
+                            <img
+                              src={message.image || "/placeholder.svg"}
+                              alt="Bot response"
+                              className="max-w-full h-auto rounded"
+                            />
+                          </div>
+                        )}
+
+                        {/* Download Excel button: only show for the last bot message with pincode/order or order details data */}
+                        {(() => {
+                          // Only show for the last bot message with pincode/order or order details data
+                          const isLastBotMsgWithData =
+                            message.sender === "bot" &&
+                            (/Pincode:/i.test(message.text) || /- Order ID:/i.test(message.text)) &&
+                            messages.slice(idx + 1).every(m => !(m.sender === "bot" && (/Pincode:/i.test(m.text) || /- Order ID:/i.test(m.text))));
+                          if (!isLastBotMsgWithData) return null;
+                          return (
+                            <button
+                              onClick={handleDownloadExcel}
+                              style={{ marginTop: 12, padding: "10px 20px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}
                             >
-                              {button.title}
-                            </Button>
-                          ))}
+                              📥 Download Excel
+                            </button>
+                          );
+                        })()}
+
+                        <div className={`text-xs mt-1 ${message.sender === "user" ? "text-blue-200" : "text-gray-500"}`}>
+                          <ClientTime timestamp={message.timestamp} />
                         </div>
-                      )}
-
-                      {message.image && (
-                        <div className="mt-2">
-                          <img
-                            src={message.image || "/placeholder.svg"}
-                            alt="Bot response"
-                            className="max-w-full h-auto rounded"
-                          />
-                        </div>
-                      )}
-
-                      {/* Download Excel button: only show for the last bot message with pincode/order or order details data */}
-                      {(() => {
-                        // Only show for the last bot message with pincode/order or order details data
-                        const isLastBotMsgWithData =
-                          message.sender === "bot" &&
-                          (/Pincode:/i.test(message.text) || /- Order ID:/i.test(message.text)) &&
-                          messages.slice(idx + 1).every(m => !(m.sender === "bot" && (/Pincode:/i.test(m.text) || /- Order ID:/i.test(m.text))));
-                        if (!isLastBotMsgWithData) return null;
-                        return (
-                          <button
-                            onClick={handleDownloadExcel}
-                            style={{ marginTop: 12, padding: "10px 20px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}
-                          >
-                            📥 Download Excel
-                          </button>
-                        );
-                      })()}
-
-                      <div className={`text-xs mt-1 ${message.sender === "user" ? "text-blue-200" : "text-gray-500"}`}>
-                        <ClientTime timestamp={message.timestamp} />
                       </div>
+
+                      {message.sender === "user" && (
+                        <Avatar className="h-8 w-8 bg-blue-600">
+                          <AvatarFallback>
+                            <User className="h-4 w-4 text-white" />
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                    </motion.div>
+                  ))}
+              </AnimatePresence>
+
+              {isLoading && (
+                <div className="flex gap-3 justify-start">
+                  <Avatar className="h-8 w-8 bg-blue-100">
+                    <AvatarFallback>
+                      <Bot className="h-4 w-4 text-blue-600" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="bg-gray-100 rounded-lg px-4 py-2">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-gray-600">Thinking...</span>
                     </div>
-
-                    {message.sender === "user" && (
-                      <Avatar className="h-8 w-8 bg-blue-600">
-                        <AvatarFallback>
-                          <User className="h-4 w-4 text-white" />
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                  </motion.div>
-                ))}
-            </AnimatePresence>
-
-            {isLoading && (
-              <div className="flex gap-3 justify-start">
-                <Avatar className="h-8 w-8 bg-blue-100">
-                  <AvatarFallback>
-                    <Bot className="h-4 w-4 text-blue-600" />
-                  </AvatarFallback>
-                </Avatar>
-                <div className="bg-gray-100 rounded-lg px-4 py-2">
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-gray-600">Thinking...</span>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
         </section>
         {/* Input Area */}
         <footer className="px-8 py-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">

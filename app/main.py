@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from .db import client
+from db import client
 from bson import ObjectId
 from fastapi.encoders import jsonable_encoder
 import time
@@ -26,6 +26,9 @@ async def create_conversation(request: Request):
     if not first_message:
         return {"success": False, "error": "Missing first message"}
     now = int(time.time() * 1000)
+    # Ensure unique id for the first message
+    if not first_message.get("id"):
+        first_message["id"] = str(ObjectId())
     conversation = {
         "title": first_message.get("text", "New Conversation"),
         "created_at": now,
@@ -43,6 +46,9 @@ async def append_message(conversation_id: str, request: Request):
     if not message:
         return {"success": False, "error": "Missing message"}
     now = int(time.time() * 1000)
+    # Ensure unique id for the appended message
+    if not message.get("id"):
+        message["id"] = str(ObjectId())
     result = conversations_collection.update_one(
         {"_id": ObjectId(conversation_id)},
         {"$push": {"messages": message}, "$set": {"updated_at": now}}
