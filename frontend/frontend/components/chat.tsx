@@ -34,6 +34,13 @@ interface RasaResponse {
   attachment?: any
 }
 
+interface ConversationMeta {
+  id: string;
+  title: string;
+  created_at: number;
+  updated_at: number;
+}
+
 function ClientTime({ timestamp }: { timestamp: number }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -91,14 +98,9 @@ function getOrCreateSessionId() {
 export function Chat() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false)
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "1",
-      text: "Hello! I'm your order management assistant. I can help you track orders, check delivery status, find orders by customer, date, location, and much more. How can I assist you today?",
-      sender: "bot",
-      timestamp: 0,
-    },
-  ])
+  const [conversations, setConversations] = useState<ConversationMeta[]>([]);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
@@ -113,6 +115,80 @@ export function Chat() {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Fetch all conversations on mount
+  useEffect(() => {
+    fetch("http://51.20.18.59:8000/conversations")
+      .then(res => res.json())
+      .then(data => {
+        if (data.conversations) setConversations(data.conversations);
+      });
+  }, []);
+
+  // Load a conversation by ID
+  const loadConversation = (id: string) => {
+    fetch(`http://51.20.18.59:8000/conversations/${id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.messages) {
+          setMessages(data.messages);
+          setCurrentConversationId(id);
+        }
+      });
+  };
+
+  // Create a new conversation
+  const startNewConversation = (firstMessage: ChatMessage) => {
+    fetch("http://51.20.18.59:8000/conversations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: firstMessage })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.conversation_id) {
+          setCurrentConversationId(data.conversation_id);
+          setMessages([firstMessage]);
+          // Refresh conversation list
+          fetch("http://51.20.18.59:8000/conversations")
+            .then(res => res.json())
+            .then(data => {
+              if (data.conversations) setConversations(data.conversations);
+            });
+        }
+      });
+  };
+
+  // Append a message to the current conversation
+  const appendMessage = (message: ChatMessage) => {
+    if (!currentConversationId) return;
+    fetch(`http://51.20.18.59:8000/conversations/${currentConversationId}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message })
+    }).then(() => {
+      setMessages(prev => [...prev, message]);
+      // Optionally refresh conversation list for updated timestamp
+      fetch("http://51.20.18.59:8000/conversations")
+        .then(res => res.json())
+        .then(data => {
+          if (data.conversations) setConversations(data.conversations);
+        });
+    });
+  };
+
+  // On first mount, start a new conversation
+  useEffect(() => {
+    if (conversations.length === 0 && !currentConversationId) {
+      const welcomeMsg: ChatMessage = {
+        id: "1",
+        text: "Hello! I'm your order management assistant. I can help you track orders, check delivery status, find orders by customer, date, location, and much more. How can I assist you today?",
+        sender: "bot",
+        timestamp: Date.now(),
+      };
+      startNewConversation(welcomeMsg);
+    }
+  }, [conversations, currentConversationId]);
 
   // Load session from backend on mount
   useEffect(() => {
@@ -210,19 +286,24 @@ export function Chat() {
     }
   }, [input]);
 
+  // Send message handler
   const sendMessage = async (messageText: string) => {
-    if (!messageText.trim() || isLoading) return
+    if (!messageText.trim() || isLoading) return;
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       text: messageText,
       sender: "user",
       timestamp: Date.now(),
-    }
+    };
 
-    setMessages((prev) => [...prev, userMessage])
-    setInput("")
-    setIsLoading(true)
+    if (!currentConversationId) {
+      startNewConversation(userMessage);
+      return;
+    }
+    appendMessage(userMessage);
+    setInput("");
+    setIsLoading(true);
 
     try {
       const response = await fetch("/api/chat", {
@@ -371,20 +452,32 @@ export function Chat() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
-      <div className="absolute top-4 left-4 z-50">
-        <select
-          value={currentSessionId}
-          onChange={e => loadSession(e.target.value)}
-          className="p-2 rounded border border-gray-300"
+    <div className="flex min-h-screen">
+      <div className="w-64 bg-gray-100 dark:bg-gray-900 p-4 overflow-y-auto">
+        <button
+          className="w-full mb-4 p-2 bg-blue-600 text-white rounded"
+          onClick={() => {
+            const welcomeMsg: ChatMessage = {
+              id: "1",
+              text: "Hello! I'm your order management assistant. I can help you track orders, check delivery status, find orders by customer, date, location, and much more. How can I assist you today?",
+              sender: "bot",
+              timestamp: Date.now(),
+            };
+            startNewConversation(welcomeMsg);
+          }}
         >
-          <option value="new">+ New Session</option>
-          {availableSessions.map(({session_id, last_updated}) => (
-            <option key={session_id} value={session_id}>
-              {session_id} {last_updated ? `- ${new Date(last_updated).toLocaleString()}` : ''}
-            </option>
-          ))}
-        </select>
+          + New Conversation
+        </button>
+        {conversations.map(conv => (
+          <div
+            key={conv.id}
+            className={`p-2 mb-2 rounded cursor-pointer ${currentConversationId === conv.id ? 'bg-blue-200 dark:bg-blue-800' : 'hover:bg-gray-200 dark:hover:bg-gray-800'}`}
+            onClick={() => loadConversation(conv.id)}
+          >
+            <div className="font-semibold truncate">{conv.title}</div>
+            <div className="text-xs text-gray-500">{conv.updated_at ? new Date(conv.updated_at).toLocaleString() : ''}</div>
+          </div>
+        ))}
       </div>
       <Card className="w-full max-w-4xl h-[80vh] flex flex-col shadow-xl">
         <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-gray-800 dark:to-gray-900 text-white rounded-t-lg flex flex-row items-center justify-between">
