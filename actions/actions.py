@@ -228,7 +228,7 @@ class ActionCxOrder(Action):
             return []
 
         message = f" Orders for **{customer_input}** from **{s_date}** to **{e_date}**:\n"
-        for order in matched_orders:
+        for order in matched_orders[::10]:
             order_id = order.get("sm_orderid", "N/A")
             sender_city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
             recipient_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
@@ -314,7 +314,7 @@ class ActionFordestination(Action):
             return []
 
         message = f"Orders for '{customer_input}' delivered to {destination}:\n"
-        for order in matched_orders:
+        for order in matched_orders[::10]:
             sender_city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
             recipient_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
             order_id = order.get("sm_orderid", "N/A")
@@ -378,7 +378,7 @@ class ActionGetOrdersByStatus(Action):
             return []
 
         message = "Orders:\n"
-        for order in matched_orders:
+        for order in matched_orders[::10]:
             order_id = order.get("sm_orderid", "N/A")
             customer_name = order.get("start", {}).get("contact", {}).get("name", "Unknown")
             booking_date_raw = order.get("createdAt", None)
@@ -508,7 +508,7 @@ class ActionGetOrdersByTAT(Action):
             f"Delivered in {tat_days} days: {len(matching_orders)}\n\n"
         )
 
-        for o in matching_orders:
+        for o in matching_orders[::10]:
             message += (
                 f"Order ID: {o['order_id']} | Sender: {o['sender']} | "
                 f"Booking: {o['booking_date']} | Delivered: {o['delivery_date']} | "
@@ -580,7 +580,7 @@ class ActionGetOrdersByTAT(Action):
             f"Delivered in {tat_days} days: {len(matching_orders)}\n\n"
         )
 
-        for o in matching_orders:
+        for o in matching_orders[::10]:
             message += (
                 f"Order ID: {o['order_id']} | Sender: {o['sender']} | "
                 f"Booking: {o['booking_date']} | Delivered: {o['delivery_date']} | "
@@ -645,7 +645,7 @@ class ActionPendingOrdersPastDays(Action):
 
         rows = []
         message = f"Pending orders for **{customer_input}** in the past **{n_days}** days:\n"
-        for order in results:
+        for order in results[::10]:
             order_id = order.get("sm_orderid", "N/A")
             status = order.get("orderStatus", "Unknown")
             created_at = order.get("createdAt")
@@ -803,7 +803,7 @@ class ActionDynamicOrderQuery(Action):
                 return []
 
             message = f" **Delivered Orders between {start_date_str} and {end_date_str}**\n"
-            for order in results:
+            for order in results[::10]:
                 order_id = order.get("sm_orderid", "N/A")
                 status = order.get("orderStatus", "Delivered")
                 rows.append({"Order ID": order_id, "Status": status})
@@ -833,7 +833,7 @@ class ActionDynamicOrderQuery(Action):
                 return []
 
             message = f"**Orders from {location_code} between {start_date_str} and {end_date_str}**\n"
-            for order in results:
+            for order in results[::10]:
                 order_id = order.get("sm_orderid", "N/A")
                 status = order.get("orderStatus", "unknown")
                 created = order.get("createdAt")
@@ -909,7 +909,7 @@ class ActionOrderStatusByInvoice(Action):
         rows = []
         message = f"Order(s) with invoice number **{invoice_number}**:\n"
 
-        for order in matched_orders:
+        for order in matched_orders[::10]:
             order_id = order.get("sm_orderid") or order.get("Order ID", "N/A")
             status = order.get("orderStatus") or order.get("Order Status", "Unknown")
             created = order.get("createdAt")
@@ -1023,7 +1023,7 @@ class ActionPendingOrdersBeforeLastTwoDays(Action):
         message = (
             f"Pending orders created before **{cutoff_date.strftime('%Y-%m-%d')}**:\n"
         )
-        for order in results:
+        for order in results[::10]:
             order_id = order.get("sm_orderid", "N/A")
             status = order.get("orderStatus", "Unknown")
             created_at = order.get("createdAt")
@@ -1198,10 +1198,10 @@ class ActionCitywiseDeliveredOrderDistribution(Action):
         else:
             message += ":\n"
 
-        for city, count in sorted_city_data:
+        for city, count in sorted_city_data[::10]:
             message += f"- {city}: {count} orders\n"
 
-        message += f"\n📄 **Total Delivered Orders**: {len(filtered_orders)}"
+        message += f"\n **Total Delivered Orders**: {len(filtered_orders)}"
         dispatcher.utter_message(message)
 
         
