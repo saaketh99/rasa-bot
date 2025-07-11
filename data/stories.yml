@@ -98,3 +98,8 @@ stories:
   steps:
     - intent: see_order_trends
     - action: action_show_order_trends
+
+- story: Show delayed order trend graph
+  steps:
+    - intent: get_delayed_order_trend
+    - action: action_delayed_orders_graph

@@ -84,6 +84,14 @@ const SUGGESTIONS = [
   "Show orders by location"
 ];
 
+// Helper to generate unique IDs on the client only
+function getClientUniqueId() {
+  if (typeof window !== 'undefined') {
+    return Date.now().toString() + Math.random().toString(36).substr(2, 5);
+  }
+  return '';
+}
+
 // Remove session ID logic and related useEffects
 // --- Session ID logic ---
 // function getOrCreateSessionId() { ... }
@@ -96,10 +104,10 @@ export function Chat() {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   // Show bot welcome message in UI only, not in backend
   const BOT_WELCOME: ChatMessage = {
-    id: "bot-welcome", // unique id for React keys
+    id: typeof window !== 'undefined' ? getClientUniqueId() : 'bot-welcome',
     text: "Hello! I'm your order management assistant. I can help you track orders, check delivery status, find orders by customer, date, location, and much more. How can I assist you today?",
     sender: "bot",
-    timestamp: Date.now(),
+    timestamp: typeof window !== 'undefined' ? Date.now() : 0,
   };
   const [messages, setMessages] = useState<ChatMessage[]>([BOT_WELCOME]);
   const [input, setInput] = useState("")
@@ -229,11 +237,17 @@ export function Chat() {
   // Send message handler
   const sendMessage = async (messageText: string) => {
     if (!messageText.trim() || isLoading) return;
+    let id = '';
+    let timestamp = 0;
+    if (typeof window !== 'undefined') {
+      id = getClientUniqueId();
+      timestamp = Date.now();
+    }
     const userMessage: ChatMessage = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 5), // ensure uniqueness
+      id: id,
       text: messageText,
       sender: "user",
-      timestamp: Date.now(),
+      timestamp: timestamp,
     };
     if (!currentConversationId) {
       // Only now create the conversation in the backend
@@ -264,10 +278,10 @@ export function Chat() {
         const botMessages: ChatMessage[] = data.responses
           .filter((resp: RasaResponse) => resp.text && resp.text.trim())
           .map((resp: RasaResponse, index: number) => ({
-            id: (Date.now() + index).toString(),
+            id: typeof window !== 'undefined' ? getClientUniqueId() : '',
             text: resp.text,
             sender: "bot" as const,
-            timestamp: Date.now(),
+            timestamp: typeof window !== 'undefined' ? Date.now() : 0,
             buttons: resp.buttons,
             image: resp.image,
           }))

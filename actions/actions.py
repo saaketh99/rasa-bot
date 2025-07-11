@@ -12,6 +12,7 @@ from rapidfuzz import process, fuzz
 from datetime import datetime
 from datetime import datetime, timedelta
 from collections import Counter
+from bson.regex import Regex
 
 
 client = MongoClient("mongodb+srv://ordersDbAdmin:LuiQu4KLLM0KXvQX@orders-cluster.jbais.mongodb.net/")
@@ -1235,7 +1236,7 @@ class ActionShowOrderTrends(Action):
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
 
-        import time
+
         start_time = time.time()
 
         customer_input = tracker.get_slot("customer_name")
@@ -1243,11 +1244,9 @@ class ActionShowOrderTrends(Action):
             dispatcher.utter_message("Please tell me who you are (e.g., from Ola or Wakefit).")
             return []
 
-
         message = tracker.latest_message.get("text", "").lower()
         print(f"[DEBUG] Message: {message}")
 
-        import re
         number_match = re.search(r'\d+', message)
         duration = int(number_match.group()) if number_match else 30
 
@@ -1255,7 +1254,6 @@ class ActionShowOrderTrends(Action):
         if "month" in message:
             unit = "months"
 
-        
         if unit == "months":
             start_date = datetime.now() - timedelta(days=duration * 30)
             group_by = 'M'
@@ -1265,7 +1263,6 @@ class ActionShowOrderTrends(Action):
 
         end_date = datetime.now()
 
-        
         all_names = collection.distinct("start.contact.name")
         matched_customers = [name for name in all_names if customer_input.lower() in name.lower()]
         if not matched_customers:
@@ -1299,15 +1296,104 @@ class ActionShowOrderTrends(Action):
         plt.xticks(rotation=45)
         plt.tight_layout()
 
-        image_path = "/trend_graph.png"
+        os.makedirs("static/graphs", exist_ok=True)
+        filename = f"trend_graph_{customer_input.replace(' ', '_')}_{unit}_{duration}.png"
+        image_path = os.path.join("static/graphs", filename)
         plt.savefig(image_path)
         plt.close()
 
-        dispatcher.utter_message(f"Here is your order trend graph for the last {duration} {unit}:")
-        dispatcher.utter_message(image=image_path)
+        public_url = f"http://51.20.18.59:8080/static/graphs/{filename}"
+        dispatcher.utter_message(f" Here is your order trend graph for the last {duration} {unit}:")
+        dispatcher.utter_message(image=public_url)
 
         print(f"[TIME] action_show_order_trends took {time.time() - start_time:.2f} seconds")
         return []
+
+class ActionDelayedOrdersGraph(Action):
+    def name(self) -> Text:
+        return "action_delayed_orders_graph"
+
+    def run(self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+
+
+        start_time = time.time()
+
+        customer_name = next(tracker.get_latest_entity_values("customer_name"), None)
+
+        message = tracker.latest_message.get("text", "").lower()
+        print(f"[DEBUG] Message: {message}")
+
+        number_match = re.search(r'\d+', message)
+        duration = int(number_match.group()) if number_match else 30
+        unit = "days"
+        if "month" in message:
+            unit = "months"
+
+        delivered_statuses = ["delivered", "delivered_at_security", "delivered_at_neighbor"]
+        cancelled_statuses = ["cancelled", "canceled"]
+        exclude_statuses = set(delivered_statuses + cancelled_statuses)
+
+        known_statuses = collection.distinct("orderStatus")
+        pending_statuses = [status for status in known_statuses if status not in exclude_statuses]
+
+        if unit == "months":
+            start_date = datetime.now() - timedelta(days=duration * 30)
+        else:
+            start_date = datetime.now() - timedelta(days=duration)
+
+        query_filter = {
+            "orderStatus": {"$in": pending_statuses},
+            "createdAt": {"$gte": start_date}
+        }
+
+        if customer_name:
+            query_filter["start.contact.name"] = Regex(customer_name, "i")
+
+        results = list(collection.find(query_filter))
+
+        if not results:
+            msg = f"No delayed (pending) orders found"
+            if customer_name:
+                msg += f" for **{customer_name}**"
+            msg += f" in the last {duration} {unit}."
+            dispatcher.utter_message(msg)
+            return []
+
+    
+        dates = [order["createdAt"].date() for order in results if "createdAt" in order]
+        df = pd.DataFrame(dates, columns=["date"])
+        df["date"] = pd.to_datetime(df["date"])
+        group_by = 'M' if unit == "months" else 'D'
+        df_grouped = df.groupby(df["date"].dt.to_period(group_by)).size().reset_index(name="order_count")
+        df_grouped["date"] = df_grouped["date"].astype(str)
+
+        plt.figure(figsize=(8, 4))
+        plt.plot(df_grouped["date"], df_grouped["order_count"], marker='o')
+        title = f"Pending Orders Trend - {customer_name.title()}" if customer_name else "Pending Orders Trend"
+        plt.title(title)
+        plt.xlabel("Month" if unit == "months" else "Date")
+        plt.ylabel("Number of Orders")
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+
+        os.makedirs("static/graphs", exist_ok=True)
+        filename = f"pending_orders_graph"
+        if customer_name:
+            filename += f"_{customer_name.replace(' ', '_')}"
+        filename += ".png"
+        filepath = os.path.join("static/graphs", filename)
+        plt.savefig(filepath)
+        plt.close()
+
+        public_url = f"http://51.20.18.59:8080/static/graphs/{filename}"
+        dispatcher.utter_message(f"Here's the pending order trend for the last {duration} {unit}:")
+        dispatcher.utter_message(image=public_url)
+
+        print(f"[TIME] action_delayed_orders_graph took {(time.time() - start_time):.2f} seconds")
+        return []
+
 
 class ActionDefaultFallback(Action):
     def name(self):
