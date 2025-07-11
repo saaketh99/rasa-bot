@@ -20,6 +20,7 @@ intents:
   - pending_orders_before_last_two_days
   - citywise_delivered_order_distribution
   - nlu_fallback
+  - see_order_trends
 
 
 entities:
@@ -33,6 +34,8 @@ entities:
  - pincode
  - tat_days
  - n_days
+ - trend_duration
+ - trend_unit
 
  - location:
       roles:
@@ -65,6 +68,7 @@ actions:
  - action_fetch_order_info_by_id
  - action_pending_orders_before_last_two_days
  - action_citywise_delivered_order_distribution
+ - action_show_order_trends
 
   
 slots:
@@ -144,19 +148,33 @@ slots:
       - type: from_entity
         entity: pincode
 
-
   tat_days:
     type: float
     influence_conversation: true
     mappings:
       - type: from_entity
         entity: tat_days
+
   n_days:
     type: float
     influence_conversation: true
     mappings:
       - type: from_entity
         entity: n_days
+  
+  trend_duration:
+    type: text
+    influence_conversation: false
+    mappings:
+      - type: from_entity
+        entity: trend_duration
+
+  trend_unit:
+    type: text
+    influence_conversation: false
+    mappings:
+      - type: from_entity
+        entity: trend_unit
 
 session_config:
   session_expiration_time: 60

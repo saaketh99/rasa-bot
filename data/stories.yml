@@ -93,3 +93,8 @@ stories:
   steps:
   - intent: citywise_delivered_order_distribution
   - action: action_citywise_delivered_order_distribution
+
+- story: View order trends with customer name 
+  steps:
+    - intent: see_order_trends
+    - action: action_show_order_trends

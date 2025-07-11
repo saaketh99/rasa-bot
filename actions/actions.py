@@ -4,6 +4,7 @@ import time
 from typing import Any, Text, Dict, List, Optional, Tuple
 from dateutil import parser
 import pandas as pd
+import matplotlib.pyplot as plt
 from rasa_sdk import Action, Tracker
 from rasa_sdk.executor import CollectingDispatcher
 from pymongo import MongoClient
@@ -1226,6 +1227,88 @@ class ActionCitywiseDeliveredOrderDistribution(Action):
         print(f"[TIME] action_citywise_delivered_order_distribution took {(time.time() - start_time):.2f} seconds")
         return []
 
+class ActionShowOrderTrends(Action):
+    def name(self) -> Text:
+        return "action_show_order_trends"
+
+    def run(self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+
+        import time
+        start_time = time.time()
+
+        customer_input = tracker.get_slot("customer_name")
+        if not customer_input:
+            dispatcher.utter_message("Please tell me who you are (e.g., from Ola or Wakefit).")
+            return []
+
+        # Get duration and unit
+        message = tracker.latest_message.get("text", "").lower()
+        print(f"[DEBUG] Message: {message}")
+
+        import re
+        number_match = re.search(r'\d+', message)
+        duration = int(number_match.group()) if number_match else 30
+
+        unit = "days"
+        if "month" in message:
+            unit = "months"
+
+        # Calculate start_date
+        if unit == "months":
+            start_date = datetime.now() - timedelta(days=duration * 30)
+            group_by = 'M'
+        else:
+            start_date = datetime.now() - timedelta(days=duration)
+            group_by = 'D'
+
+        end_date = datetime.now()
+
+        # Mongo customer match
+        all_names = collection.distinct("start.contact.name")
+        matched_customers = [name for name in all_names if customer_input.lower() in name.lower()]
+        if not matched_customers:
+            dispatcher.utter_message(f"No matching customer found for '{customer_input}'.")
+            return []
+
+        regex_conditions = [{"start.contact.name": {"$regex": name, "$options": "i"}} for name in matched_customers]
+        query = {
+            "$and": [
+                {"$or": regex_conditions},
+                {"createdAt": {"$gte": start_date, "$lt": end_date}}
+            ]
+        }
+
+        matched_orders = list(collection.find(query))
+        if not matched_orders:
+            dispatcher.utter_message("No orders found in the given range.")
+            return []
+
+        # Plotting
+        dates = [order["createdAt"].date() for order in matched_orders if "createdAt" in order]
+        df = pd.DataFrame(dates, columns=["date"])
+        df["date"] = pd.to_datetime(df["date"])
+        df_grouped = df.groupby(df["date"].dt.to_period(group_by)).size().reset_index(name="order_count")
+        df_grouped["date"] = df_grouped["date"].astype(str)
+
+        plt.figure(figsize=(8, 4))
+        plt.plot(df_grouped["date"], df_grouped["order_count"], marker='o')
+        plt.title(f"{unit.title()}ly Order Trend for {customer_input.title()}")
+        plt.xlabel("Month" if unit == "months" else "Date")
+        plt.ylabel("Orders")
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+
+        image_path = "trend_graph.png"
+        plt.savefig(image_path)
+        plt.close()
+
+        dispatcher.utter_message(f"Here is your order trend graph for the last {duration} {unit}:")
+        dispatcher.utter_message(image=image_path)
+
+        print(f"[TIME] action_show_order_trends took {time.time() - start_time:.2f} seconds")
+        return []
 
 class ActionDefaultFallback(Action):
     def name(self):

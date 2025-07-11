@@ -404,3 +404,40 @@ nlu:
     - Delivered shipment summary for [Ola ELE](customer_name)
     - Do we have city-level report for [Wakefit](customer_name)?
     - City distribution of orders belonging to [Ola ELE](customer_name)
+
+- intent: see_order_trends
+  examples: |
+    - show me order trends for last [30](trend_duration) [days](trend_unit)
+    - I want to see the order graph of [ola](customer_name) for last [7](trend_duration) [days](trend_unit)
+    - display the monthly order chart for [wakefit](customer_name) for last [2](trend_duration) [months](trend_unit)
+    - show me [3](trend_duration) [months](trend_unit) trend for [ola ele](customer_name)
+    - give me order trends for [ola](customer_name) in the past [15](trend_duration) [days](trend_unit)
+    - how are the orders in the last [10](trend_duration) [days](trend_unit) for [wakefit](customer_name)
+    - I need a graph of orders for [ola](customer_name) from last [5](trend_duration) [days](trend_unit)
+    - order trend of [wakefit](customer_name) for [2](trend_duration) [months](trend_unit)
+    - display past [6](trend_duration) [months](trend_unit) order report for [ola ele](customer_name)
+    - show order trends of [ola](customer_name)
+    - can you show me the last [7](trend_duration) [days](trend_unit) trend of [wakefit](customer_name)
+    - what are the order trends for [ola](customer_name) over [4](trend_duration) [months](trend_unit)
+    - give me a line chart for [ola](customer_name) of last [20](trend_duration) [days](trend_unit)
+    - past [12](trend_duration) [days](trend_unit) order trend of [wakefit](customer_name)
+    - [wakefit](customer_name) order graph for last [30](trend_duration) [days](trend_unit)
+
+
+- intent: see_order_trends
+  examples: |
+    - show me order trends for last [30](trend_duration) [days](trend_unit)
+    - I want to see the order graph of [ola](customer_name) for last [7](trend_duration) [days](trend_unit)
+    - display the monthly order chart for [wakefit](customer_name) for last [2](trend_duration) [months](trend_unit)
+    - show me [3](trend_duration) [months](trend_unit) trend for [ola ele](customer_name)
+    - give me order trends for [ola](customer_name) in the past [15](trend_duration) [days](trend_unit)
+    - how are the orders in the last [10](trend_duration) [days](trend_unit) for [wakefit](customer_name)
+    - I need a graph of orders for [ola](customer_name) from last [5](trend_duration) [days](trend_unit)
+    - order trend of [wakefit](customer_name) for [2](trend_duration) [months](trend_unit)
+    - display past [6](trend_duration) [months](trend_unit) order report for [ola ele](customer_name)
+    - show order trends of [ola](customer_name)
+    - can you show me the last [7](trend_duration) [days](trend_unit) trend of [wakefit](customer_name)
+    - what are the order trends for [ola](customer_name) over [4](trend_duration) [months](trend_unit)
+    - give me a line chart for [ola](customer_name) of last [20](trend_duration) [days](trend_unit)
+    - past [12](trend_duration) [days](trend_unit) order trend of [wakefit](customer_name)
+    - [wakefit](customer_name) order graph for last [30](trend_duration) [days](trend_unit)
