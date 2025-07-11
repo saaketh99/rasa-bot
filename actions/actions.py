@@ -1305,6 +1305,7 @@ class ActionShowOrderTrends(Action):
         public_url = f"http://51.20.18.59:8080/static/graphs/{filename}"
         dispatcher.utter_message(f" Here is your order trend graph for the last {duration} {unit}:")
         dispatcher.utter_message(image=public_url)
+        dispatcher.utter_message(f" [Click here to view the graph]({public_url})")
 
         print(f"[TIME] action_show_order_trends took {time.time() - start_time:.2f} seconds")
         return []
@@ -1390,6 +1391,7 @@ class ActionDelayedOrdersGraph(Action):
         public_url = f"http://51.20.18.59:8080/static/graphs/{filename}"
         dispatcher.utter_message(f"Here's the pending order trend for the last {duration} {unit}:")
         dispatcher.utter_message(image=public_url)
+        dispatcher.utter_message(f" [Click here to view the graph]({public_url})")
 
         print(f"[TIME] action_delayed_orders_graph took {(time.time() - start_time):.2f} seconds")
         return []
