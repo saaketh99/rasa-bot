@@ -229,7 +229,7 @@ class ActionCxOrder(Action):
             return []
 
         message = f" Orders for **{customer_input}** from **{s_date}** to **{e_date}**:\n"
-        for order in matched_orders[::10]:
+        for order in matched_orders[:10]:
             order_id = order.get("sm_orderid", "N/A")
             sender_city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
             recipient_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
@@ -268,7 +268,7 @@ class ActionrouteOrder(Action):
             return []
 
         message = f"Orders from {pickup} to {drop}:\n"
-        for order in matched_orders:
+        for order in matched_orders[:10]:
             created_date = order.get("createdAt")
             booking_date = created_date.strftime('%Y-%m-%d') if hasattr(created_date, 'strftime') else str(created_date)
             message += (
@@ -315,7 +315,7 @@ class ActionFordestination(Action):
             return []
 
         message = f"Orders for '{customer_input}' delivered to {destination}:\n"
-        for order in matched_orders[::10]:
+        for order in matched_orders[:10]:
             sender_city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
             recipient_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
             order_id = order.get("sm_orderid", "N/A")
@@ -379,7 +379,7 @@ class ActionGetOrdersByStatus(Action):
             return []
 
         message = "Orders:\n"
-        for order in matched_orders[::10]:
+        for order in matched_orders[:10]:
             order_id = order.get("sm_orderid", "N/A")
             customer_name = order.get("start", {}).get("contact", {}).get("name", "Unknown")
             booking_date_raw = order.get("createdAt", None)
@@ -509,7 +509,7 @@ class ActionGetOrdersByTAT(Action):
             f"Delivered in {tat_days} days: {len(matching_orders)}\n\n"
         )
 
-        for o in matching_orders[::10]:
+        for o in matching_orders[:10]:
             message += (
                 f"Order ID: {o['order_id']} | Sender: {o['sender']} | "
                 f"Booking: {o['booking_date']} | Delivered: {o['delivery_date']} | "
@@ -581,7 +581,7 @@ class ActionGetOrdersByTAT(Action):
             f"Delivered in {tat_days} days: {len(matching_orders)}\n\n"
         )
 
-        for o in matching_orders[::10]:
+        for o in matching_orders[:10]:
             message += (
                 f"Order ID: {o['order_id']} | Sender: {o['sender']} | "
                 f"Booking: {o['booking_date']} | Delivered: {o['delivery_date']} | "
@@ -646,7 +646,7 @@ class ActionPendingOrdersPastDays(Action):
 
         rows = []
         message = f"Pending orders for **{customer_input}** in the past **{n_days}** days:\n"
-        for order in results[::10]:
+        for order in results[:10]:
             order_id = order.get("sm_orderid", "N/A")
             status = order.get("orderStatus", "Unknown")
             created_at = order.get("createdAt")
@@ -804,7 +804,7 @@ class ActionDynamicOrderQuery(Action):
                 return []
 
             message = f" **Delivered Orders between {start_date_str} and {end_date_str}**\n"
-            for order in results[::10]:
+            for order in results[:10]:
                 order_id = order.get("sm_orderid", "N/A")
                 status = order.get("orderStatus", "Delivered")
                 rows.append({"Order ID": order_id, "Status": status})
@@ -849,7 +849,7 @@ class ActionDynamicOrderQuery(Action):
             filename = f"orders_{location_code}_{start_date_str}_to_{end_date_str}.xlsx"
 
 
-        for row in rows:
+        for row in rows[:10]:
             message += "- " + " | ".join(f"{k}: {v}" for k, v in row.items()) + "\n"
         message += f"\n**Total Records**: {len(rows)}"
 
@@ -1024,7 +1024,7 @@ class ActionPendingOrdersBeforeLastTwoDays(Action):
         message = (
             f"Pending orders created before **{cutoff_date.strftime('%Y-%m-%d')}**:\n"
         )
-        for order in results[::10]:
+        for order in results[:10]:
             order_id = order.get("sm_orderid", "N/A")
             status = order.get("orderStatus", "Unknown")
             created_at = order.get("createdAt")
@@ -1177,7 +1177,7 @@ class ActionCitywiseDeliveredOrderDistribution(Action):
         city_counts = Counter()
         filtered_orders = []
 
-        for order in results:
+        for order in results[:10]:
             city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
             order_id = order.get("sm_orderid", "N/A")
             status = order.get("orderStatus", "delivered")
@@ -1243,7 +1243,7 @@ class ActionShowOrderTrends(Action):
             dispatcher.utter_message("Please tell me who you are (e.g., from Ola or Wakefit).")
             return []
 
-        # Get duration and unit
+
         message = tracker.latest_message.get("text", "").lower()
         print(f"[DEBUG] Message: {message}")
 
@@ -1255,7 +1255,7 @@ class ActionShowOrderTrends(Action):
         if "month" in message:
             unit = "months"
 
-        # Calculate start_date
+        
         if unit == "months":
             start_date = datetime.now() - timedelta(days=duration * 30)
             group_by = 'M'
@@ -1265,7 +1265,7 @@ class ActionShowOrderTrends(Action):
 
         end_date = datetime.now()
 
-        # Mongo customer match
+        
         all_names = collection.distinct("start.contact.name")
         matched_customers = [name for name in all_names if customer_input.lower() in name.lower()]
         if not matched_customers:
@@ -1285,7 +1285,6 @@ class ActionShowOrderTrends(Action):
             dispatcher.utter_message("No orders found in the given range.")
             return []
 
-        # Plotting
         dates = [order["createdAt"].date() for order in matched_orders if "createdAt" in order]
         df = pd.DataFrame(dates, columns=["date"])
         df["date"] = pd.to_datetime(df["date"])
@@ -1300,7 +1299,7 @@ class ActionShowOrderTrends(Action):
         plt.xticks(rotation=45)
         plt.tight_layout()
 
-        image_path = "trend_graph.png"
+        image_path = "/trend_graph.png"
         plt.savefig(image_path)
         plt.close()
 

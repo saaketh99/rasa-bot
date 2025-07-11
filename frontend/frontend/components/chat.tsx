@@ -84,16 +84,10 @@ const SUGGESTIONS = [
   "Show orders by location"
 ];
 
+// Remove session ID logic and related useEffects
 // --- Session ID logic ---
-function getOrCreateSessionId() {
-  if (typeof window === 'undefined') return '';
-  let sessionId = localStorage.getItem('chat_session_id');
-  if (!sessionId) {
-    sessionId = Math.random().toString(36).substr(2, 9) + Date.now();
-    localStorage.setItem('chat_session_id', sessionId);
-  }
-  return sessionId;
-}
+// function getOrCreateSessionId() { ... }
+// const sessionId = getOrCreateSessionId();
 
 export function Chat() {
   const { theme, setTheme } = useTheme();
@@ -114,8 +108,7 @@ export function Chat() {
   const inputRef = useRef<HTMLInputElement>(null)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([])
-  const sessionId = getOrCreateSessionId();
-  // Remove availableSessions, setAvailableSessions, and session-related useEffect/UI
+  // Remove session ID logic and related useEffects
   // Only keep conversation-related logic and UI
 
   // Ensure component only renders on client side
@@ -195,33 +188,8 @@ export function Chat() {
     }
   }, [conversations, currentConversationId]);
 
-  // Load session from backend on mount
-  useEffect(() => {
-    if (!mounted) return;
-    fetch(`http://51.20.18.59:8000/conversations/${sessionId}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
-          setMessages(data.messages);
-        }
-      })
-      .catch(() => {});
-  }, [mounted]);
-
-  // Save session to backend whenever messages change (after mount)
-  useEffect(() => {
-    if (!mounted) return;
-    fetch("http://51.20.18.59:8000/conversations", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        session_id: sessionId,
-        messages,
-      })
-    }).catch(() => {});
-  }, [messages, mounted, sessionId]);
-
-  // Remove availableSessions, setAvailableSessions, and session-related useEffect/UI
+  // Remove useEffect for loading session from backend by sessionId
+  // Remove useEffect for saving session to backend by sessionId
   // Only keep conversation-related logic and UI
 
   const scrollToBottom = () => {
