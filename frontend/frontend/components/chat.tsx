@@ -485,12 +485,53 @@ export function Chat() {
                         )}
 
                         {message.image && (
-                          <div className="mt-2">
+                          <div className="mt-2 flex flex-col items-center">
                             <img
                               src={message.image || "/placeholder.svg"}
                               alt="Bot response"
-                              className="max-w-full h-auto rounded"
+                              className="max-w-full h-auto rounded border border-gray-300"
+                              id={`trend-graph-img-${idx}`}
                             />
+                            {/* Download button for trend graph image */}
+                            {(() => {
+                              // Only show for the last bot message with a trend graph image
+                              const isTrendGraph = message.image && message.image.includes("trend_graph");
+                              const isLastTrendGraph =
+                                isTrendGraph &&
+                                messages.slice(idx + 1).every(m => !(m.sender === "bot" && m.image && m.image.includes("trend_graph")));
+                              if (!isLastTrendGraph) return null;
+                              return (
+                                <button
+                                  onClick={() => {
+                                    const img = document.getElementById(`trend-graph-img-${idx}`) as HTMLImageElement;
+                                    if (!img) return;
+                                    // Create a canvas to draw the image and trigger download
+                                    const canvas = document.createElement('canvas');
+                                    canvas.width = img.naturalWidth;
+                                    canvas.height = img.naturalHeight;
+                                    const ctx = canvas.getContext('2d');
+                                    if (ctx) {
+                                      ctx.drawImage(img, 0, 0);
+                                      canvas.toBlob(blob => {
+                                        if (blob) {
+                                          const url = URL.createObjectURL(blob);
+                                          const a = document.createElement('a');
+                                          a.href = url;
+                                          a.download = 'order_trend_graph.png';
+                                          document.body.appendChild(a);
+                                          a.click();
+                                          document.body.removeChild(a);
+                                          URL.revokeObjectURL(url);
+                                        }
+                                      }, 'image/png');
+                                    }
+                                  }}
+                                  style={{ marginTop: 8, padding: "8px 16px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}
+                                >
+                                  📈 Download Graph
+                                </button>
+                              );
+                            })()}
                           </div>
                         )}
 
