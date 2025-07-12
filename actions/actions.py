@@ -1416,6 +1416,7 @@ class ActionStakeholderDistribution(Action):
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
 
+
         start_time = time.time()
 
         customer_name = next(tracker.get_latest_entity_values("customer_name"), None)
@@ -1433,18 +1434,27 @@ class ActionStakeholderDistribution(Action):
             dispatcher.utter_message(msg)
             return []
 
-        stakeholder_types = [
-            order.get("stakeholders", {}).get("stakeholderType", "Unknown")
-            for order in results
-        ]
+        stakeholder_types = []
+        for order in results:
+            try:
+                events = order.get("orderStatusEvents", [])
+                if events and isinstance(events, list):
+                    stakeholder_type = events[0].get("stakeholderType", "Unknown")
+                else:
+                    stakeholder_type = "Unknown"
+            except Exception:
+                stakeholder_type = "Unknown"
+            stakeholder_types.append(stakeholder_type)
 
         if not stakeholder_types:
             dispatcher.utter_message("No stakeholder type information found.")
             return []
 
+
         counts = Counter(stakeholder_types)
 
-        response = "Stakeholder type distribution"
+    
+        response = " **Stakeholder Type Distribution**"
         if customer_name:
             response += f" for **{customer_name.title()}**"
         response += ":\n"

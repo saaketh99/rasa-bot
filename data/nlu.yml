@@ -467,33 +467,24 @@ nlu:
 
 - intent: get_stakeholder_distribution
   examples: |
-    - what is the stakeholder type distribution?
-    - can you show who books most orders?
-    - give me a graph of stakeholder types
-    - I want to see stakeholder-wise order distribution
-    - plot the stakeholder type chart
-    - show stakeholder category breakdown
-    - how are the orders distributed by stakeholder type?
-    - who are the major stakeholders in bookings?
-    - breakdown of order bookings by stakeholder type
-    - what type of stakeholders usually place orders?
-    - generate stakeholder analytics graph
-    - stakeholder types and their order share
-    - visualize order booking distribution by stakeholder
-    - which stakeholder type books the most?
-    - stakeholder type wise order report
-    - draw pie chart for stakeholder types
-    - stakeholder type count distribution
-    - summarize who has booked the orders so far
-    - show me a chart for stakeholder classification
-    - what is the stakeholder distribution for [Ola](customer_name)?
-    - can you show stakeholder types for [Wakefit](customer_name)?
-    - who booked orders for [Ola](customer_name)?
-    - show stakeholder type distribution of [Wakefit](customer_name)
-    - stakeholder classification for customer [Ola](customer_name)
-    - stakeholder types who placed orders from [Wakefit](customer_name)
-    - stakeholder graph of [Ola](customer_name)'s orders
-    - analyze stakeholder distribution for [Wakefit](customer_name)
-    - stakeholder type summary for [Ola](customer_name)
-    - stakeholder wise distribution chart for [Wakefit](customer_name)
+    - what is the stakeholder type distribution
+    - who is updating the orders
+    - give me the distribution of stakeholders updating the orders
+    - show who updated the orders
+    - what types of stakeholders are making updates to the orders
+    - stakeholder types involved in updating the order statuses
+    - how are the orders being updated, by which stakeholders
+    - i want to know who is performing the status updates
+    - stakeholder update distribution for all orders
+    - get me stakeholder types who updated orders
+    - stakeholder-wise order update count
+    - share stakeholder distribution for status updates
+    - can you tell me who updated the orders
+    - show stakeholder type frequency for event updates
+    - tell me which types of stakeholders updated orders
+    - who updated the orders for [Ola](customer_name)
+    - stakeholder type distribution for [Wakefit](customer_name)
+    - who is updating events for [Ola](customer_name) orders
+    - stakeholder update share for customer [Wakefit](customer_name)
+    - tell me who updated [Ola](customer_name)'s orders
 
