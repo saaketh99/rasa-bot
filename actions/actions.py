@@ -1407,7 +1407,6 @@ class ActionDelayedOrdersGraph(Action):
 
         print(f"[TIME] action_order_trend_graph_by_status took {(time.time() - start_time):.2f} seconds")
         return []
-
 class ActionStakeholderDistribution(Action):
     def name(self) -> Text:
         return "action_stakeholder_distribution"
@@ -1417,30 +1416,46 @@ class ActionStakeholderDistribution(Action):
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
 
         start_time = time.time()
-        customer_input = tracker.get_slot("customer_name") or next(tracker.get_latest_entity_values("customer_name"), None)
+        customer_input = tracker.get_slot("customer_name")
+        if not customer_input:
+            customer_input = next(tracker.get_latest_entity_values("customer_name"), None)
 
         match_stage = {}
         if customer_input:
-            match_stage = {"start.contact.name": {"$regex": customer_input, "$options": "i"}}
+            match_stage = {
+                "start.contact.name": {"$regex": customer_input, "$options": "i"}
+            }
+
+        delivery_statuses = ["delivered", "delivered_to_neighbour", "delivered_to_watchman"]
 
         stakeholder_pipeline = []
         if match_stage:
             stakeholder_pipeline.append({"$match": match_stage})
-
         stakeholder_pipeline += [
             {
                 "$project": {
-                    "stakeholderType": {
-                        "$ifNull": [
-                            {"$arrayElemAt": ["$orderStatusEvents.stakeholderType", 0]},
-                            "Unknown"
-                        ]
-                    }
+                    "deliveredEvent": {
+                        "$first": {
+                            "$filter": {
+                                "input": "$orderStatusEvents",
+                                "as": "event",
+                                "cond": {
+                                    "$in": ["$$event.status", delivery_statuses]
+                                }
+                            }
+                        }
+                    },
+                    "sm_orderid": 1
+                }
+            },
+            {
+                "$match": {
+                    "deliveredEvent": {"$ne": None}
                 }
             },
             {
                 "$group": {
-                    "_id": "$stakeholderType",
+                    "_id": "$deliveredEvent.stakeholderType",
                     "count": {"$sum": 1}
                 }
             }
@@ -1450,8 +1465,18 @@ class ActionStakeholderDistribution(Action):
         if match_stage:
             total_orders_pipeline.append({"$match": match_stage})
         total_orders_pipeline += [
-            {"$group": {"_id": "$sm_orderid"}},
-            {"$count": "total"}
+            {
+                "$match": {
+                    "orderStatusEvents": {
+                        "$elemMatch": {
+                            "status": {"$in": delivery_statuses}
+                        }
+                    }
+                }
+            },
+            {
+                "$count": "total"
+            }
         ]
 
         try:
@@ -1462,17 +1487,16 @@ class ActionStakeholderDistribution(Action):
             print(f"[ERROR] {e}")
             return []
 
-        total_orders = total_count_data[0]["total"] if total_count_data else 0
+        total_delivered = total_count_data[0]["total"] if total_count_data else 0
 
         if not stakeholder_data:
-            msg = "No orders found"
+            msg = "No delivered orders found"
             if customer_input:
                 msg += f" for customer **{customer_input}**."
             dispatcher.utter_message(msg)
             return []
 
-
-        response = "**Stakeholder Type Distribution**"
+        response = "**Stakeholder Distribution for Delivered Orders**"
         if customer_input:
             response += f" for **{customer_input.title()}**"
         response += ":\n"
@@ -1482,7 +1506,7 @@ class ActionStakeholderDistribution(Action):
             count = item["count"]
             response += f"- {st_type}: {count}\n"
 
-        response += f"\n**Total Orders**: {total_orders}"
+        response += f"\n**Total Delivered Orders**: {total_delivered}"
         dispatcher.utter_message(response)
 
         print(f"[TIME] action_stakeholder_distribution took {(time.time() - start_time):.2f} seconds")
