@@ -1408,7 +1408,6 @@ class ActionDelayedOrdersGraph(Action):
         print(f"[TIME] action_order_trend_graph_by_status took {(time.time() - start_time):.2f} seconds")
         return []
 
-
 class ActionStakeholderDistribution(Action):
     def name(self) -> Text:
         return "action_stakeholder_distribution"
@@ -1418,67 +1417,77 @@ class ActionStakeholderDistribution(Action):
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
 
         start_time = time.time()
+        customer_input = tracker.get_slot("customer_name") or next(tracker.get_latest_entity_values("customer_name"), None)
 
-        customer_input = tracker.get_slot("customer_name")
-        if not customer_input:
-            customer_input = next(tracker.get_latest_entity_values("customer_name"), None)
-
-        pipeline = []
-
+        match_stage = {}
         if customer_input:
-            pipeline.append({
-                "$match": {
-                    "start.contact.name": {"$regex": customer_input, "$options": "i"}
-                }
-            })
+            match_stage = {"start.contact.name": {"$regex": customer_input, "$options": "i"}}
 
-        pipeline += [
+        stakeholder_pipeline = []
+        if match_stage:
+            stakeholder_pipeline.append({"$match": match_stage})
+
+        stakeholder_pipeline += [
             {
                 "$project": {
-                    "firstStakeholder": {"$arrayElemAt": ["$orderStatusEvents", 0]}
+                    "stakeholderType": {
+                        "$ifNull": [
+                            {"$arrayElemAt": ["$orderStatusEvents.stakeholderType", 0]},
+                            "Unknown"
+                        ]
+                    }
                 }
             },
             {
                 "$group": {
-                    "_id": "$firstStakeholder.stakeholderType",
+                    "_id": "$stakeholderType",
                     "count": {"$sum": 1}
                 }
             }
         ]
 
+        total_orders_pipeline = []
+        if match_stage:
+            total_orders_pipeline.append({"$match": match_stage})
+        total_orders_pipeline += [
+            {"$group": {"_id": "$sm_orderid"}},
+            {"$count": "total"}
+        ]
+
         try:
-            results = list(collection.aggregate(pipeline))
+            stakeholder_data = list(collection.aggregate(stakeholder_pipeline))
+            total_count_data = list(collection.aggregate(total_orders_pipeline))
         except Exception as e:
-            dispatcher.utter_message("Something went wrong while querying the database.")
+            dispatcher.utter_message("Error while querying the database.")
             print(f"[ERROR] {e}")
             return []
 
-        if not results:
+        total_orders = total_count_data[0]["total"] if total_count_data else 0
+
+        if not stakeholder_data:
             msg = "No orders found"
             if customer_input:
                 msg += f" for customer **{customer_input}**."
             dispatcher.utter_message(msg)
             return []
 
+
         response = "**Stakeholder Type Distribution**"
         if customer_input:
             response += f" for **{customer_input.title()}**"
         response += ":\n"
 
-        total_orders = 0
-        for item in results:
-            stakeholder_type = item["_id"] or "Unknown"
+        for item in stakeholder_data:
+            st_type = item["_id"] or "Unknown"
             count = item["count"]
-            total_orders += count
-            response += f"- {stakeholder_type}: {count}\n"
+            response += f"- {st_type}: {count}\n"
 
         response += f"\n**Total Orders**: {total_orders}"
         dispatcher.utter_message(response)
 
         print(f"[TIME] action_stakeholder_distribution took {(time.time() - start_time):.2f} seconds")
         return []
-
-
+    
 class ActionDefaultFallback(Action):
     def name(self):
         return "action_default_fallback"
