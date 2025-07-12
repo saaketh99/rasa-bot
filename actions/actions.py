@@ -1408,17 +1408,6 @@ class ActionDelayedOrdersGraph(Action):
         print(f"[TIME] action_order_trend_graph_by_status took {(time.time() - start_time):.2f} seconds")
         return []
 
-from typing import Any, Text, Dict, List
-from rasa_sdk import Action, Tracker
-from rasa_sdk.executor import CollectingDispatcher
-from pymongo import MongoClient
-from collections import Counter
-import time
-
-# MongoDB setup (adjust your URI and DB/collection name as needed)
-client = MongoClient("your_mongodb_connection_uri")
-db = client["your_database_name"]
-collection = db["your_collection_name"]
 
 class ActionStakeholderDistribution(Action):
     def name(self) -> Text:
