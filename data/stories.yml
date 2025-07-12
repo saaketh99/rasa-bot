@@ -106,5 +106,5 @@ stories:
 
 - story: Stakeholder distribution without customer name
   steps:
-    - intent: ask_stakeholder_distribution
+    - intent: get_stakeholder_distribution
     - action: action_stakeholder_distribution
