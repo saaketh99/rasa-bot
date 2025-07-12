@@ -52,20 +52,49 @@ function ClientTime({ timestamp }: { timestamp: number }) {
 
 // Helper to render message text with download button if link is present
 function renderMessageText(text: string) {
-  // Regex to match the download link
-  const downloadRegex = /<a [^>]*href=["']([^"']+)["'][^>]*download[^>]*>([\s\S]*?)<\/a>/i;
-  const match = text.match(downloadRegex);
+  // Regex to match markdown links: [label](url)
+  const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/;
+  const match = text.match(markdownLinkRegex);
   if (match) {
-    const url = match[1];
-    // Instead of rendering a button, just render the link text or nothing
-    // return (
-    //   <a href={url} download target="_blank" rel="noopener noreferrer">
-    //     <button style={{ padding: "10px 20px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "5px" }}>
-    //       📥 Download Excel
-    //     </button>
-    //   </a>
-    // );
-    return null; // or return <span />; if you want to show nothing
+    const label = match[1];
+    const url = match[2];
+    // If the link is to an image, show the image and a download button
+    if (url.match(/\.(png|jpg|jpeg|gif|svg)$/i)) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+          <img
+            src={url}
+            alt={label}
+            style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid #ddd', marginBottom: 8 }}
+          />
+          <button
+            onClick={() => {
+              // Download the image
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = url.split('/').pop() || 'graph.png';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+            }}
+            style={{ padding: '8px 16px', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: 5, cursor: 'pointer' }}
+          >
+            📈 Download Graph
+          </button>
+        </div>
+      );
+    } else {
+      // Otherwise, show a button to open the link
+      return (
+        <a href={url} target="_blank" rel="noopener noreferrer">
+          <button
+            style={{ padding: '8px 16px', backgroundColor: '#1976d2', color: 'white', border: 'none', borderRadius: 5, cursor: 'pointer' }}
+          >
+            {label}
+          </button>
+        </a>
+      );
+    }
   }
   // Fallback: render as plain text
   return <span>{text}</span>;

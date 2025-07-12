@@ -22,6 +22,7 @@ intents:
   - nlu_fallback
   - see_order_trends
   - get_delayed_order_trend
+  - get_stakeholder_distribution
 
 
 entities:
@@ -72,6 +73,7 @@ actions:
  - action_citywise_delivered_order_distribution
  - action_show_order_trends
  - action_delayed_orders_graph
+ - action_stakeholder_distribution
 
   
 slots:

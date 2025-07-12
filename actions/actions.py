@@ -1322,7 +1322,7 @@ class ActionDelayedOrdersGraph(Action):
         start_time = time.time()
 
         customer_name = next(tracker.get_latest_entity_values("customer_name"), None)
-
+        status_entity = next(tracker.get_latest_entity_values("order_status"), None)
         message = tracker.latest_message.get("text", "").lower()
         print(f"[DEBUG] Message: {message}")
 
@@ -1334,18 +1334,29 @@ class ActionDelayedOrdersGraph(Action):
 
         delivered_statuses = ["delivered", "delivered_at_security", "delivered_at_neighbor"]
         cancelled_statuses = ["cancelled", "canceled"]
-        exclude_statuses = set(delivered_statuses + cancelled_statuses)
-
         known_statuses = collection.distinct("orderStatus")
-        pending_statuses = [status for status in known_statuses if status not in exclude_statuses]
 
-        if unit == "months":
-            start_date = datetime.now() - timedelta(days=duration * 30)
+        if status_entity:
+            if "deliver" in status_entity:
+                filtered_statuses = delivered_statuses
+                display_status = "Delivered"
+            elif "cancel" in status_entity:
+                filtered_statuses = cancelled_statuses
+                display_status = "Cancelled"
+            elif "delay" in status_entity or "pending" in status_entity:
+                filtered_statuses = [s for s in known_statuses if s not in delivered_statuses + cancelled_statuses]
+                display_status = "Pending"
+            else:
+                filtered_statuses = [status_entity]
+                display_status = status_entity.capitalize()
         else:
-            start_date = datetime.now() - timedelta(days=duration)
+            filtered_statuses = [s for s in known_statuses if s not in delivered_statuses + cancelled_statuses]
+            display_status = "Pending"
+
+        start_date = datetime.now() - timedelta(days=duration * 30 if unit == "months" else duration)
 
         query_filter = {
-            "orderStatus": {"$in": pending_statuses},
+            "orderStatus": {"$in": filtered_statuses},
             "createdAt": {"$gte": start_date}
         }
 
@@ -1355,14 +1366,13 @@ class ActionDelayedOrdersGraph(Action):
         results = list(collection.find(query_filter))
 
         if not results:
-            msg = f"No delayed (pending) orders found"
+            msg = f"No **{display_status}** orders found"
             if customer_name:
                 msg += f" for **{customer_name}**"
             msg += f" in the last {duration} {unit}."
             dispatcher.utter_message(msg)
             return []
 
-    
         dates = [order["createdAt"].date() for order in results if "createdAt" in order]
         df = pd.DataFrame(dates, columns=["date"])
         df["date"] = pd.to_datetime(df["date"])
@@ -1372,7 +1382,9 @@ class ActionDelayedOrdersGraph(Action):
 
         plt.figure(figsize=(8, 4))
         plt.plot(df_grouped["date"], df_grouped["order_count"], marker='o')
-        title = f"Pending Orders Trend - {customer_name.title()}" if customer_name else "Pending Orders Trend"
+        title = f"{display_status} Orders Trend"
+        if customer_name:
+            title += f" - {customer_name.title()}"
         plt.title(title)
         plt.xlabel("Month" if unit == "months" else "Date")
         plt.ylabel("Number of Orders")
@@ -1380,7 +1392,7 @@ class ActionDelayedOrdersGraph(Action):
         plt.tight_layout()
 
         os.makedirs("static/graphs", exist_ok=True)
-        filename = f"pending_orders_graph"
+        filename = f"{display_status.lower()}_orders_graph"
         if customer_name:
             filename += f"_{customer_name.replace(' ', '_')}"
         filename += ".png"
@@ -1389,11 +1401,59 @@ class ActionDelayedOrdersGraph(Action):
         plt.close()
 
         public_url = f"http://51.20.18.59:8080/static/graphs/{filename}"
-        dispatcher.utter_message(f"Here's the pending order trend for the last {duration} {unit}:")
+        dispatcher.utter_message(f"Here's the **{display_status}** order trend for the last {duration} {unit}:")
         dispatcher.utter_message(image=public_url)
-        dispatcher.utter_message(f" [Click here to view the graph]({public_url})")
+        dispatcher.utter_message(f"[Click here to view the graph]({public_url})")
 
-        print(f"[TIME] action_delayed_orders_graph took {(time.time() - start_time):.2f} seconds")
+        print(f"[TIME] action_order_trend_graph_by_status took {(time.time() - start_time):.2f} seconds")
+        return []
+
+class ActionStakeholderDistribution(Action):
+    def name(self) -> Text:
+        return "action_stakeholder_distribution"
+
+    def run(self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+
+        start_time = time.time()
+
+        customer_name = next(tracker.get_latest_entity_values("customer_name"), None)
+        query_filter = {}
+
+        if customer_name:
+            query_filter["start.contact.name"] = Regex(customer_name, "i")
+
+        results = list(collection.find(query_filter))
+
+        if not results:
+            msg = "No orders found"
+            if customer_name:
+                msg += f" for customer **{customer_name}**."
+            dispatcher.utter_message(msg)
+            return []
+
+        stakeholder_types = [
+            order.get("stakeholders", {}).get("stakeholderType", "Unknown")
+            for order in results
+        ]
+
+        if not stakeholder_types:
+            dispatcher.utter_message("No stakeholder type information found.")
+            return []
+
+        counts = Counter(stakeholder_types)
+
+        response = "Stakeholder type distribution"
+        if customer_name:
+            response += f" for **{customer_name.title()}**"
+        response += ":\n"
+
+        for stype, count in counts.items():
+            response += f"- {stype}: {count}\n"
+
+        dispatcher.utter_message(response)
+        print(f"[TIME] action_stakeholder_distribution took {(time.time() - start_time):.2f} seconds")
         return []
 
 

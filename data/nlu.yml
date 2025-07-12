@@ -444,13 +444,56 @@ nlu:
 
 - intent: get_delayed_order_trend
   examples: |
-    - show me delayed orders for [Ola](customer_name) for last [30](number) [days](time_unit)
-    - give pending orders trend of [Wakefit](customer_name) in last [2](number) [months](time_unit)
-    - i want to see [Ola](customer_name)'s delayed orders of past [1](number) [month](time_unit)
-    - can you show delayed trend for [Wakefit](customer_name) for [15](number) [days](time_unit)
-    - tell me how many pending orders [Ola](customer_name) had in last [3](number) [months](time_unit)
-    - show me the graph for delayed orders for [Wakefit](customer_name) in last [7](number) [days](time_unit)
-    - order delay trend of [Wakefit](customer_name) from last [5](number) [days](time_unit)
-    - plot delay trend for [Ola](customer_name) for [2](number) [months](time_unit)
-    - delayed orders graph [Ola](customer_name) [30](number) [days](time_unit)
-    - get me pending trend of [Wakefit](customer_name) [1](number) [month](time_unit)
+    - show me [delayed](order_status) orders for [Ola](customer_name) for last [30](number) [days](time_unit)
+    - give [pending](order_status) orders trend of [Wakefit](customer_name) in last [2](number) [months](time_unit)
+    - i want to see [Ola](customer_name)'s [delayed](order_status) orders of past [1](number) [month](time_unit)
+    - can you show [delayed](order_status) trend for [Wakefit](customer_name) for [15](number) [days](time_unit)
+    - tell me how many [pending](order_status) orders [Ola](customer_name) had in last [3](number) [months](time_unit)
+    - show me the graph for [delayed](order_status) orders for [Wakefit](customer_name) in last [7](number) [days](time_unit)
+    - order [delay](order_status) trend of [Wakefit](customer_name) from last [5](number) [days](time_unit)
+    - plot [delay](order_status) trend for [Ola](customer_name) for [2](number) [months](time_unit)
+    - [delayed](order_status) orders graph [Ola](customer_name) [30](number) [days](time_unit)
+    - get me [pending](order_status) trend of [Wakefit](customer_name) [1](number) [month](time_unit)
+    - give [delivered](order_status) orders chart of [Ola](customer_name) from past [6](number) [months](time_unit)
+    - show [cancelled](order_status) orders for [Wakefit](customer_name) over last [10](number) [days](time_unit)
+    - can you show [delivered](order_status) order trends for [Ola](customer_name) from [3](number) [months](time_unit)
+    - how many [delayed](order_status) orders did [Wakefit](customer_name) have over [4](number) [months](time_unit)
+    - i want [delivered](order_status) order graph for [Ola](customer_name) in last [60](number) [days](time_unit)
+    - trend of [cancelled](order_status) orders for [Wakefit](customer_name) for [20](number) [days](time_unit)
+    - graph for [pending](order_status) [Ola](customer_name) orders for last [14](number) [days](time_unit)
+    - [Wakefit](customer_name) [delivered](order_status) orders trend in [1](number) [month](time_unit)
+    - last [2](number) [months](time_unit) [delayed](order_status) order trend of [Ola](customer_name)
+    - get [Ola](customer_name)'s [delivered](order_status) graph for last [3](number) [months](time_unit)
+
+- intent: get_stakeholder_distribution
+  examples: |
+    - what is the stakeholder type distribution?
+    - can you show who books most orders?
+    - give me a graph of stakeholder types
+    - I want to see stakeholder-wise order distribution
+    - plot the stakeholder type chart
+    - show stakeholder category breakdown
+    - how are the orders distributed by stakeholder type?
+    - who are the major stakeholders in bookings?
+    - breakdown of order bookings by stakeholder type
+    - what type of stakeholders usually place orders?
+    - generate stakeholder analytics graph
+    - stakeholder types and their order share
+    - visualize order booking distribution by stakeholder
+    - which stakeholder type books the most?
+    - stakeholder type wise order report
+    - draw pie chart for stakeholder types
+    - stakeholder type count distribution
+    - summarize who has booked the orders so far
+    - show me a chart for stakeholder classification
+    - what is the stakeholder distribution for [Ola](customer_name)?
+    - can you show stakeholder types for [Wakefit](customer_name)?
+    - who booked orders for [Ola](customer_name)?
+    - show stakeholder type distribution of [Wakefit](customer_name)
+    - stakeholder classification for customer [Ola](customer_name)
+    - stakeholder types who placed orders from [Wakefit](customer_name)
+    - stakeholder graph of [Ola](customer_name)'s orders
+    - analyze stakeholder distribution for [Wakefit](customer_name)
+    - stakeholder type summary for [Ola](customer_name)
+    - stakeholder wise distribution chart for [Wakefit](customer_name)
+
