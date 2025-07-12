@@ -1408,6 +1408,18 @@ class ActionDelayedOrdersGraph(Action):
         print(f"[TIME] action_order_trend_graph_by_status took {(time.time() - start_time):.2f} seconds")
         return []
 
+from typing import Any, Text, Dict, List
+from rasa_sdk import Action, Tracker
+from rasa_sdk.executor import CollectingDispatcher
+from pymongo import MongoClient
+from collections import Counter
+import time
+
+# MongoDB setup (adjust your URI and DB/collection name as needed)
+client = MongoClient("your_mongodb_connection_uri")
+db = client["your_database_name"]
+collection = db["your_collection_name"]
+
 class ActionStakeholderDistribution(Action):
     def name(self) -> Text:
         return "action_stakeholder_distribution"
@@ -1416,53 +1428,64 @@ class ActionStakeholderDistribution(Action):
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
 
-
         start_time = time.time()
 
-        customer_name = next(tracker.get_latest_entity_values("customer_name"), None)
-        query_filter = {}
+        customer_input = tracker.get_slot("customer_name")
+        if not customer_input:
+            customer_input = next(tracker.get_latest_entity_values("customer_name"), None)
 
-        if customer_name:
-            query_filter["start.contact.name"] = Regex(customer_name, "i")
+        pipeline = []
 
-        results = list(collection.find(query_filter))
+        if customer_input:
+            pipeline.append({
+                "$match": {
+                    "start.contact.name": {"$regex": customer_input, "$options": "i"}
+                }
+            })
+
+        pipeline += [
+            {
+                "$project": {
+                    "firstStakeholder": {"$arrayElemAt": ["$orderStatusEvents", 0]}
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$firstStakeholder.stakeholderType",
+                    "count": {"$sum": 1}
+                }
+            }
+        ]
+
+        try:
+            results = list(collection.aggregate(pipeline))
+        except Exception as e:
+            dispatcher.utter_message("Something went wrong while querying the database.")
+            print(f"[ERROR] {e}")
+            return []
 
         if not results:
             msg = "No orders found"
-            if customer_name:
-                msg += f" for customer **{customer_name}**."
+            if customer_input:
+                msg += f" for customer **{customer_input}**."
             dispatcher.utter_message(msg)
             return []
 
-        stakeholder_types = []
-        for order in results:
-            try:
-                events = order.get("orderStatusEvents", [])
-                if events and isinstance(events, list):
-                    stakeholder_type = events[0].get("stakeholderType", "Unknown")
-                else:
-                    stakeholder_type = "Unknown"
-            except Exception:
-                stakeholder_type = "Unknown"
-            stakeholder_types.append(stakeholder_type)
-
-        if not stakeholder_types:
-            dispatcher.utter_message("No stakeholder type information found.")
-            return []
-
-
-        counts = Counter(stakeholder_types)
-
-    
-        response = " **Stakeholder Type Distribution**"
-        if customer_name:
-            response += f" for **{customer_name.title()}**"
+        response = "**Stakeholder Type Distribution**"
+        if customer_input:
+            response += f" for **{customer_input.title()}**"
         response += ":\n"
 
-        for stype, count in counts.items():
-            response += f"- {stype}: {count}\n"
+        total_orders = 0
+        for item in results:
+            stakeholder_type = item["_id"] or "Unknown"
+            count = item["count"]
+            total_orders += count
+            response += f"- {stakeholder_type}: {count}\n"
 
+        response += f"\n**Total Orders**: {total_orders}"
         dispatcher.utter_message(response)
+
         print(f"[TIME] action_stakeholder_distribution took {(time.time() - start_time):.2f} seconds")
         return []
 
