@@ -83,35 +83,35 @@ nlu:
     
 - intent: orders_to_destination
   examples: |
-    - Show orders sent to [Chennai]{"entity": "location", "role": "destination"} for [Wakefit]{"entity": "customer_name"}
-    - Shipments for [Amazon]{"entity": "customer_name"} delivered to [Bangalore]{"entity": "location", "role": "destination"}
-    - [Flipkart]{"entity": "customer_name"} packages sent to [Delhi]{"entity": "location", "role": "destination"}
-    - List orders under [Myntra]{"entity": "customer_name"} delivered to [Hyderabad]{"entity": "location", "role": "destination"}
-    - Anything for [Pepperfry]{"entity": "customer_name"} that went to [Pune]{"entity": "location", "role": "destination"}
-    - Check all shipments from [Ola]{"entity": "customer_name"} to [Ahmedabad]{"entity": "location", "role": "destination"}
-    - Give me [JioMart]{"entity": "customer_name"} deliveries to [Jaipur]{"entity": "location", "role": "destination"}
-    - Which orders from [BigBasket]{"entity": "customer_name"} went to [Indore]{"entity": "location", "role": "destination"}
-    - Show bookings by [Tata Cliq]{"entity": "customer_name"} for [Kolkata]{"entity": "location", "role": "destination"}
-    - Deliveries handled for [Urban Ladder]{"entity": "customer_name"} that reached [Nagpur]{"entity": "location", "role": "destination"}
-    - Show orders sent to [Chnai]{"entity": "location", "role": "destination"} for [Wakeft]{"entity": "customer_name"}
-    - Shipments for [Amzon]{"entity": "customer_name"} delivered to [Bangalor]{"entity": "location", "role": "destination"}
-    - [Flipkrt]{"entity": "customer_name"} packages sent to [Delli]{"entity": "location", "role": "destination"}
-    - List orders under [Myntr]{"entity": "customer_name"} delivered to [Hydrbd]{"entity": "location", "role": "destination"}
-    - Anything for [Pprfry]{"entity": "customer_name"} that went to [Puna]{"entity": "location", "role": "destination"}
-    - Check all shipments from [Oola]{"entity": "customer_name"} to [Ahmdbd]{"entity": "location", "role": "destination"}
-    - Give me [JMart]{"entity": "customer_name"} deliveries to [Jaypur]{"entity": "location", "role": "destination"}
-    - Which orders from [BigBsket]{"entity": "customer_name"} went to [Indr]{"entity": "location", "role": "destination"}
-    - Show bookings by [Tta Cliq]{"entity": "customer_name"} for [Kolkatta]{"entity": "location", "role": "destination"}
-    - Deliveries handled for [Urban Ladr]{"entity": "customer_name"} that reached [Nagpr]{"entity": "location", "role": "destination"}
-    - Show orders for [Wakfit]{"entity": "customer_name"} sent to [Chnnai]{"entity": "location", "role": "destination"}
+    - Show me the orders sent to [Chennai]{"entity": "location", "role": "destination"} for [Wakefit]{"entity": "customer_name"}
+    - List all shipments for [Amazon]{"entity": "customer_name"} delivered to [Bangalore]{"entity": "location", "role": "destination"}
+    - Which packages from [Flipkart]{"entity": "customer_name"} were sent to [Delhi]{"entity": "location", "role": "destination"}
+    - Any orders under [Myntra]{"entity": "customer_name"} shipped to [Hyderabad]{"entity": "location", "role": "destination"}
+    - Deliveries by [Pepperfry]{"entity": "customer_name"} that reached [Pune]{"entity": "location", "role": "destination"}
+    - Show all shipments from [Ola]{"entity": "customer_name"} going to [Ahmedabad]{"entity": "location", "role": "destination"}
+    - Orders of [JioMart]{"entity": "customer_name"} delivered to [Jaipur]{"entity": "location", "role": "destination"}
+    - From [BigBasket]{"entity": "customer_name"}, list orders sent to [Indore]{"entity": "location", "role": "destination"}
+    - Bookings by [Tata Cliq]{"entity": "customer_name"} for [Kolkata]{"entity": "location", "role": "destination"}
+    - Find orders handled for [Urban Ladder]{"entity": "customer_name"} and delivered to [Nagpur]{"entity": "location", "role": "destination"}
+    - [Wakeft]{"entity": "customer_name"} orders sent to [Chnai]{"entity": "location", "role": "destination"}
+    - [Amzon]{"entity": "customer_name"} shipments delivered to [Bangalor]{"entity": "location", "role": "destination"}
+    - Show [Flipkrt]{"entity": "customer_name"} packages to [Delli]{"entity": "location", "role": "destination"}
+    - [Myntr]{"entity": "customer_name"} deliveries reached [Hydrbd]{"entity": "location", "role": "destination"}
+    - Orders by [Pprfry]{"entity": "customer_name"} sent to [Puna]{"entity": "location", "role": "destination"}
+    - Find shipments from [Oola]{"entity": "customer_name"} to [Ahmdbd]{"entity": "location", "role": "destination"}
+    - Give me [JMart]{"entity": "customer_name"} deliveries sent to [Jaypur]{"entity": "location", "role": "destination"}
+    - List orders under [BigBsket]{"entity": "customer_name"} shipped to [Indr]{"entity": "location", "role": "destination"}
+    - Orders from [Tta Cliq]{"entity": "customer_name"} sent to [Kolkatta]{"entity": "location", "role": "destination"}
+    - Deliveries of [Urban Ladr]{"entity": "customer_name"} that went to [Nagpr]{"entity": "location", "role": "destination"}
+    - Any [Wakfit]{"entity": "customer_name"} orders shipped to [Chnnai]{"entity": "location", "role": "destination"}
     - [Big Baskt]{"entity": "customer_name"} shipments arrived in [Indorr]{"entity": "location", "role": "destination"}
-    - Any orders from [Flipkart]{"entity": "customer_name"} to [Delhi]{"entity": "location", "role": "destination"}
-    - I need orders by [Amazn]{"entity": "customer_name"} for [Bglr]{"entity": "location", "role": "destination"}
-    - [Tata Clicq]{"entity": "customer_name"} deliveries went to [Kolkat]{"entity": "location", "role": "destination"}
-    - Anything from [URBN Ladder]{"entity": "customer_name"} shipped to [Nagpoor]{"entity": "location", "role": "destination"}
-    - [Jio Mart]{"entity": "customer_name"} orders to [Jypur]{"entity": "location", "role": "destination"}
-    - Show bookings of [Mntra]{"entity": "customer_name"} for [Hyderbad]{"entity": "location", "role": "destination"}
-    - [OlA]{"entity": "customer_name"} consignments to [Ahmedbad]{"entity": "location", "role": "destination"}
+    - Are there any orders from [Flipkart]{"entity": "customer_name"} to [Delhi]{"entity": "location", "role": "destination"}
+    - I need deliveries by [Amazn]{"entity": "customer_name"} for [Bglr]{"entity": "location", "role": "destination"}
+    - [Tata Clicq]{"entity": "customer_name"} orders that went to [Kolkat]{"entity": "location", "role": "destination"}
+    - Shipments from [URBN Ladder]{"entity": "customer_name"} delivered to [Nagpoor]{"entity": "location", "role": "destination"}
+    - [Jio Mart]{"entity": "customer_name"} bookings shipped to [Jypur]{"entity": "location", "role": "destination"}
+    - Orders for [Mntra]{"entity": "customer_name"} reaching [Hyderbad]{"entity": "location", "role": "destination"}
+    - [OlA]{"entity": "customer_name"} deliveries to [Ahmedbad]{"entity": "location", "role": "destination"}
 
 - intent: get_orders_by_status
   examples: |
@@ -339,31 +339,30 @@ nlu:
 
 - intent: pending_orders_before_last_two_days
   examples: |
-    - Show me orders that are pending for more than 2 days
-    - Get a list of orders not yet delivered since 48 hours ago
-    - Display all shipments that are stuck for the past two days
-    - Fetch pending orders that haven't moved for over 2 days
-    - What are the unshipped orders older than two days?
-    - List all incomplete deliveries before the last two days
-    - Provide backlog data for orders not processed in the last 2 days
-    - Retrieve aging orders that have not been delivered for more than two days
-    - Which orders have been pending since before two days ago?
-    - Orders that remain unfulfilled for more than 48 hours
-    - Show delayed shipments from over two days back
-    - Give me a summary of orders delayed more than two days
-    - Can you show all pending dispatches older than 2 days?
-    - Pull undelivered order records from before two days ago
-    - Show me everything pending for more than two days
-    - List all orders that haven’t been dispatched since 2 days ago
-    - Which orders are overdue and older than 2 days?
-    - Identify long-pending shipments as of 2 days ago
-    - Provide all open orders not touched in the last two days
-    - Any incomplete orders pending since 48 hours back?
-    - Show me shipment backlogs beyond two days
-    - Get orders that were supposed to be shipped before the last 2 days
-    - List orders still pending and created before 2 days back
-    - Display pending delivery requests older than 2 days
-    - Which customer orders are still open for more than 2 days?
+    - Show me long pending orders
+    - Get all aging shipments not delivered since 2 days ago
+    - What are the aging orders pending for more than 48 hours?
+    - Display stuck deliveries before the last two days
+    - Fetch all unshipped orders older than 2 days
+    - Give me orders that are overdue by 2 days
+    - Which shipments haven't moved in more than 2 days?
+    - List all customer orders still open from 2+ days ago
+    - Show me orders pending for 3 days or more
+    - Provide all incomplete shipments from before 2 days back
+    - What orders are aging and still pending?
+    - Pull long-standing orders not updated in the last 2 days
+    - Any long-pending customer deliveries from before 48 hours?
+    - Retrieve backlogged shipments from more than two days ago
+    - Show orders that haven’t been fulfilled in the past 2 days
+    - Get me all the orders that are in queue since 2 days
+    - Give the list of all stuck or undelivered orders before two days
+    - I want to see old pending orders
+    - Are there any pending dispatches that are stuck for more than 48 hours?
+    - Show all orders in pending status and older than two days
+    - What shipments are not completed since 2 days back?
+    - Get all old backlog orders not touched in 2 days
+    - Can I see all pending requests that are overdue?
+    - List all orders in process and stuck for more than 2 days
 
 
 - intent: citywise_delivered_order_distribution
@@ -426,44 +425,49 @@ nlu:
 
 - intent: see_order_trends
   examples: |
-    - show me order trends for last [30](trend_duration) [days](trend_unit)
-    - I want to see the order graph of [ola](customer_name) for last [7](trend_duration) [days](trend_unit)
-    - display the monthly order chart for [wakefit](customer_name) for last [2](trend_duration) [months](trend_unit)
-    - show me [3](trend_duration) [months](trend_unit) trend for [ola ele](customer_name)
-    - give me order trends for [ola](customer_name) in the past [15](trend_duration) [days](trend_unit)
-    - how are the orders in the last [10](trend_duration) [days](trend_unit) for [wakefit](customer_name)
-    - I need a graph of orders for [ola](customer_name) from last [5](trend_duration) [days](trend_unit)
-    - order trend of [wakefit](customer_name) for [2](trend_duration) [months](trend_unit)
-    - display past [6](trend_duration) [months](trend_unit) order report for [ola ele](customer_name)
-    - show order trends of [ola](customer_name)
-    - can you show me the last [7](trend_duration) [days](trend_unit) trend of [wakefit](customer_name)
-    - what are the order trends for [ola](customer_name) over [4](trend_duration) [months](trend_unit)
-    - give me a line chart for [ola](customer_name) of last [20](trend_duration) [days](trend_unit)
-    - past [12](trend_duration) [days](trend_unit) order trend of [wakefit](customer_name)
-    - [wakefit](customer_name) order graph for last [30](trend_duration) [days](trend_unit)
+    - show me the order trend for [ola](customer_name) in the past [30](trend_duration) [days](trend_unit)
+    - give me a graph of orders for [wakefit](customer_name) over the last [2](trend_duration) [months](trend_unit)
+    - what is the trend of orders for [ola ele](customer_name) in the past [7](trend_duration) [days](trend_unit)
+    - display the [monthly](trend_unit) order report for [ola](customer_name)
+    - I need a line chart of [wakefit](customer_name) orders from the last [10](trend_duration) [days](trend_unit)
+    - give order summary of [ola ele](customer_name) over [3](trend_duration) [months](trend_unit)
+    - how were the orders for [wakefit](customer_name) in the past [20](trend_duration) [days](trend_unit)
+    - show [ola](customer_name)'s order pattern in the last [1](trend_duration) [month](trend_unit)
+    - can you display order history for [wakefit](customer_name) for [14](trend_duration) [days](trend_unit)
+    - order chart of [ola](customer_name) over last [5](trend_duration) [days](trend_unit)
+    - [wakefit](customer_name)'s monthly trend for [2](trend_duration) [months](trend_unit)
+    - visualize the past [60](trend_duration) [days](trend_unit) order activity for [ola ele](customer_name)
+    - give me [ola](customer_name)'s order stats for [3](trend_duration) [months](trend_unit)
+    - show me the trend for [wakefit](customer_name) for last [6](trend_duration) [months](trend_unit)
+    - order trend report for [ola](customer_name)
+    - give me trend data for [wakefit](customer_name) in the previous [30](trend_duration) [days](trend_unit)
+    - chart of orders for [ola](customer_name) over [4](trend_duration) [weeks](trend_unit)
+    - last [15](trend_duration) [days](trend_unit) order graph of [wakefit](customer_name)
+    - order timeline for [ola](customer_name)
+    - I want to analyze [wakefit](customer_name) orders over [1](trend_duration) [month](trend_unit)
 
 - intent: get_delayed_order_trend
   examples: |
-    - show me [delayed](order_status) orders for [Ola](customer_name) for last [30](number) [days](time_unit)
-    - give [pending](order_status) orders trend of [Wakefit](customer_name) in last [2](number) [months](time_unit)
-    - i want to see [Ola](customer_name)'s [delayed](order_status) orders of past [1](number) [month](time_unit)
-    - can you show [delayed](order_status) trend for [Wakefit](customer_name) for [15](number) [days](time_unit)
-    - tell me how many [pending](order_status) orders [Ola](customer_name) had in last [3](number) [months](time_unit)
-    - show me the graph for [delayed](order_status) orders for [Wakefit](customer_name) in last [7](number) [days](time_unit)
-    - order [delay](order_status) trend of [Wakefit](customer_name) from last [5](number) [days](time_unit)
-    - plot [delay](order_status) trend for [Ola](customer_name) for [2](number) [months](time_unit)
-    - [delayed](order_status) orders graph [Ola](customer_name) [30](number) [days](time_unit)
-    - get me [pending](order_status) trend of [Wakefit](customer_name) [1](number) [month](time_unit)
-    - give [delivered](order_status) orders chart of [Ola](customer_name) from past [6](number) [months](time_unit)
-    - show [cancelled](order_status) orders for [Wakefit](customer_name) over last [10](number) [days](time_unit)
-    - can you show [delivered](order_status) order trends for [Ola](customer_name) from [3](number) [months](time_unit)
-    - how many [delayed](order_status) orders did [Wakefit](customer_name) have over [4](number) [months](time_unit)
-    - i want [delivered](order_status) order graph for [Ola](customer_name) in last [60](number) [days](time_unit)
-    - trend of [cancelled](order_status) orders for [Wakefit](customer_name) for [20](number) [days](time_unit)
-    - graph for [pending](order_status) [Ola](customer_name) orders for last [14](number) [days](time_unit)
-    - [Wakefit](customer_name) [delivered](order_status) orders trend in [1](number) [month](time_unit)
-    - last [2](number) [months](time_unit) [delayed](order_status) order trend of [Ola](customer_name)
-    - get [Ola](customer_name)'s [delivered](order_status) graph for last [3](number) [months](time_unit)
+    - show [delayed](order_status) order trend for [Ola](customer_name) in the last [30](number) [days](time_unit)
+    - graph of [pending](order_status) shipments for [Wakefit](customer_name) over [3](number) [months](time_unit)
+    - display trend of [delivered](order_status) orders by [Ola ELE](customer_name) in last [60](number) [days](time_unit)
+    - get [Wakefit](customer_name)'s [cancelled](order_status) order summary from last [2](number) [months](time_unit)
+    - can you show [pending](order_status) graph for [Ola](customer_name) from [7](number) [days](time_unit) ago
+    - how many [delayed](order_status) shipments did [Wakefit](customer_name) have in past [1](number) [month](time_unit)
+    - show me [Wakefit](customer_name)'s [delivered](order_status) order report for [15](number) [days](time_unit)
+    - I need the [cancelled](order_status) trend of [Ola ELE](customer_name) from past [5](number) [months](time_unit)
+    - [Ola](customer_name) [delayed](order_status) orders over the last [2](number) [months](time_unit)
+    - give chart of [Wakefit](customer_name) [pending](order_status) shipments for last [10](number) [days](time_unit)
+    - plot [delivered](order_status) orders graph for [Ola](customer_name) over [6](number) [months](time_unit)
+    - view [cancelled](order_status) order stats of [Wakefit](customer_name) from the past [20](number) [days](time_unit)
+    - what's the trend for [pending](order_status) orders for [Ola](customer_name) in the last [3](number) [months](time_unit)
+    - get delivery trend of [delivered](order_status) shipments for [Wakefit](customer_name) in [1](number) [month](time_unit)
+    - give me a bar chart of [cancelled](order_status) orders from [Ola ELE](customer_name)
+    - how many [pending](order_status) shipments did [Wakefit](customer_name) have over [2](number) [weeks](time_unit)
+    - show trend for [delivered](order_status) orders of [Ola](customer_name) for past [4](number) [weeks](time_unit)
+    - [Wakefit](customer_name)'s [delay](order_status) chart for last [7](number) [days](time_unit)
+    - analyze [Ola](customer_name)'s [cancelled](order_status) shipment count over [30](number) [days](time_unit)
+    - trend analysis of [pending](order_status) orders for [Wakefit](customer_name)
 
 - intent: get_stakeholder_distribution
   examples: |
@@ -710,6 +714,30 @@ nlu:
 
 
 lookup_tables:
+- lookup: customer_name
+  examples: |
+    - Ola
+    - Ola ELE
+    - Wakefit
+    - Flipkart
+    - Amazon
+    - Myntra
+    - Pepperfry
+    - JioMart
+    - BigBasket
+    - Tata Cliq
+    - Urban Ladder
+    - Ajio
+    - Meesho
+    - FirstCry
+    - Nykaa
+    - Snapdeal
+    - Reliance Digital
+    - Croma
+    - Zepto
+    - Blinkit
+    - Dunzo
+
 
 - lookup: pickup
   examples: |
