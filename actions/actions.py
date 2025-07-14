@@ -159,6 +159,15 @@ def extract_location_code_from_text(user_text: str) -> Optional[str]:
         print(f"[DEBUG] No fuzzy match above threshold. Best score: {best_score}")
         return None
 
+def serialize_for_json(obj):
+    if isinstance(obj, datetime):
+        return obj.strftime('%Y-%m-%d')
+    if isinstance(obj, list):
+        return [serialize_for_json(i) for i in obj]
+    if isinstance(obj, dict):
+        return {k: serialize_for_json(v) for k, v in obj.items()}
+    return obj
+
 class ActionCxOrder(Action):
     def name(self) -> Text:
         return "action_cx_date"
@@ -234,13 +243,8 @@ class ActionCxOrder(Action):
         df.to_excel(filepath, index=False)
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
-        dispatcher.utter_message(
-            f'<a href="{public_url}" download target="_blank">'
-            f'<button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
-            f'</a>'
-        )
         if rows:
-            dispatcher.utter_message(custom={"orders": rows})
+            dispatcher.utter_message(custom={"orders": serialize_for_json(rows), "excel_url": public_url})
 
         print(f"[TIME] action_cx_date took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
@@ -296,13 +300,8 @@ class ActionrouteOrder(Action):
         df.to_excel(filepath, index=False)
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
-        dispatcher.utter_message(
-            f'<a href="{public_url}" download target="_blank">'
-            f'<button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
-            f'</a>'
-        )
         if rows:
-            dispatcher.utter_message(custom={"orders": rows})
+            dispatcher.utter_message(custom={"orders": serialize_for_json(rows), "excel_url": public_url})
 
         print(f"[TIME] action_route took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
@@ -364,13 +363,8 @@ class ActionFordestination(Action):
         df.to_excel(filepath, index=False)
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
-        dispatcher.utter_message(
-            f'<a href="{public_url}" download target="_blank">'
-            f'<button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
-            f'</a>'
-        )
         if rows:
-            dispatcher.utter_message(custom={"orders": rows})
+            dispatcher.utter_message(custom={"orders": serialize_for_json(rows), "excel_url": public_url})
 
         print(f"[TIME] action_cx_destination took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
@@ -459,11 +453,6 @@ class ActionGetOrdersByStatus(Action):
         df.to_excel(filepath, index=False)
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
-        dispatcher.utter_message(
-            f'<a href="{public_url}" download target="_blank">'
-            f'<button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
-            f'</a>'
-        )
         if matched_orders:
             orders_json = []
             for order in matched_orders[:10]:
@@ -473,7 +462,7 @@ class ActionGetOrdersByStatus(Action):
                     "Status": order.get("orderStatus", order.get("Order Status", "Unknown")),
                     "Date": order.get("createdAt").strftime('%Y-%m-%d') if order.get("createdAt") else ""
                 })
-            dispatcher.utter_message(custom={"orders": orders_json})
+            dispatcher.utter_message(custom={"orders": serialize_for_json(orders_json), "excel_url": public_url})
 
         print(f"[TIME] action_get_orders_by_status took {time.time() - start_time:.2f} seconds")
         return []
@@ -535,6 +524,11 @@ class ActionGetOrderStatus(Action):
 
         
         dispatcher.utter_message(message)
+        # Add custom field for frontend
+        custom_data = {"Order ID": order_id, "Status": status}
+        if status.lower() == "delivered" and 'delivery_date' in locals():
+            custom_data["Delivery Date"] = delivery_date
+        dispatcher.utter_message(custom={"order_status": custom_data})
         print(f"[TIME] action_get_order_status took {time.time() - start_time:.2f} seconds")
         return []
 
@@ -616,11 +610,7 @@ class ActionGetOrdersByTAT(Action):
             df.to_excel(filepath, index=False)
 
             public_url = f"http://51.20.18.59:8080/static/files/{filename}"
-            dispatcher.utter_message(
-                f'<a href="{public_url}" download target="_blank">'
-                f'<button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
-                f'</a>'
-            )
+            dispatcher.utter_message(custom={"orders": serialize_for_json(matching_orders), "excel_url": public_url})
 
         print(f"[TIME] action_get_orders_by_tat took {time.time() - start_time:.2f} seconds")
         return []
@@ -716,13 +706,8 @@ class ActionPendingOrdersPastDays(Action):
 
         
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
-        dispatcher.utter_message(
-            f'<a href="{public_url}" download target="_blank">'
-            f'<button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
-            f'</a>'
-        )
         if rows:
-            dispatcher.utter_message(custom={"orders": rows})
+            dispatcher.utter_message(custom={"orders": serialize_for_json(rows), "excel_url": public_url})
 
         print(f"[TIME] action_pending_orders_past_days took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
@@ -786,11 +771,6 @@ class ActionTopPincodesByCustomer(Action):
         df.to_excel(filepath, index=False)
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
-        dispatcher.utter_message(
-            f'<a href="{public_url}" download target="_blank">'
-            f'<button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
-            f'</a>'
-        )
         if rows:
             pincodes_json = []
             for i, (pincode, count) in enumerate(top_pincodes, start=1):
@@ -798,7 +778,7 @@ class ActionTopPincodesByCustomer(Action):
                     "Pincode": pincode,
                     "Order Count": count
                 })
-            dispatcher.utter_message(custom={"pincodes": pincodes_json})
+            dispatcher.utter_message(custom={"pincodes": serialize_for_json(pincodes_json), "excel_url": public_url})
 
         print(f"[TIME] action_top_pincodes_by_customer took {(time.time() - start_time):.2f} seconds")
         return []
@@ -925,14 +905,8 @@ class ActionDynamicOrderQuery(Action):
 
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
-        dispatcher.utter_message(
-            f'<a href="{public_url}" download target="_blank">'
-            f'<button style="padding: 10px 20px; background-color: #4CAF50; '
-            f'color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
-            f'</a>'
-        )
         if rows:
-            dispatcher.utter_message(custom={"orders": rows})
+            dispatcher.utter_message(custom={"orders": serialize_for_json(rows), "excel_url": public_url})
 
         print(f"[TIME] action_dynamic_order_query took {(time.time() - start_time):.2f} seconds")
         return []
@@ -1004,12 +978,8 @@ class ActionOrderStatusByInvoice(Action):
 
         
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
-        dispatcher.utter_message(
-            f'<a href="{public_url}" download target="_blank">'
-            f'<button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
-            f'</a>'
-        )
-
+        if rows:
+            dispatcher.utter_message(custom={"orders": serialize_for_json(rows), "excel_url": public_url})
         print(f"[TIME] action_order_status_by_invoice took {(time.time() - start_time):.2f} seconds")
         return []
 
@@ -1049,8 +1019,11 @@ class ActionCheckServiceByPincode(Action):
         if agent_names:
             agent_list = ', '.join(agent_names)
             dispatcher.utter_message(f"Service is **available** in pincode **{pincode}**.\n Assigned delivery agent(s): **{agent_list}**.")
+            # Add custom field for frontend
+            dispatcher.utter_message(custom={"service": {"pincode": pincode, "agents": list(agent_names)}})
         else:
             dispatcher.utter_message(f"Service is **available** in pincode **{pincode}**, but no delivery agent has been assigned yet.")
+            dispatcher.utter_message(custom={"service": {"pincode": pincode, "agents": []}})
 
         print(f"[TIME] action_check_service_by_pincode took {time.time() - start_time:.2f} seconds")
         return []
@@ -1113,11 +1086,8 @@ class ActionPendingOrdersBeforeLastTwoDays(Action):
         df.to_excel(filepath, index=False)
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
-        dispatcher.utter_message(
-            f'<a href="{public_url}" download target="_blank">'
-            f'<button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
-            f'</a>'
-        )
+        if rows:
+            dispatcher.utter_message(custom={"orders": serialize_for_json(rows), "excel_url": public_url})
 
         print(f"[TIME] action_pending_orders_before_last_two_days took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
@@ -1185,13 +1155,15 @@ class ActionOrderDetailsByID(Action):
         df.to_excel(filepath, index=False)
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
-        dispatcher.utter_message(
-            f'<a href="{public_url}" download target="_blank">'
-            f'<button style="padding: 10px 20px; background-color: #4CAF50; '
-            f'color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
-            f'</a>'
-        )
-
+        if rows:
+            dispatcher.utter_message(custom={"order_info": {
+                "Order ID": order_id,
+                "Sender City": sender_city,
+                "Receiver Address": receiver_address,
+                "Invoice Number": invoice_number,
+                "Payment Mode": payment_mode,
+                "LR Number": lr_number
+            }, "excel_url": public_url})
         print(f"[TIME] action_fetch_order_info_by_id took {(time.time() - start_time):.2f} seconds")
         return []
 
@@ -1277,12 +1249,6 @@ class ActionCitywiseDeliveredOrderDistribution(Action):
         df.to_excel(filepath, index=False)
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
-        dispatcher.utter_message(
-            f'<a href="{public_url}" download target="_blank">'
-            f'<button style="padding: 10px 20px; background-color: #4CAF50; '
-            f'color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
-            f'</a>'
-        )
         if filtered_orders:
             filtered_orders_json = []
             for order in filtered_orders:
@@ -1292,7 +1258,7 @@ class ActionCitywiseDeliveredOrderDistribution(Action):
                     "Customer": order.get("Customer"),
                     "Status": order.get("Status")
                 })
-            dispatcher.utter_message(custom={"city_orders": filtered_orders_json})
+            dispatcher.utter_message(custom={"city_orders": serialize_for_json(filtered_orders_json), "excel_url": public_url})
 
         print(f"[TIME] action_citywise_delivered_order_distribution took {(time.time() - start_time):.2f} seconds")
         return []
@@ -1375,7 +1341,8 @@ class ActionShowOrderTrends(Action):
         dispatcher.utter_message(f" Here is your order trend graph for the last {duration} {unit}:")
         dispatcher.utter_message(image=public_url)
         dispatcher.utter_message(f" [Click here to view the graph]({public_url})")
-
+        # Add custom field for frontend
+        dispatcher.utter_message(custom={"graph_url": public_url})
         print(f"[TIME] action_show_order_trends took {time.time() - start_time:.2f} seconds")
         return []
 
@@ -1473,7 +1440,8 @@ class ActionDelayedOrdersGraph(Action):
         dispatcher.utter_message(f"Here's the **{display_status}** order trend for the last {duration} {unit}:")
         dispatcher.utter_message(image=public_url)
         dispatcher.utter_message(f"[Click here to view the graph]({public_url})")
-
+        # Add custom field for frontend
+        dispatcher.utter_message(custom={"graph_url": public_url})
         print(f"[TIME] action_order_trend_graph_by_status took {(time.time() - start_time):.2f} seconds")
         return []
 class ActionStakeholderDistribution(Action):
@@ -1577,7 +1545,7 @@ class ActionStakeholderDistribution(Action):
 
         response += f"\n**Total Delivered Orders**: {total_delivered}"
         dispatcher.utter_message(response)
-
+        dispatcher.utter_message(custom={"stakeholders": serialize_for_json(stakeholder_data), "total": total_delivered})
         print(f"[TIME] action_stakeholder_distribution took {(time.time() - start_time):.2f} seconds")
         return []
     
