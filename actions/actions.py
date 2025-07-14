@@ -239,6 +239,8 @@ class ActionCxOrder(Action):
             f'<button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
             f'</a>'
         )
+        if rows:
+            dispatcher.utter_message(custom={"orders": rows})
 
         print(f"[TIME] action_cx_date took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
@@ -299,6 +301,8 @@ class ActionrouteOrder(Action):
             f'<button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
             f'</a>'
         )
+        if rows:
+            dispatcher.utter_message(custom={"orders": rows})
 
         print(f"[TIME] action_route took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
@@ -365,6 +369,8 @@ class ActionFordestination(Action):
             f'<button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
             f'</a>'
         )
+        if rows:
+            dispatcher.utter_message(custom={"orders": rows})
 
         print(f"[TIME] action_cx_destination took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
@@ -458,6 +464,16 @@ class ActionGetOrdersByStatus(Action):
             f'<button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
             f'</a>'
         )
+        if matched_orders:
+            orders_json = []
+            for order in matched_orders[:10]:
+                orders_json.append({
+                    "Order ID": order.get("sm_orderid", "N/A"),
+                    "Customer": order.get("start", {}).get("contact", {}).get("name", "Unknown"),
+                    "Status": order.get("orderStatus", order.get("Order Status", "Unknown")),
+                    "Date": order.get("createdAt").strftime('%Y-%m-%d') if order.get("createdAt") else ""
+                })
+            dispatcher.utter_message(custom={"orders": orders_json})
 
         print(f"[TIME] action_get_orders_by_status took {time.time() - start_time:.2f} seconds")
         return []
@@ -705,6 +721,8 @@ class ActionPendingOrdersPastDays(Action):
             f'<button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
             f'</a>'
         )
+        if rows:
+            dispatcher.utter_message(custom={"orders": rows})
 
         print(f"[TIME] action_pending_orders_past_days took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
@@ -773,6 +791,14 @@ class ActionTopPincodesByCustomer(Action):
             f'<button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
             f'</a>'
         )
+        if rows:
+            pincodes_json = []
+            for i, (pincode, count) in enumerate(top_pincodes, start=1):
+                pincodes_json.append({
+                    "Pincode": pincode,
+                    "Order Count": count
+                })
+            dispatcher.utter_message(custom={"pincodes": pincodes_json})
 
         print(f"[TIME] action_top_pincodes_by_customer took {(time.time() - start_time):.2f} seconds")
         return []
@@ -905,6 +931,8 @@ class ActionDynamicOrderQuery(Action):
             f'color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
             f'</a>'
         )
+        if rows:
+            dispatcher.utter_message(custom={"orders": rows})
 
         print(f"[TIME] action_dynamic_order_query took {(time.time() - start_time):.2f} seconds")
         return []
@@ -1255,6 +1283,16 @@ class ActionCitywiseDeliveredOrderDistribution(Action):
             f'color: white; border: none; border-radius: 5px;">📥 Download Excel</button>'
             f'</a>'
         )
+        if filtered_orders:
+            filtered_orders_json = []
+            for order in filtered_orders:
+                filtered_orders_json.append({
+                    "Order ID": order.get("Order ID"),
+                    "City": order.get("City"),
+                    "Customer": order.get("Customer"),
+                    "Status": order.get("Status")
+                })
+            dispatcher.utter_message(custom={"city_orders": filtered_orders_json})
 
         print(f"[TIME] action_citywise_delivered_order_distribution took {(time.time() - start_time):.2f} seconds")
         return []

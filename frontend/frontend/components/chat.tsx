@@ -25,6 +25,7 @@ interface ChatMessage {
   timestamp: number
   buttons?: Array<{ title: string; payload: string }>
   image?: string
+  custom?: any;
 }
 
 interface RasaResponse {
@@ -54,10 +55,10 @@ function ClientTime({ timestamp }: { timestamp: number }) {
 function renderMessageText(text: string) {
   // Regex to match markdown links: [label](url)
   const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/;
-  const match = text.match(markdownLinkRegex);
-  if (match) {
-    const label = match[1];
-    const url = match[2];
+  const markdownMatch = text.match(markdownLinkRegex);
+  if (markdownMatch) {
+    const label = markdownMatch[1];
+    const url = markdownMatch[2];
     // If the link is to an image, show the image and a download button
     if (url.match(/\.(png|jpg|jpeg|gif|svg)$/i)) {
       return (
@@ -84,17 +85,35 @@ function renderMessageText(text: string) {
         </div>
       );
     } else {
-      // Otherwise, show a button to open the link
+      // Otherwise, show a button to open/download the link
       return (
-        <a href={url} target="_blank" rel="noopener noreferrer">
+        <a href={url} target="_blank" rel="noopener noreferrer" download={url.endsWith('.xlsx') || url.endsWith('.xls') ? true : undefined}>
           <button
-            style={{ padding: '8px 16px', backgroundColor: '#1976d2', color: 'white', border: 'none', borderRadius: 5, cursor: 'pointer' }}
+            style={{ padding: '8px 16px', backgroundColor: url.endsWith('.xlsx') || url.endsWith('.xls') ? '#4CAF50' : '#1976d2', color: 'white', border: 'none', borderRadius: 5, cursor: 'pointer' }}
           >
             {label}
           </button>
         </a>
       );
     }
+  }
+  // Regex to match HTML <a> download links
+  const htmlLinkRegex = /<a [^>]*href=["']([^"']+)["'][^>]*download[^>]*>([\s\S]*?)<\/a>/i;
+  const htmlMatch = text.match(htmlLinkRegex);
+  if (htmlMatch) {
+    const url = htmlMatch[1];
+    // Extract button label if present, fallback to generic
+    const labelMatch = htmlMatch[2].match(/<button[^>]*>([\s\S]*?)<\/button>/i);
+    const label = labelMatch ? labelMatch[1] : '📥 Download Excel';
+    return (
+      <a href={url} target="_blank" rel="noopener noreferrer" download>
+        <button
+          style={{ padding: '8px 16px', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: 5, cursor: 'pointer' }}
+        >
+          {label}
+        </button>
+      </a>
+    );
   }
   // Fallback: render as plain text
   return <span>{text}</span>;
@@ -105,6 +124,7 @@ const SUGGESTIONS = [
   "Get me the orders going from Hyderabad to Visakhapatnam",
   "How many shipments were delivered to Coimbatore?",
   "Show all pending orders",
+  "Find orders with wallet payment method",
   "Order status for OLAELE04199",
   "Track order with invoice number 9849577711",
   "Show me all delivered orders within 2 days",
@@ -518,6 +538,43 @@ export function Chat() {
                         }`}
                       >
                         <div className="whitespace-pre-wrap break-words">{renderMessageText(message.text)}</div>
+                        {message.custom && message.custom.orders && Array.isArray(message.custom.orders) && message.custom.orders.length > 0 && (
+                          <div className="overflow-x-auto mt-2">
+                            <button
+                              onClick={() => {
+                                const worksheet = XLSX.utils.json_to_sheet(message.custom.orders);
+                                const workbook = XLSX.utils.book_new();
+                                XLSX.utils.book_append_sheet(workbook, worksheet, "Orders");
+                                const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+                                const file = new Blob([excelBuffer], { type: "application/octet-stream" });
+                                saveAs(file, "orders.xlsx");
+                              }}
+                              style={{ marginBottom: 8, padding: "8px 16px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: 5, cursor: "pointer" }}
+                            >
+                              📥 Download Table as Excel
+                            </button>
+                            <table className="min-w-full border text-sm bg-white">
+                              <thead>
+                                <tr>
+                                  <th className="border px-2 py-1">Order ID</th>
+                                  <th className="border px-2 py-1">Customer</th>
+                                  <th className="border px-2 py-1">Status</th>
+                                  <th className="border px-2 py-1">Date</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {message.custom.orders.map((order: any, i: number) => (
+                                  <tr key={order.order_id + i}>
+                                    <td className="border px-2 py-1">{order.order_id}</td>
+                                    <td className="border px-2 py-1">{order.customer}</td>
+                                    <td className="border px-2 py-1">{order.status}</td>
+                                    <td className="border px-2 py-1">{order.date}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
 
                         {message.buttons && message.buttons.length > 0 && (
                           <div className="mt-2 space-y-1">
