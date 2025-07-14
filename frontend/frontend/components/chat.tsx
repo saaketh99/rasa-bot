@@ -101,16 +101,24 @@ function renderMessageText(text: string) {
 }
 
 const SUGGESTIONS = [
-  "Show my recent orders",
-  "Delivery report between [date] and [date]",
-  "Show pending orders",
-  "Show delivered orders",
-  "Show orders for customer John Doe",
-  "Show orders for pincode 123456",
-  "Download order report",
-  "What is the status of order OLAHYD1077?",
-  "Show orders created today",
-  "Show orders by location"
+  "Show me the orders for Wakefit from 2025-06-21 to 2025-07-31",
+  "Get me the orders going from Hyderabad to Visakhapatnam",
+  "How many shipments were delivered to Coimbatore?",
+  "Show all pending orders",
+  "Order status for OLAELE04199",
+  "Track order with invoice number 9849577711",
+  "Show me all delivered orders within 2 days",
+  "Is service available in pincode 530013?",
+  "Delivery summary from 2025-06-21 to 2025-07-31",
+  "Give me complete details for order ID OLAELE04199",
+  "long pending orders",
+  "Show pending orders from the last 5 days",
+  "Top delivery pincodes for Ola Ele",
+  "how delivered orders distributed across cities",
+  "Delivered report across cities for Ola ELE",
+  "Show me the order trend for the past 30 days",
+  "What’s the delay trend in the past 15 days?",
+  "Who is updating most of the delivery statuses?"
 ];
 
 // Helper to generate unique IDs on the client only
@@ -663,9 +671,10 @@ export function Chat() {
                   />
                 </div>
               )}
-              {filteredSuggestions.length > 0 && (
+              {/* Replace the suggestion rendering logic to always show suggestions when input is empty */}
+              {(filteredSuggestions.length > 0 || input.length === 0) && (
                 <ul className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow z-40 max-h-40 overflow-y-auto">
-                  {filteredSuggestions.map((s, i) => (
+                  {(input.length === 0 ? SUGGESTIONS : filteredSuggestions).map((s, i) => (
                     <li
                       key={i}
                       className="px-3 py-2 cursor-pointer hover:bg-blue-100 dark:hover:bg-gray-700"
