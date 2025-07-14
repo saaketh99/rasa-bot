@@ -149,17 +149,91 @@ function getClientUniqueId() {
   return '';
 }
 
-// Remove session ID logic and related useEffects
-// --- Session ID logic ---
-// function getOrCreateSessionId() { ... }
-// const sessionId = getOrCreateSessionId();
+/**
+ * START: FINAL HELPER FUNCTION
+ * This function now intelligently parses THREE different bot response formats.
+ * It checks for unique keywords to decide which parser to use.
+ * @param text The bot's raw text response.
+ * @returns An array of objects if table data is found, otherwise null.
+ */
+function parseTextToTableData(text: string) {
+    const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
+    if (lines.length === 0) return null;
+
+    let tableData: any[] = [];
+
+    // Define all regexes
+    const format1Regex = /^- Order ID: (.*?) \| Sender: (.*?) \| Booking Date: (.*?)$/;
+    const format2Line1Regex = /^- Order ID: (.*?) \| Customer: (.*?) \| Status: (.*?) \|$/;
+    const format2Line2Regex = /^Date: (.*?)$/;
+    const format3Line1Regex = /^Order ID: (.*?) \| Sender: (.*?) \| Booking: (.*?) \|$/;
+    const format3Line2Regex = /^Delivered: (.*?) \| TAT: (.*?)$/;
+
+    // --- Test for Format 3 (Delivered Orders with TAT) ---
+    // Signature: Contains "Delivered:" and "TAT:"
+    if (text.includes("Delivered:") && text.includes("TAT:")) {
+        for (let i = 0; i < lines.length - 1; i++) {
+            const match1 = lines[i].match(format3Line1Regex);
+            const match2 = lines[i + 1].match(format3Line2Regex);
+            if (match1 && match2) {
+                tableData.push({
+                    "Order ID": match1[1].trim(),
+                    "Sender": match1[2].trim(),
+                    "Booking Date": match1[3].trim(),
+                    "Delivered Date": match2[1].trim(),
+                    "TAT": match2[2].trim(),
+                });
+                i++; // Skip the next line as it's part of the current record
+            }
+        }
+        if (tableData.length > 0) return tableData;
+    }
+
+    // --- Test for Format 2 (Pending Orders) ---
+    // Signature: Contains "Customer:" and "Status:"
+    if (text.includes("Customer:") && text.includes("Status:")) {
+         for (let i = 0; i < lines.length - 1; i++) {
+            const match1 = lines[i].match(format2Line1Regex);
+            const match2 = lines[i + 1].match(format2Line2Regex);
+            if (match1 && match2) {
+                tableData.push({
+                    "Order ID": match1[1].trim(),
+                    "Customer": match1[2].trim(),
+                    "Status": match1[3].trim(),
+                    "Date": match2[1].trim(),
+                });
+                i++; // Skip the next line
+            }
+        }
+        if (tableData.length > 0) return tableData;
+    }
+
+    // --- Test for Format 1 (Simple Orders) ---
+    // Signature: Starts with "- Order ID:" and has "Sender:"
+    if (text.trim().startsWith("- Order ID:") && text.includes("Sender:")) {
+        for (const line of lines) {
+            const match = line.match(format1Regex);
+            if (match) {
+                tableData.push({
+                    "Order ID": match[1].trim(),
+                    "Sender": match[2].trim(),
+                    "Booking Date": match[3].trim(),
+                });
+            }
+        }
+        if (tableData.length > 0) return tableData;
+    }
+
+    return null; // Return null if no formats matched
+}
+// END: FINAL HELPER FUNCTION
+
 
 export function Chat() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false)
   const [conversations, setConversations] = useState<ConversationMeta[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
-  // Show bot welcome message in UI only, not in backend
   const BOT_WELCOME: ChatMessage = {
     id: typeof window !== 'undefined' ? getClientUniqueId() : 'bot-welcome',
     text: "Hello! I'm your order management assistant. I can help you track orders, check delivery status, find orders by customer, date, location, and much more. How can I assist you today?",
@@ -173,15 +247,11 @@ export function Chat() {
   const inputRef = useRef<HTMLInputElement>(null)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([])
-  // Remove session ID logic and related useEffects
-  // Only keep conversation-related logic and UI
 
-  // Ensure component only renders on client side
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  // Fetch all conversations on mount
   useEffect(() => {
     fetch("http://51.20.18.59:8000/conversations")
       .then(res => res.json())
@@ -190,23 +260,17 @@ export function Chat() {
       });
   }, []);
 
-  // Remove all logic that generates random conversation IDs in the frontend.
-  // Only set currentConversationId after receiving a valid ObjectId from the backend (after POST /conversations).
-  // When '+ New Conversation' is clicked, do not set any ID—just show the bot welcome message.
-  // Only use backend-provided IDs for loading and appending messages.
-  // Load a conversation by ID
   const loadConversation = (id: string) => {
     fetch(`http://51.20.18.59:8000/conversations/${id}`)
       .then(res => res.json())
       .then(data => {
         if (data.messages) {
-          setMessages(data.messages); // Only backend messages
+          setMessages(data.messages);
           setCurrentConversationId(id);
         }
       });
   };
 
-  // Create a new conversation (only on first user message)
   const startNewConversation = (firstUserMessage: ChatMessage) => {
     fetch("http://51.20.18.59:8000/conversations", {
       method: "POST",
@@ -217,8 +281,7 @@ export function Chat() {
       .then(data => {
         if (data.success && data.conversation_id) {
           setCurrentConversationId(data.conversation_id);
-          setMessages([firstUserMessage]); // Only user message, not bot welcome
-          // Refresh conversation list
+          setMessages([firstUserMessage]);
           fetch("http://51.20.18.59:8000/conversations")
             .then(res => res.json())
             .then(data => {
@@ -228,7 +291,6 @@ export function Chat() {
       });
   };
 
-  // Append a message to the current conversation
   const appendMessage = (message: ChatMessage) => {
     if (!currentConversationId) return;
     fetch(`http://51.20.18.59:8000/conversations/${currentConversationId}/messages`, {
@@ -237,7 +299,6 @@ export function Chat() {
       body: JSON.stringify({ message })
     }).then(() => {
       setMessages(prev => [...prev, message]);
-      // Optionally refresh conversation list for updated timestamp
       fetch("http://51.20.18.59:8000/conversations")
         .then(res => res.json())
         .then(data => {
@@ -246,16 +307,11 @@ export function Chat() {
     });
   };
 
-  // On first mount, start a new conversation
   useEffect(() => {
     if (conversations.length === 0 && !currentConversationId) {
       startNewConversation(BOT_WELCOME);
     }
   }, [conversations, currentConversationId]);
-
-  // Remove useEffect for loading session from backend by sessionId
-  // Remove useEffect for saving session to backend by sessionId
-  // Only keep conversation-related logic and UI
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
@@ -270,7 +326,6 @@ export function Chat() {
     scrollToBottom()
   }, [messages])
 
-  // Set initial timestamp on client to avoid hydration error
   useEffect(() => {
     if (mounted) {
       setMessages((msgs) =>
@@ -291,71 +346,72 @@ export function Chat() {
     }
   }, [input]);
 
-  // Send message handler
   const sendMessage = async (messageText: string) => {
     if (!messageText.trim() || isLoading) return;
-    let id = '';
-    let timestamp = 0;
-    if (typeof window !== 'undefined') {
-      id = getClientUniqueId();
-      timestamp = Date.now();
-    }
-    const userMessage: ChatMessage = {
-      id: id,
-      text: messageText,
-      sender: "user",
-      timestamp: timestamp,
-    };
+    let id = getClientUniqueId();
+    let timestamp = Date.now();
+
+    const userMessage: ChatMessage = { id, text: messageText, sender: "user", timestamp };
+
     if (!currentConversationId) {
-      // Only now create the conversation in the backend
       startNewConversation(userMessage);
-      setInput("");
-      setIsLoading(true);
-      return;
+    } else {
+      appendMessage(userMessage);
     }
-    appendMessage(userMessage);
     setInput("");
     setIsLoading(true);
 
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: messageText,
-          sender: "user_" + Date.now(),
-        }),
-      })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: messageText, sender: "user_" + Date.now() }),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.success && data.responses) {
         const botMessages: ChatMessage[] = data.responses
           .filter((resp: RasaResponse) => resp.text && resp.text.trim())
-          .map((resp: RasaResponse, index: number) => ({
-            id: typeof window !== 'undefined' ? getClientUniqueId() : '',
-            text: resp.text,
-            sender: "bot" as const,
-            timestamp: typeof window !== 'undefined' ? Date.now() : 0,
-            buttons: resp.buttons,
-            image: resp.image,
-          }))
+          .map((resp: RasaResponse): ChatMessage => {
+            const tableData = parseTextToTableData(resp.text);
+            let messageText = resp.text;
+            let customData = {};
+
+            if (tableData) {
+              // Get the first non-list line as the title, or use a default.
+              const firstLine = resp.text.split('\n')[0].trim();
+              if (firstLine && !firstLine.trim().startsWith('-') && !firstLine.trim().startsWith('Order ID:')) {
+                  messageText = firstLine;
+              } else {
+                  messageText = "Here are the details I found:";
+              }
+              customData = { table_data: tableData };
+            }
+
+            return {
+              id: getClientUniqueId(),
+              text: messageText,
+              sender: "bot" as const,
+              timestamp: Date.now(),
+              buttons: resp.buttons,
+              image: resp.image,
+              custom: customData,
+            };
+          });
 
         if (botMessages.length > 0) {
-          setMessages((prev) => [...prev, ...botMessages])
+          setMessages((prev) => [...prev, ...botMessages]);
         } else {
-          // Fallback if no valid responses
           setMessages((prev) => [
             ...prev,
             {
               id: Date.now().toString(),
-              text: "I received your message but don't have a response right now. Please try rephrasing your question.",
+              text: "I received your message but don't have a response right now. Please try rephrasing.",
               sender: "bot",
               timestamp: Date.now(),
             },
-          ])
+          ]);
         }
       } else {
         setMessages((prev) => [
@@ -366,90 +422,31 @@ export function Chat() {
             sender: "bot",
             timestamp: Date.now(),
           },
-        ])
+        ]);
       }
     } catch (error) {
-      console.error("Error sending message:", error)
+      console.error("Error sending message:", error);
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now().toString(),
-          text: "Sorry, I'm having trouble connecting. Please check if the Rasa server is running and try again.",
+          text: "Sorry, I'm having trouble connecting. Please check if the Rasa server is running.",
           sender: "bot",
           timestamp: Date.now(),
         },
-      ])
+      ]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    sendMessage(input)
-  }
+    e.preventDefault();
+    sendMessage(input);
+  };
 
   const handleButtonClick = (payload: string, title: string) => {
-    sendMessage(payload)
-  }
-
-  // Helper to extract pincode/order data from a message string
-  function extractPincodeOrders(text: string) {
-    const regex = /Pincode:\s*(\d+)\s*→\s*(\d+) orders/g;
-    const result = [];
-    let match;
-    while ((match = regex.exec(text)) !== null) {
-      result.push({ Pincode: match[1], Orders: parseInt(match[2], 10) });
-    }
-    return result;
-  }
-
-  // Helper to extract order details from a message string
-  function extractOrderDetails(text: string) {
-    // Matches lines like: - Order ID: ... | Customer: ... | Status: ... | Date: ...
-    const regex = /- Order ID: ([^|]+) \| Customer: ([^|]+) \| Status: ([^|]+) \| Date: ([^\n]+)/g;
-    const result = [];
-    let match;
-    while ((match = regex.exec(text)) !== null) {
-      result.push({
-        "Order ID": match[1].trim(),
-        "Customer": match[2].trim(),
-        "Status": match[3].trim(),
-        "Date": match[4].trim(),
-      });
-    }
-    return result;
-  }
-
-  // Download handler (now supports both pincode/orders and order details)
-  const handleDownloadExcel = () => {
-    // Find the latest bot message with either pincode/order data or order details
-    const lastBotMsg = [...messages].reverse().find(m => m.sender === "bot" && (/Pincode:/i.test(m.text) || /- Order ID:/i.test(m.text)));
-    if (!lastBotMsg) {
-      toast.error("No data found to download.");
-      return;
-    }
-    let data: any[] = extractPincodeOrders(lastBotMsg.text);
-    let sheetName = "Pincodes";
-    if (!data.length) {
-      data = extractOrderDetails(lastBotMsg.text);
-      sheetName = "Orders";
-    }
-    if (!data.length) {
-      toast.error("No data found to download.");
-      return;
-    }
-    try {
-      const worksheet = XLSX.utils.json_to_sheet(data);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-      const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-      const file = new Blob([excelBuffer], { type: "application/octet-stream" });
-      saveAs(file, sheetName === "Pincodes" ? "top_pincodes.xlsx" : "pending_orders.xlsx");
-      toast.success("Excel file downloaded!");
-    } catch (err) {
-      toast.error("Failed to download Excel file.");
-    }
+    sendMessage(payload);
   };
 
   if (!mounted) {
@@ -491,7 +488,20 @@ export function Chat() {
         </div>
       </aside>
       {/* Main Chat Area */}
-      <main className="flex-1 flex flex-col h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <main className="flex-1 flex flex-col h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 relative">
+        {/* Suggestion Bubbles on the Right */}
+        <div className="fixed right-8 top-32 flex flex-col gap-3 z-30 max-w-xs">
+          {SUGGESTIONS.map((s, i) => (
+            <button
+              key={i}
+              className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full shadow hover:bg-blue-200 transition text-left max-w-xs border border-blue-200"
+              style={{ minWidth: 180 }}
+              onClick={() => setInput(s)}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
         {/* Header */}
         <header className="flex items-center justify-between px-8 py-6 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-gray-800 dark:to-gray-900 text-white shadow">
           <div>
@@ -538,51 +548,62 @@ export function Chat() {
                         }`}
                       >
                         <div className="whitespace-pre-wrap break-words">{renderMessageText(message.text)}</div>
-                        {message.custom && message.custom.orders && Array.isArray(message.custom.orders) && message.custom.orders.length > 0 && (
-                          <div className="overflow-x-auto mt-2">
-                            <button
-                              onClick={() => {
-                                const worksheet = XLSX.utils.json_to_sheet(message.custom.orders);
-                                const workbook = XLSX.utils.book_new();
-                                XLSX.utils.book_append_sheet(workbook, worksheet, "Orders");
-                                const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-                                const file = new Blob([excelBuffer], { type: "application/octet-stream" });
-                                saveAs(file, "orders.xlsx");
-                              }}
-                              style={{ marginBottom: 8, padding: "8px 16px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: 5, cursor: "pointer" }}
-                            >
-                              📥 Download Table as Excel
-                            </button>
-                            <table className="min-w-full border text-sm bg-white">
-                              <thead>
-                                <tr>
-                                  <th className="border px-2 py-1">Order ID</th>
-                                  <th className="border px-2 py-1">Customer</th>
-                                  <th className="border px-2 py-1">Status</th>
-                                  <th className="border px-2 py-1">Date</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {message.custom.orders.map((order: any, i: number) => (
-                                  <tr key={order.order_id + i}>
-                                    <td className="border px-2 py-1">{order.order_id}</td>
-                                    <td className="border px-2 py-1">{order.customer}</td>
-                                    <td className="border px-2 py-1">{order.status}</td>
-                                    <td className="border px-2 py-1">{order.date}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
+                        
+                        {/* DYNAMIC TABLE RENDERING */}
+                        {(() => {
+                          const custom = message.custom;
+                          if (!custom || !Array.isArray(custom.table_data) || custom.table_data.length === 0) return null;
+                          
+                          const tableArray = custom.table_data;
+                          const columns = Object.keys(tableArray[0]);
 
+                          return (
+                            <div className="overflow-x-auto mt-2 text-black">
+                              <button
+                                onClick={() => {
+                                  try {
+                                    const worksheet = XLSX.utils.json_to_sheet(tableArray);
+                                    const workbook = XLSX.utils.book_new();
+                                    XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
+                                    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+                                    const file = new Blob([excelBuffer], { type: "application/octet-stream" });
+                                    saveAs(file, "exported_data.xlsx");
+                                    toast.success("Excel file downloaded!");
+                                  } catch (err) {
+                                      toast.error("Failed to download Excel file.");
+                                  }
+                                }}
+                                className="mb-2 px-3 py-1 bg-green-600 text-white border-none rounded cursor-pointer hover:bg-green-700 transition"
+                              >
+                                📥 Download as Excel
+                              </button>
+                              <table className="min-w-full border text-sm bg-white">
+                                <thead className="bg-gray-200">
+                                  <tr>
+                                    {columns.map((col) => (
+                                      <th key={col} className="border px-2 py-1 font-semibold">{col}</th>
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {tableArray.map((row: any, i: number) => (
+                                    <tr key={i} className="hover:bg-gray-50">
+                                      {columns.map((col) => (
+                                        <td key={col} className="border px-2 py-1">{row[col]}</td>
+                                      ))}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          );
+                        })()}
+                        
                         {message.buttons && message.buttons.length > 0 && (
                           <div className="mt-2 space-y-1">
                             {message.buttons.map((button, index) => (
                               <Button
                                 key={index}
-                                variant="outline"
-                                size="sm"
                                 className="mr-2 mb-1 bg-transparent"
                                 onClick={() => handleButtonClick(button.payload, button.title)}
                               >
@@ -598,68 +619,9 @@ export function Chat() {
                               src={message.image || "/placeholder.svg"}
                               alt="Bot response"
                               className="max-w-full h-auto rounded border border-gray-300"
-                              id={`trend-graph-img-${idx}`}
                             />
-                            {/* Download button for trend graph image */}
-                            {(() => {
-                              // Only show for the last bot message with a trend graph image
-                              const isTrendGraph = message.image && message.image.includes("trend_graph");
-                              const isLastTrendGraph =
-                                isTrendGraph &&
-                                messages.slice(idx + 1).every(m => !(m.sender === "bot" && m.image && m.image.includes("trend_graph")));
-                              if (!isLastTrendGraph) return null;
-                              return (
-                                <button
-                                  onClick={() => {
-                                    const img = document.getElementById(`trend-graph-img-${idx}`) as HTMLImageElement;
-                                    if (!img) return;
-                                    // Create a canvas to draw the image and trigger download
-                                    const canvas = document.createElement('canvas');
-                                    canvas.width = img.naturalWidth;
-                                    canvas.height = img.naturalHeight;
-                                    const ctx = canvas.getContext('2d');
-                                    if (ctx) {
-                                      ctx.drawImage(img, 0, 0);
-                                      canvas.toBlob(blob => {
-                                        if (blob) {
-                                          const url = URL.createObjectURL(blob);
-                                          const a = document.createElement('a');
-                                          a.href = url;
-                                          a.download = 'order_trend_graph.png';
-                                          document.body.appendChild(a);
-                                          a.click();
-                                          document.body.removeChild(a);
-                                          URL.revokeObjectURL(url);
-                                        }
-                                      }, 'image/png');
-                                    }
-                                  }}
-                                  style={{ marginTop: 8, padding: "8px 16px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}
-                                >
-                                  📈 Download Graph
-                                </button>
-                              );
-                            })()}
                           </div>
                         )}
-
-                        {/* Download Excel button: only show for the last bot message with pincode/order or order details data */}
-                        {(() => {
-                          // Only show for the last bot message with pincode/order or order details data
-                          const isLastBotMsgWithData =
-                            message.sender === "bot" &&
-                            (/Pincode:/i.test(message.text) || /- Order ID:/i.test(message.text)) &&
-                            messages.slice(idx + 1).every(m => !(m.sender === "bot" && (/Pincode:/i.test(m.text) || /- Order ID:/i.test(m.text))));
-                          if (!isLastBotMsgWithData) return null;
-                          return (
-                            <button
-                              onClick={handleDownloadExcel}
-                              style={{ marginTop: 12, padding: "10px 20px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}
-                            >
-                              📥 Download Excel
-                            </button>
-                          );
-                        })()}
 
                         <div className={`text-xs mt-1 ${message.sender === "user" ? "text-blue-200" : "text-gray-500"}`}>
                           <ClientTime timestamp={message.timestamp} />
@@ -728,20 +690,7 @@ export function Chat() {
                   />
                 </div>
               )}
-              {/* Replace the suggestion rendering logic to always show suggestions when input is empty */}
-              {(filteredSuggestions.length > 0 || input.length === 0) && (
-                <ul className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow z-40 max-h-40 overflow-y-auto">
-                  {(input.length === 0 ? SUGGESTIONS : filteredSuggestions).map((s, i) => (
-                    <li
-                      key={i}
-                      className="px-3 py-2 cursor-pointer hover:bg-blue-100 dark:hover:bg-gray-700"
-                      onClick={() => setInput(s)}
-                    >
-                      {s}
-                    </li>
-                  ))}
-                </ul>
-              )}
+              {/* REMOVE DROPDOWN SUGGESTION LOGIC */}
             </div>
             <Button type="submit" disabled={isLoading || !input.trim()} className="bg-blue-600 hover:bg-blue-700">
               <Send className="h-4 w-4" />
