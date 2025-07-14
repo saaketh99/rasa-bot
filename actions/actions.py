@@ -215,14 +215,16 @@ class ActionCxOrder(Action):
             dispatcher.utter_message("No orders found for the given customer in the provided date range.")
             return []
 
-        message = f"Orders for **{customer_input}** from **{s_date.date()}** to **{e_date.date()}**:\n"
+        message = f"Orders for **{customer_input}** from **{s_date.date()}** to **{e_date.date()}**:\n\n"
+        message += f"{'Order ID':<40} {'From':<20} {'To':<20}\n"
+        message += f"{'-'*40} {'-'*20} {'-'*20}\n"
         rows = []
 
         for order in matched_orders[:10]:
             order_id = order.get("sm_orderid", "N/A")
             from_city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
             to_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
-            message += f"- Order ID: {order_id} | {from_city} → {to_city}\n"
+            message += f"{order_id:<40} {from_city:<20} {to_city:<20}\n"
 
         for order in matched_orders:
             rows.append({
@@ -271,7 +273,9 @@ class ActionrouteOrder(Action):
             dispatcher.utter_message(f"No orders found from {pickup} to {drop}.")
             return []
 
-        message = f"Orders from {pickup} to {drop}:\n"
+        message = f" Orders from {pickup} to {drop}:\n\n"
+        message += f"{'Order ID':<40} {'Sender':<20} {'Booking Date':<15}\n"
+        message += f"{'-'*40} {'-'*20} {'-'*15}\n"
         rows = []
 
         for order in matched_orders[:10]:
@@ -279,7 +283,7 @@ class ActionrouteOrder(Action):
             sender = order.get("start", {}).get("contact", {}).get("name", "Unknown")
             created_at = order.get("createdAt")
             created_date = created_at.strftime('%Y-%m-%d') if hasattr(created_at, 'strftime') else str(created_at)
-            message += f"- Order ID: {order_id} | Sender: {sender} | Booking Date: {created_date}\n"
+            message += f"{order_id:<40} {sender:<20} {created_date:<15}\n"
 
         for order in matched_orders:
             rows.append({
@@ -335,14 +339,16 @@ class ActionFordestination(Action):
             dispatcher.utter_message("No orders found for the given customer to that destination.")
             return []
 
-        message = f"Orders for '{customer_input}' delivered to {destination}:\n"
+        message = f" Orders for **{customer_input}** delivered to **{destination}**:\n\n"
+        message += f"{'Order ID':<40} {'From':<20} {'To':<20}\n"
+        message += f"{'-'*40} {'-'*20} {'-'*20}\n"
         rows = []
 
         for order in matched_orders[:10]:
             order_id = order.get("sm_orderid", "N/A")
             from_city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
             to_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
-            message += f"- Order ID: {order_id} | {from_city} → {to_city}\n"
+            message += f"{order_id:<40} {from_city:<20} {to_city:<20}\n"
 
         for order in matched_orders:
             rows.append({
@@ -421,17 +427,20 @@ class ActionGetOrdersByStatus(Action):
             print(f"[TIME] action_get_orders_by_status took {time.time() - start_time:.2f} seconds")
             return []
 
-        message = "Orders:\n"
+        message = "**Orders by Status**\n\n"
+        message += f"{'Order ID':<35} {'Customer':<25} {'Status':<20} {'Date':<12}\n"
+        message += f"{'-'*35} {'-'*25} {'-'*20} {'-'*12}\n"
+
         rows = []
 
         for order in matched_orders[:10]:
             order_id = order.get("sm_orderid", "N/A")
             customer_name = order.get("start", {}).get("contact", {}).get("name", "Unknown")
+            status = order.get("orderStatus", order.get("Order Status", "Unknown"))
             created_at = order.get("createdAt", None)
             booking_date = created_at.strftime('%Y-%m-%d') if hasattr(created_at, 'strftime') else str(created_at)
-            status = order.get("orderStatus", order.get("Order Status", "Unknown"))
 
-            message += f"- Order ID: {order_id} | Customer: {customer_name} | Status: {status} | Date: {booking_date}\n"
+            message += f"{order_id:<35} {customer_name:<25} {status:<20} {booking_date:<12}\n"
 
         for order in matched_orders:
             created_at = order.get("createdAt", None)
@@ -524,7 +533,6 @@ class ActionGetOrderStatus(Action):
 
         
         dispatcher.utter_message(message)
-        # Add custom field for frontend
         custom_data = {"Order ID": order_id, "Status": status}
         if status.lower() == "delivered" and 'delivery_date' in locals():
             custom_data["Delivery Date"] = delivery_date
@@ -588,20 +596,17 @@ class ActionGetOrdersByTAT(Action):
             f"Total delivered orders in DB: {total_delivered}\n"
             f"Delivered in {tat_days} days: {len(matching_orders)}\n\n"
         )
+        message += f"{'Order ID':<35} {'Sender':<25} {'Booking Date':<15} {'Delivery Date':<15} {'TAT':<5}\n"
+        message += f"{'-'*35} {'-'*25} {'-'*15} {'-'*15} {'-'*5}\n"
 
         for o in matching_orders[:10]:
-            message += (
-                f"Order ID: {o['Order ID']} | Sender: {o['Sender']} | "
-                f"Booking: {o['Booking Date']} | Delivered: {o['Delivery Date']} | "
-                f"TAT: {o['TAT (days)']} days\n"
-            )
+            message += f"{o['Order ID']:<35} {o['Sender']:<25} {o['Booking Date']:<15} {o['Delivery Date']:<15} {o['TAT (days)']:<5}\n"
 
         if not matching_orders:
             message += "No orders found matching the given TAT."
 
         dispatcher.utter_message(message)
 
-        # Export all matching orders to Excel
         if matching_orders:
             df = pd.DataFrame(matching_orders)
             os.makedirs("static/files", exist_ok=True)
@@ -666,18 +671,18 @@ class ActionPendingOrdersPastDays(Action):
 
         rows = []
         message = f"Pending orders for **{customer_input}** in the past **{n_days}** days:\n"
-        
-        # Display only top 10 orders in bot message
+        message += f"{'Order ID':<35} {'Status':<20} {'To City':<20} {'Created At':<15}\n"
+        message += f"{'-'*35} {'-'*20} {'-'*20} {'-'*15}\n"
+
         for order in results[:10]:
             order_id = order.get("sm_orderid", "N/A")
             status = order.get("orderStatus", "Unknown")
+            to_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
             created_at = order.get("createdAt")
             created_date = created_at.strftime('%Y-%m-%d') if hasattr(created_at, "strftime") else str(created_at)
-            to_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
 
-            message += f"- Order ID: {order_id} | Status: {status} | To: {to_city} | Created: {created_date}\n"
+            message += f"{order_id:<35} {status:<20} {to_city:<20} {created_date:<15}\n"
 
-        # Collect all orders for Excel
         for order in results:
             order_id = order.get("sm_orderid", "N/A")
             status = order.get("orderStatus", "Unknown")
@@ -757,9 +762,12 @@ class ActionTopPincodesByCustomer(Action):
 
         message = f"Top 10 delivery pincodes for customers matching '{customer_input}':\n"
         message += f"Matched names: {', '.join(matched_customers)}\n\n"
+        message += f"{'S.No.':<6} {'Pincode':<12} {'Order Count':<12}\n"
+        message += f"{'-'*6} {'-'*12} {'-'*12}\n"
+
         rows = []
         for i, (pincode, count) in enumerate(top_pincodes, start=1):
-            message += f"{i}. Pincode: {pincode} → {count} orders\n"
+            message += f"{i:<6} {pincode:<12} {count:<12}\n"
             rows.append({"Pincode": pincode, "Order Count": count})
 
         dispatcher.utter_message(message)
@@ -835,6 +843,9 @@ class ActionDynamicOrderQuery(Action):
                 return []
 
             message = f"**Delivered Orders between {start_date_str} and {end_date_str}:**\n"
+            message += f"{'Order ID':<24} {'Status':<20} {'Created At':<12}\n"
+            message += f"{'-'*24} {'-'*20} {'-'*12}\n"
+
             for order in results:
                 order_id = order.get("sm_orderid", "N/A")
                 status = order.get("orderStatus", "Delivered")
@@ -847,9 +858,11 @@ class ActionDynamicOrderQuery(Action):
                     "Created At": created_str
                 })
 
+            for row in rows[:10]:
+                message += f"{row['Order ID']:<24} {row['Status']:<20} {row['Created At']:<12}\n"
+
             filename = f"delivered_orders_{start_date_str}_to_{end_date_str}.xlsx"
 
-        # LOCATION REPORT
         elif is_location_query and start_dt and end_dt:
             query = {
                 "$and": [
@@ -872,6 +885,9 @@ class ActionDynamicOrderQuery(Action):
                 return []
 
             message = f"**Orders from location `{location_code}` between {start_date_str} and {end_date_str}:**\n"
+            message += f"{'Order ID':<24} {'Status':<20} {'Created At':<12}\n"
+            message += f"{'-'*24} {'-'*20} {'-'*12}\n"
+
             for order in results:
                 order_id = order.get("sm_orderid", "N/A")
                 status = order.get("orderStatus", "Unknown")
@@ -884,25 +900,24 @@ class ActionDynamicOrderQuery(Action):
                     "Created At": created_str
                 })
 
+            for row in rows[:10]:
+                message += f"{row['Order ID']:<24} {row['Status']:<20} {row['Created At']:<12}\n"
+
             filename = f"orders_{location_code}_{start_date_str}_to_{end_date_str}.xlsx"
 
         else:
             dispatcher.utter_message("Please provide either a location ID or ask for a delivery report with valid dates.")
             return []
 
-        for row in rows[:10]:
-            message += "- " + " | ".join(f"{k}: {v}" for k, v in row.items()) + "\n"
         message += f"\n**Total Records**: {len(rows)}"
-
         dispatcher.utter_message(message)
 
-        
+
         df = pd.DataFrame(rows)
         os.makedirs("static/files", exist_ok=True)
         filename = filename.replace(" ", "_").replace(":", "-")
         filepath = os.path.join("static/files", filename)
         df.to_excel(filepath, index=False)
-
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
         if rows:
@@ -1019,7 +1034,6 @@ class ActionCheckServiceByPincode(Action):
         if agent_names:
             agent_list = ', '.join(agent_names)
             dispatcher.utter_message(f"Service is **available** in pincode **{pincode}**.\n Assigned delivery agent(s): **{agent_list}**.")
-            # Add custom field for frontend
             dispatcher.utter_message(custom={"service": {"pincode": pincode, "agents": list(agent_names)}})
         else:
             dispatcher.utter_message(f"Service is **available** in pincode **{pincode}**, but no delivery agent has been assigned yet.")
@@ -1054,7 +1068,9 @@ class ActionPendingOrdersBeforeLastTwoDays(Action):
             return []
 
         rows = []
-        message = f"Pending orders created before **{cutoff_date.strftime('%Y-%m-%d')}**:\n"
+        message = f"**Pending orders created before {cutoff_date.strftime('%Y-%m-%d')}**\n"
+        message += f"{'Order ID':<24} {'Customer':<20} {'Status':<20} {'To City':<15} {'Created At':<12}\n"
+        message += f"{'-'*24} {'-'*20} {'-'*20} {'-'*15} {'-'*12}\n"
 
         for order in results:
             order_id = order.get("sm_orderid", "N/A")
@@ -1073,12 +1089,11 @@ class ActionPendingOrdersBeforeLastTwoDays(Action):
             })
 
         for row in rows[:10]:
-            message += f"- Order ID: {row['Order ID']} | Customer: {row['Customer']} | Status: {row['Status']} | To: {row['To City']} | Created: {row['Created At']}\n"
+            message += f"{row['Order ID']:<24} {row['Customer']:<20} {row['Status']:<20} {row['To City']:<15} {row['Created At']:<12}\n"
 
-        message += f"\nTotal pending orders: {len(rows)}"
+        message += f"\n**Total pending orders:** {len(rows)}"
         dispatcher.utter_message(message)
 
-        # Save to Excel
         df = pd.DataFrame(rows)
         os.makedirs("static/files", exist_ok=True)
         filename = "pending_orders_before_2days_all.xlsx"
@@ -1155,8 +1170,8 @@ class ActionOrderDetailsByID(Action):
         df.to_excel(filepath, index=False)
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
-        if rows:
-            dispatcher.utter_message(custom={"order_info": {
+        
+        dispatcher.utter_message(custom={"order_info": {
                 "Order ID": order_id,
                 "Sender City": sender_city,
                 "Receiver Address": receiver_address,
@@ -1226,15 +1241,20 @@ class ActionCitywiseDeliveredOrderDistribution(Action):
 
         
         message = f" **Delivered Orders Distribution by City**"
+
         if customer_name:
-            message += f" for customer **{customer_name}**:\n"
+            message += f" for customer **{customer_name}**\n"
         else:
             message += ":\n"
 
-        for city, count in sorted_city_data[::10]:
-            message += f"- {city}: {count} orders\n"
+        message += f"\n{'City':<20} {'Order Count':<12}\n"
+        message += f"{'-'*20} {'-'*12}\n"
 
-        message += f"\n **Total Delivered Orders**: {len(filtered_orders)}"
+        for city, count in sorted_city_data:
+            message += f"{city:<20} {count:<12}\n"
+
+        message += f"\n**Total Delivered Orders:** {len(results)}"
+
         dispatcher.utter_message(message)
 
         
@@ -1341,7 +1361,6 @@ class ActionShowOrderTrends(Action):
         dispatcher.utter_message(f" Here is your order trend graph for the last {duration} {unit}:")
         dispatcher.utter_message(image=public_url)
         dispatcher.utter_message(f" [Click here to view the graph]({public_url})")
-        # Add custom field for frontend
         dispatcher.utter_message(custom={"graph_url": public_url})
         print(f"[TIME] action_show_order_trends took {time.time() - start_time:.2f} seconds")
         return []
@@ -1440,7 +1459,6 @@ class ActionDelayedOrdersGraph(Action):
         dispatcher.utter_message(f"Here's the **{display_status}** order trend for the last {duration} {unit}:")
         dispatcher.utter_message(image=public_url)
         dispatcher.utter_message(f"[Click here to view the graph]({public_url})")
-        # Add custom field for frontend
         dispatcher.utter_message(custom={"graph_url": public_url})
         print(f"[TIME] action_order_trend_graph_by_status took {(time.time() - start_time):.2f} seconds")
         return []
@@ -1536,14 +1554,18 @@ class ActionStakeholderDistribution(Action):
         response = "**Stakeholder Distribution for Delivered Orders**"
         if customer_input:
             response += f" for **{customer_input.title()}**"
-        response += ":\n"
+        response += ":\n\n"
+
+        response += f"{'Stakeholder Type':<25} {'Order Count':<12}\n"
+        response += f"{'-'*25} {'-'*12}\n"
 
         for item in stakeholder_data:
             st_type = item["_id"] or "Unknown"
             count = item["count"]
-            response += f"- {st_type}: {count}\n"
+            response += f"{st_type:<25} {count:<12}\n"
 
-        response += f"\n**Total Delivered Orders**: {total_delivered}"
+        response += f"\n**Total Delivered Orders:** {total_delivered}"
+
         dispatcher.utter_message(response)
         dispatcher.utter_message(custom={"stakeholders": serialize_for_json(stakeholder_data), "total": total_delivered})
         print(f"[TIME] action_stakeholder_distribution took {(time.time() - start_time):.2f} seconds")

@@ -247,6 +247,8 @@ export function Chat() {
   const inputRef = useRef<HTMLInputElement>(null)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([])
+  // Add state for suggestion panel
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true)
@@ -392,10 +394,10 @@ export function Chat() {
             return {
               id: getClientUniqueId(),
               text: messageText,
-              sender: "bot" as const,
-              timestamp: Date.now(),
-              buttons: resp.buttons,
-              image: resp.image,
+            sender: "bot" as const,
+            timestamp: Date.now(),
+            buttons: resp.buttons,
+            image: resp.image,
               custom: customData,
             };
           });
@@ -489,18 +491,38 @@ export function Chat() {
       </aside>
       {/* Main Chat Area */}
       <main className="flex-1 flex flex-col h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 relative">
-        {/* Suggestion Bubbles on the Right */}
-        <div className="fixed right-8 top-32 flex flex-col gap-3 z-30 max-w-xs">
-          {SUGGESTIONS.map((s, i) => (
-            <button
-              key={i}
-              className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full shadow hover:bg-blue-200 transition text-left max-w-xs border border-blue-200"
-              style={{ minWidth: 180 }}
-              onClick={() => setInput(s)}
-            >
-              {s}
-            </button>
-          ))}
+        {/* Suggestion Panel Button & Expandable Suggestions */}
+        <div className="fixed right-6 bottom-32 z-50 flex flex-col items-end">
+          {/* Expand/Collapse Button */}
+          <button
+            className="bg-blue-600 text-white rounded-full p-3 shadow-lg hover:bg-blue-700 transition"
+            onClick={() => setSuggestionsOpen((prev) => !prev)}
+            aria-label="Show suggestions"
+          >
+            {/* Icon (lightbulb) */}
+            <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path d="M12 2a7 7 0 0 1 7 7c0 2.5-1.5 4.5-3.5 5.5V17a1 1 0 0 1-2 0v-2.5C8.5 13.5 7 11.5 7 9a7 7 0 0 1 7-7z" fill="currentColor"/>
+            </svg>
+          </button>
+          {/* Suggestions Panel */}
+          <div
+            className={`overflow-hidden transition-all duration-300 ease-in-out ${
+              suggestionsOpen ? "max-h-96 opacity-100 mt-2" : "max-h-0 opacity-0"
+            }`}
+            style={{ minWidth: "220px" }}
+          >
+            <div className="bg-white rounded-lg shadow-lg p-2 flex flex-col gap-2">
+              {SUGGESTIONS.map((s, i) => (
+                <button
+                  key={i}
+                  className="bg-blue-100 text-blue-800 rounded px-3 py-1 text-sm text-left hover:bg-blue-200 transition"
+                  onClick={() => { setInput(s); setSuggestionsOpen(false); }}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
         {/* Header */}
         <header className="flex items-center justify-between px-8 py-6 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-gray-800 dark:to-gray-900 text-white shadow">
@@ -598,7 +620,7 @@ export function Chat() {
                             </div>
                           );
                         })()}
-                        
+
                         {message.buttons && message.buttons.length > 0 && (
                           <div className="mt-2 space-y-1">
                             {message.buttons.map((button, index) => (

@@ -108,3 +108,117 @@ stories:
   steps:
     - intent: get_stakeholder_distribution
     - action: action_stakeholder_distribution
+
+- story: user checks cx orders after greeting
+  steps:
+    - intent: greet
+    - action: utter_greet
+    - intent: cx_date_orders
+    - action: action_cx_date
+
+- story: route orders after greeting
+  steps:
+    - intent: greet
+    - action: utter_greet
+    - intent: route_orders
+    - action: action_route
+
+- story: get status then track order
+  steps:
+    - intent: get_orders_by_status
+    - action: action_get_orders_by_status
+    - intent: track_order_by_id
+    - action: action_get_order_status
+
+- story: fetch metadata after saying hello
+  steps:
+    - intent: greet
+    - action: utter_greet
+    - intent: fetch_by_metadata
+    - action: action_fetch_by_metadata
+
+- story: check TAT orders after status
+  steps:
+    - intent: get_orders_by_status
+    - action: action_get_orders_by_status
+    - intent: get_orders_by_tat
+    - action: action_get_orders_by_tat
+
+- story: destination orders with fallback to status
+  steps:
+    - intent: orders_to_destination
+    - action: action_cx_destination
+    - intent: get_orders_by_status
+    - action: action_get_orders_by_status
+
+- story: location-duration then delayed trend
+  steps:
+    - intent: orders_by_location_duration
+    - action: action_dynamic_order_query
+    - intent: get_delayed_order_trend
+    - action: action_delayed_orders_graph
+
+- story: city delivery then stakeholder analysis
+  steps:
+    - intent: citywise_delivered_order_distribution
+    - action: action_citywise_delivered_order_distribution
+    - intent: get_stakeholder_distribution
+    - action: action_stakeholder_distribution
+
+- story: track invoice then goodbye
+  steps:
+    - intent: track_order_by_invoice
+    - action: action_order_status_by_invoice
+    - intent: goodbye
+    - action: utter_goodbye
+
+- story: user confirms after cx destination
+  steps:
+    - intent: orders_to_destination
+    - action: action_cx_destination
+    - intent: cx_date_orders
+    - action: action_cx_date
+
+- story: see order trends after delay trend
+  steps:
+    - intent: get_delayed_order_trend
+    - action: action_delayed_orders_graph
+    - intent: see_order_trends
+    - action: action_show_order_trends
+
+- story: user checks aging then fetches metadata
+  steps:
+    - intent: pending_orders_before_last_two_days
+    - action: action_pending_orders_before_last_two_days
+    - intent: fetch_by_metadata
+    - action: action_fetch_by_metadata
+
+- story: back-to-back customer and location queries
+  steps:
+    - intent: get_top_pincodes_by_customer
+    - action: action_top_pincodes_by_customer
+    - intent: orders_by_location_duration
+    - action: action_dynamic_order_query
+
+- story: stakeholder distribution then goodbye
+  steps:
+    - intent: get_stakeholder_distribution
+    - action: action_stakeholder_distribution
+    - intent: goodbye
+    - action: utter_goodbye
+
+- story: full delivery query flow
+  steps:
+    - intent: delivery_report_by_duration
+    - action: action_dynamic_order_query
+    - intent: get_orders_by_status
+    - action: action_get_orders_by_status
+    - intent: get_orders_by_tat
+    - action: action_get_orders_by_tat
+
+- story: check service and then city distribution
+  steps:
+    - intent: check_service_by_pincode
+    - action: action_check_service_by_pincode
+    - intent: citywise_delivered_order_distribution
+    - action: action_citywise_delivered_order_distribution
