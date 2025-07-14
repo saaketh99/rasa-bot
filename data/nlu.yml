@@ -488,3 +488,984 @@ nlu:
     - stakeholder update share for customer [Wakefit](customer_name)
     - tell me who updated [Ola](customer_name)'s orders
 
+- synonym: Hyderabad
+  examples: |
+    - hyd
+    - Hyd
+    - HYD
+    - hydbad
+    - hyderbad
+    - hyderabd
+    - hyderaad
+    - hyderabad
+    - hyderaaaabd
+    - haidrabad
+    - haidrbd
+
+- synonym: Visakhapatnam
+  examples: |
+    - vskp
+    - Vskp
+    - VSKP
+    - vizag
+    - Vizag
+    - VIZAG
+    - vskptnm
+    - visakapatnam
+    - visakhpatnam
+    - visakapatanam
+    - vishakhapatnam
+    - vishakapatnam
+    - visag
+    - visaga
+    - visakaptnm
+    - visptm
+
+- synonym: Vijayawada
+  examples: |
+    - vij
+    - Vij
+    - VIJ
+    - vijaywada
+    - vijayvada
+    - vijyawada
+    - vijaywad
+    - vijawada
+    - vjywada
+
+- synonym: Rajamahendravaram
+  examples: |
+    - rajahmundry
+    - Rajahmundry
+    - RAJAHMUNDRY
+    - rajmndry
+    - rajmandry
+    - rajmandari
+    - rajahmndry
+    - rajhmundry
+    - rajamundry
+
+- synonym: Tirupati
+  examples: |
+    - tpt
+    - Tpt
+    - TPT
+    - thirupati
+    - thirupathi
+    - tirupathi
+    - tirupat
+    - tirpt
+    - tirpti
+
+- synonym: Kakinada
+  examples: |
+    - kkd
+    - Kkd
+    - KKD
+    - kakinad
+    - kaknada
+    - kakinda
+    - kakinnada
+
+- synonym: Srikakulam
+  examples: |
+    - sklm
+    - Sklm
+    - SKLM
+    - srikaakulam
+    - srikaklm
+    - srikklm
+    - srikklam
+    - srikakolam
+
+- synonym: Nellore
+  examples: |
+    - nlr
+    - Nlr
+    - NLR
+    - nelore
+    - nellur
+    - nelloor
+    - nelor
+
+- synonym: Anantapur
+  examples: |
+    - atp
+    - Atp
+    - ATP
+    - ananthpur
+    - anantpoor
+    - anantpr
+    - anantapuram
+
+- synonym: Guntur
+  examples: |
+    - gnt
+    - Gnt
+    - GNT
+    - guntr
+    - gunturh
+    - guntor
+
+- synonym: Kadapa
+  examples: |
+    - yp
+    - Yp
+    - YP
+    - cuddapah
+    - Cuddapah
+    - kadpaa
+    - kadpa
+    - kadappa
+    - kadapha
+
+- synonym: Ongole
+  examples: |
+    - ogl
+    - Ogl
+    - OGL
+    - ongl
+    - onglo
+    - ongol
+    - ongle
+
+- synonym: Khammam
+  examples: |
+    - kmm
+    - Kmm
+    - KMM
+    - khamam
+    - khmmam
+    - khamamam
+    - khmm
+
+- synonym: Kothagudem
+  examples: |
+    - ktm
+    - Ktm
+    - KTM
+    - kotagudem
+    - kothgudem
+    - kotgudem
+    - kothagudam
+
+- synonym: Warangal
+  examples: |
+    - wgl
+    - Wgl
+    - WGL
+    - varangal
+    - warngal
+    - warngl
+    - warangalh
+
+- synonym: Secunderabad
+  examples: |
+    - scbd
+    - Scbd
+    - SCBD
+    - secundrabad
+    - sekunderabad
+    - secbd
+    - secndrbd
+
+- synonym: Chittoor
+  examples: |
+    - ctr
+    - Ctr
+    - CTR
+    - chittor
+    - chitor
+    - chitur
+    - chithoor
+
+- synonym: Medak
+  examples: |
+    - mdk
+    - Mdk
+    - MDK
+    - medhak
+    - medk
+    - medakk
+
+- synonym: Bhimavaram
+  examples: |
+    - bvrm
+    - Bvrm
+    - BVRM
+    - bhimvaram
+    - bheemavaram
+    - bhimvrm
+    - bhmavaram
+
+- synonym: Vizianagaram
+  examples: |
+    - vzm
+    - Vzm
+    - VZM
+    - vznm
+    - vijayanagaram
+    - vizyanagaram
+    - vijanagaram
+
+
+lookup_tables:
+
+- lookup: pickup
+  examples: |
+    Adiabad
+    Adialbad
+    Adilabad
+    Ailabad
+    Anantapur
+    Ananthpur
+    Anantpaur
+    Anqntapur
+    Beegaluru
+    Benaluru
+    Bengaluru
+    Bengaluur
+    Bhimaaram
+    Bhimaparam
+    Bhimavaam
+    Bhimavaram
+    Bomgakal
+    Bommaakl
+    Bommakal
+    Bomwakal
+    Chittmor
+    Chittoor
+    Eluru
+    Gntur
+    Guntur
+    Gunutr
+    Hanakonda
+    Hanamkonda
+    Hanamkonta
+    Hanmakonda
+    Hyderabad
+    Hydeuabad
+    Hydxrabad
+    Kadaap
+    Kadapa
+    Kadxpa
+    Kaiknada
+    Kakianda
+    Kakinada
+    Karrivani Reru
+    Karrivani Reuv
+    Karrivani Revu
+    Karrivani evu
+    Khammam
+    Khammm
+    Khammma
+    Kykinada
+    Mahbubnagar
+    Mahbubnagir
+    Mahbubnagr
+    Mahbunagar
+    Mugal
+    Mugpal
+    Mugpl
+    Nagonda
+    Nalgonda
+    Nalxonda
+    Naygonda
+    Nellore
+    Niral
+    Nirmal
+    Nlelore
+    Normal
+    Nrmal
+    Ongle
+    Ongoe
+    Ongole
+    Rajamahendraaram
+    Rajamahendravaram
+    Rajamahendrnvaram
+    Secunderabad
+    Secundrabad
+    Secundreabad
+    Tirpuati
+    Tirupati
+    Tirupti
+    Vellore
+    Vellre
+    Vijayawada
+    Vijayawqda
+    Vijaytwada
+    Vijaywaada
+    Visakhapatnam
+    Viskhapatnam
+    Vsakhapatnam
+    adapa
+    eVllore
+    eellore
+    ehittoor
+    firupati
+    hKammam
+    hittoor
+    isakhapatnam
+    lEuru
+    luru
+    mluru
+    ngole
+    pecunderabad
+    pyderabad
+    uellore
+    ugpal
+    untur
+
+- lookup: drop
+  examples: |
+    Abraharam
+    Adanki
+    Addanik
+    Addanki
+    Adilabad
+    Adilaoad
+    Adilqbad
+    Adoni
+    Agraharam
+    Agroharam
+    Akibpur
+    Akilpur
+    Akilupr
+    Akilur
+    Akkampali
+    Akkampalli
+    Akkampaqli
+    Akkampawli
+    Ambur
+    Amdur
+    Amubr
+    Anantapdr
+    Anantapru
+    Anantapur
+    Anantpaur
+    Andiatti
+    Andipatti
+    Anidpatti
+    Anmanchipalli
+    Anmuanchipalli
+    Anpipatti
+    Anumanchipali
+    Anumanchipalli
+    Aodni
+    Araharam
+    Avadi
+    Avaid
+    Avaqi
+    Avidi
+    Ayannapalem
+    Ayaynnapalem
+    Ayyannapaem
+    Ayyannapalem
+    Azhikod eNorth
+    Azhikode Norht
+    Azhikode North
+    AzhikodexNorth
+    BHIMAVARAM
+    BHIMAVRAAM
+    BHIMAVhRAM
+    BHMIAVARAM
+    Baaptla
+    Bapatla
+    Bdimavaram
+    Belagai
+    Belagasi
+    Belagavi
+    Belgaavi
+    Bengalhru
+    Bengaluru
+    Bhimavaarm
+    Bhimavalam
+    Bhimavaram
+    Bommakal
+    Bommakfl
+    Bosmakal
+    Bpaatla
+    Bpatla
+    Brahmanagudem
+    Brahmanagudme
+    Buddaram
+    Buddcram
+    Buudaram
+    CUDADPAH
+    CUDAPAH
+    CUDDAPAH
+    CUDDAPH
+    Cekkikulam
+    Cennai
+    Cheegal
+    Cheglal
+    Chekkikulam
+    Chelgal
+    Chennai
+    Chewgal
+    Chilakalripet
+    Chilakaluripet
+    Chilakalwripet
+    Chilakaulripet
+    Chintalapudi
+    Chintalpaudi
+    Chintalvpudi
+    Chiraa
+    Chirala
+    Chitnalapudi
+    Chittoor
+    Chittor
+    Chrala
+    Chriala
+    Chtitoor
+    Chzkkikulam
+    Coimbatore
+    Coimnatore
+    Dahrwad
+    Darwad
+    Dharwad
+    Dhcne
+    Dhhne
+    Dhone
+    Duepalavalasa
+    Dupalavalasa
+    Duppalaavlasa
+    Duppalavalasa
+    Edulakuna
+    Edulakunta
+    Edulakuta
+    Edulakutna
+    Elru
+    Elruu
+    Eluru
+    Eulru
+    Gadicherlapaely
+    Gadicherlapally
+    Gadicherlapaxly
+    Gella
+    Ghaziabad
+    Ghzaiabad
+    Ghziabad
+    Girdharnur Sunarasi
+    Girdharpur Sunarasi
+    Girdharupr Sunarasi
+    Glola
+    Gnutur
+    Godicherla
+    Godichkrla
+    Godichrela
+    Gola
+    Golla
+    Gopannapaem
+    Gopannapalem
+    Gopannapaqem
+    Gopdnnapalem
+    Gowrdpatnam
+    Gowripatnam
+    Gowripatnxm
+    Gowrpatnam
+    Gqntur
+    Gridharpur Sunarasi
+    Gudivada
+    Gudvada
+    Gudviada
+    Guntur
+    Gurtur
+    Hamilapr
+    Hamilapur
+    Hamilaur
+    Hanamkoda
+    Hanamkogda
+    Hanamkonda
+    Hanuman Junction
+    Hanuman ounction
+    Hanuman uJnction
+    Hasan
+    Hasran
+    Hassan
+    Haxsan
+    Hnamkonda
+    Hnuman Junction
+    Hubballi
+    Hubbclli
+    Hubbelli
+    Hubgalli
+    Hydearbad
+    Hyderabad
+    IRUPATI
+    Jaggampeta
+    Jaggamppta
+    Jaggamptea
+    Jagtial
+    Jagtila
+    Janareddigudem
+    Jangareddigudem
+    Jonnalaagdda
+    Jonnalagadda
+    Jonnalakadda
+    Jonnlagadda
+    Jzgtial
+    Kaankavalli
+    Kadapa
+    Kadiri
+    Kahakavalli
+    Kakiada
+    Kakidada
+    Kakinada
+    Kalabragi
+    Kalabruagi
+    Kalaburagi
+    Kalaburgi
+    Kamareddy
+    Kanakavalli
+    Kanakuvalli
+    Kancherlapalem
+    Kancherlapalgm
+    Kancherlapalme
+    Kancherlaplem
+    Kandur
+    Kangndi
+    Kangnudi
+    Kangundi
+    Kangunid
+    Kannur
+    Kannur 
+    Kanrur
+    Kanur
+    Kaprivani Revu
+    Karrivani Revu
+    Karrivni Revu
+    Keeeara
+    Keesara
+    Keesgra
+    Keesyra
+    Kesagapalli
+    Kesarapalli
+    Kesarapnlli
+    Khamam
+    Khammam
+    Khammfm
+    Khammm
+    Kkinada
+    Kmaareddy
+    Kmareddy
+    Knchanapalli
+    Kolakta
+    Kolkasa
+    Kolkata
+    Kolxata
+    Kona Gunturu
+    Konda Gunturu
+    Konda uGnturu
+    Konda unturu
+    Kondlaludi
+    Kondlapudi
+    Kondlaupdi
+    Kondlupudi
+    Koretla
+    Kortula
+    Korutla
+    Kothagudem
+    Kothagudm
+    Kothagudtm
+    Kothaqudem
+    Kozhikode
+    Kozhirode
+    Kozihkode
+    Kozikode
+    Kpmareddy
+    Kunchaanpalli
+    Kunchanapalli
+    Kupcam
+    Kuppam
+    Kuppm
+    Kurjool
+    Kurnool
+    Maakshi
+    Maapkshi
+    Machiipatnam
+    Machilipatnam
+    Machilpatnam
+    Machilwpatnam
+    Madanapalle
+    Madanaplale
+    Madanaplle
+    Madanapslle
+    Madhhra
+    Madhira
+    Madihra
+    Madira
+    Mahbubangar
+    Mahbubnagar
+    Mahubbnagar
+    Malkapuarm
+    Malkapuram
+    Malkcpuram
+    Mamillanalli
+    Mamillapali
+    Mamillapalli
+    Mamillapaqli
+    Mancheiral
+    Mancherial
+    Mancherifl
+    Mancheril
+    Mangaluru
+    Mangaluu
+    Manglauru
+    Mangmluru
+    Mapakshi
+    Medak
+    Medapuram
+    Medaupram
+    Medauram
+    Medk
+    Medka
+    Medxk
+    Mgpal
+    Mllkapuram
+    Moadvalasa
+    Modavalasa
+    Modavalisa
+    Movavalasa
+    Mpaakshi
+    Mphbubnagar
+    Msyuru
+    Mugal
+    Mugpal
+    Mugtal
+    Mysru
+    Mysruu
+    Mysuru
+    Nagaram
+    Nalgnda
+    Nalgonda
+    Nallayapalle
+    Nallayxpalle
+    Nandigaam
+    Nandigama
+    Nandikotkur
+    Nandikotkxr
+    Nandikotur
+    Nandyala
+    Nanigama
+    Nantigama
+    Narasa Poram
+    Narasa Pram
+    Narasa Pruam
+    Narasa Puram
+    Narasaaopeta
+    Narasaraopeta
+    Narasinga Puram
+    Narasraopeta
+    Narawinga Puram
+    Narsaaraopeta
+    Narsainga Puram
+    Narsapr
+    Narsapru
+    Narsapur
+    Narsinga Puram
+    Narsipatnam
+    Nasipatnam
+    Nasripatnam
+    Ndiadavole
+    Nellore
+    Nemam
+    New Deehi
+    New Deghi
+    New Delhi
+    Ngaaram
+    Nhndyala
+    Niamal
+    Nidadaole
+    Nidadavole
+    Nidadbvole
+    Nirmal
+    Nirmanapuram
+    Nirmanapurm
+    Nirmanpuram
+    Nizamaabd
+    Nizamaad
+    Nizamabad
+    Nizamabd
+    Nlgonda
+    Nllore
+    Nmam
+    Nmeam
+    Nndyala
+    Nobda
+    Noia
+    Noida
+    Nqgaram
+    Nrasapur
+    Nrasipatnam
+    Nrmanapuram
+    Nsmam
+    Ntlgonda
+    Nvgaram
+    Ongole
+    Ongrle
+    Ongvle
+    P N Pucur
+    P N Pudur
+    P N fudur
+    P N udur
+    Paderu
+    Palakollu
+    Palakolu
+    Palakorlu
+    Palfkollu
+    Paneru
+    Pata
+    Patan
+    Patna
+    Patoa
+    Pedapadu
+    Peddapadu
+    Peddpadu
+    Pimpfi-Chinchwad
+    Pimpri-Chinchwad
+    Pimpri-Chinhcwad
+    Pnmpri-Chinchwad
+    Poddatur
+    Prathiadu
+    Prathipadu
+    Prathivadu
+    Proddatru
+    Proddatur
+    Pune
+    Punganr
+    Punganru
+    Punganur
+    Punpanur
+    Putthr
+    Puttru
+    Puttur
+    Pxoddatur
+    Raajmpet
+    Rachur
+    Raghunadaalem
+    Raghunadaialem
+    Raghunadapalem
+    Raichur
+    Rajamahendravaram
+    Rajamahendravarm
+    Rajamahendravarma
+    Rajamahendravarnm
+    Rajamet
+    Rajampet
+    Rajamvet
+    Ramaaropet
+    Ramaguhdam
+    Ramagundam
+    Ramaraoept
+    Ramaraopet
+    Ramgaundam
+    Ramgundam
+    Rampkram
+    Rampuam
+    Rampuarm
+    Rampuram
+    Rayachoty
+    Rayalam Rual
+    Rayalam Rudal
+    Rayalam Rural
+    Rayalam Rurla
+    Rdyachoty
+    Reddipali
+    Reddipalli
+    Redeipalli
+    Repalle
+    Riichur
+    Rmmaraopet
+    Rpalle
+    Rpealle
+    Rvichur
+    Salem
+    Samarlakota
+    Samralakota
+    Samrlakota
+    Sankaam
+    Sankaram
+    Sankhampalle
+    Satilite City
+    Satilite Ctty
+    Satilite Cty
+    Scunderabad
+    Secunderabad
+    Secunderbaad
+    Secunderebad
+    Seetharampuram
+    Seetharvmpuram
+    Setharampuram
+    Shivamogga
+    Shivamogwa
+    Shuvamogga
+    Sihvamogga
+    Sikakulam
+    Sindagi
+    Sindgi
+    Sindmgi
+    Sindogi
+    Slaem
+    Smlem
+    Snakaram
+    Snkaram
+    Snlem
+    Srikakulam
+    Srikkaulam
+    Srikkulam
+    Srikrishnapatnam
+    Srikrishnapatnm
+    Srnugavarapu kota
+    Srungaarapu kota
+    Srungavarapc kota
+    Srungavarapu kota
+    Sryapet
+    Stailite City
+    Suryapet
+    Suryapt
+    Suryapte
+    Svetharampuram
+    TIRUPATI
+    TIUPATI
+    TIURPATI
+    Talpuula
+    Talupula
+    Tanuku
+    Tanuu
+    Tanuuk
+    Taulpula
+    Taupula
+    Tcruvuru
+    Teali
+    Tegkali
+    Tekkali
+    Tekklai
+    Tekkzli
+    Tenaii
+    Tenali
+    Thalassery
+    Thalassrey
+    Thalassry
+    Tiruati
+    Tirupai
+    Tirupati
+    Tirupaui
+    Tiruvuru
+    Tnauku
+    Tpnali
+    Uddr
+    Uddur
+    Udur
+    Uppaalpadu
+    Uppalaeadu
+    Uppalapadu
+    Uppalapaud
+    Utjarpara
+    Uttarpara
+    Velampalem
+    Velamqalem
+    Velgore
+    Velloe
+    Velloqe
+    Vellore
+    Viakrabad
+    Viarabad
+    Viizanagaram
+    Vijayawada
+    Vijayawdaa
+    Vijayawyda
+    Vikaarbad
+    Vikarabad
+    Vinkonda
+    Vinkuonda
+    Vinukonad
+    Vinukonda
+    Visakapatnam
+    Visakhapatnam
+    Visakhpaatnam
+    Visakhpatnam
+    Viziaagaram
+    Vizianagaram
+    Viziatagaram
+    Vrlampalem
+    Waarngal
+    Walangal
+    Warangal
+    aJggampeta
+    aJgtial
+    aKdapa
+    aKdiri
+    aNllayapalle
+    aNndyala
+    aRyachoty
+    aSnkhampalle
+    aderu
+    adiri
+    aelampalem
+    amarlakota
+    andikotkur
+    angareddigudem
+    ankhampalle
+    ayachoty
+    badapa
+    baderu
+    bhimavacam
+    bhimavakam
+    bhimavaram
+    bhkmavaram
+    coida
+    dAoni
+    dUdur
+    doni
+    eBngaluru
+    eNllore
+    ePddapadu
+    ew Delhi
+    faghunadapalem
+    gngole
+    hCennai
+    hDarwad
+    hGaziabad
+    halassery
+    hennai
+    iTruvuru
+    iengaluru
+    ijayawada
+    irmal
+    iruvuru
+    kadapa
+    kdilabad
+    kuddaram
+    lrahmanagudem
+    mallayapalle
+    mbur
+    mommakal
+    mune
+    nedapuram
+    oCimbatore
+    odicherla
+    oimbatore
+    orikrishnapatnam
+    rSikrishnapatnam
+    rahmanagudem
+    rathipadu
+    shone
+    tUtarpara
+    thekkikulam
+    ttarpara
+    uKppam
+    uKrnool
+    uPne
+    uangareddigudem
+    udivada
+    uirmal
+    une
+    uorutla
+    vamilapur
+    wuttur
+    xankhampalle
+    xarangal
+    xellore
+    yderabad
+    yyderabad
