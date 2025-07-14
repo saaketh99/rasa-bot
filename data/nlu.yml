@@ -46,54 +46,28 @@ nlu:
 - intent: route_orders
   examples: |
     - Show me all orders routed from [Hyderabad]{"entity": "location", "role": "pickup"} to [Chennai]{"entity": "location", "role": "drop"}
-    - What routes are taken from [Bangalore]{"entity": "location", "role": "pickup"} to [Kolkata]{"entity": "location", "role": "drop"}?
-    - How are shipments moving from [Vijayawada]{"entity": "location", "role": "pickup"} to [Guntur]{"entity": "location", "role": "drop"}?
-    - Tell me the order flow from [Pune]{"entity": "location", "role": "pickup"} to [Mumbai]{"entity": "location", "role": "drop"}
-    - Get all bookings from [Warangal]{"entity": "location", "role": "pickup"} to [Khammam]{"entity": "location", "role": "drop"}
-    - Which orders are picked up at [Tirupati]{"entity": "location", "role": "pickup"} and dropped at [Kadapa]{"entity": "location", "role": "drop"}?
-    - Are there any routes from [Secunderabad]{"entity": "location", "role": "pickup"} to [Rajahmundry]{"entity": "location", "role": "drop"}?
-    - List shipments going from [Kakinada]{"entity": "location", "role": "pickup"} to [Visakhapatnam]{"entity": "location", "role": "drop"}
-    - Find shipments routed between [Nellore]{"entity": "location", "role": "pickup"} and [Vijayawada]{"entity": "location", "role": "drop"}
-    - Track loads moved from [BLR]{"entity": "location", "role": "pickup"} to [VZM]{"entity": "location", "role": "drop"}
-   
+    - Get orders from [Hyderabad]{"entity": "location", "role": "pickup"} to [Visakhapatnam]{"entity": "location", "role": "drop"}
+    - I need all shipments from [Hyderabad]{"entity": "location", "role": "pickup"} to [Vizag]{"entity": "location", "role": "drop"}
+    - Bookings moved between [Pune]{"entity": "location", "role": "pickup"} and [Mumbai]{"entity": "location", "role": "drop"}
+    - Packages routed from [Bangalore]{"entity": "location", "role": "pickup"} to [Guntur]{"entity": "location", "role": "drop"}
+    - Orders picked up in [Tirupati]{"entity": "location", "role": "pickup"} and dropped at [Kadapa]{"entity": "location", "role": "drop"}
+    - List all consignments shipped from [Kakinada]{"entity": "location", "role": "pickup"} to [Visakhapatnam]{"entity": "location", "role": "drop"}
+    - Any deliveries from [Vijayawada]{"entity": "location", "role": "pickup"} to [Hyderabad]{"entity": "location", "role": "drop"}
+    - Get details of loads moved from [Secunderabad]{"entity": "location", "role": "pickup"} to [Rajahmundry]{"entity": "location", "role": "drop"}
+    - Which shipments were routed from [Warangal]{"entity": "location", "role": "pickup"} to [Khammam]{"entity": "location", "role": "drop"}
+
 - intent: orders_to_destination
   examples: |
-    - Show me the orders sent to [Chennai]{"entity": "location", "role": "destination"} for [Wakefit]{"entity": "customer_name"}
-    - List all shipments for [Amazon]{"entity": "customer_name"} delivered to [Bangalore]{"entity": "location", "role": "destination"}
-    - Which packages from [Flipkart]{"entity": "customer_name"} were sent to [Delhi]{"entity": "location", "role": "destination"}
-    - Any orders under [Myntra]{"entity": "customer_name"} shipped to [Hyderabad]{"entity": "location", "role": "destination"}
-    - Deliveries by [Pepperfry]{"entity": "customer_name"} that reached [Pune]{"entity": "location", "role": "destination"}
-    - Show all shipments from [Ola]{"entity": "customer_name"} going to [Ahmedabad]{"entity": "location", "role": "destination"}
-    - Orders of [JioMart]{"entity": "customer_name"} delivered to [Jaipur]{"entity": "location", "role": "destination"}
-    - From [BigBasket]{"entity": "customer_name"}, list orders sent to [Indore]{"entity": "location", "role": "destination"}
-    - Bookings by [Tata Cliq]{"entity": "customer_name"} for [Kolkata]{"entity": "location", "role": "destination"}
-    - Find orders handled for [Urban Ladder]{"entity": "customer_name"} and delivered to [Nagpur]{"entity": "location", "role": "destination"}
-    - [Wakeft]{"entity": "customer_name"} orders sent to [Chnai]{"entity": "location", "role": "destination"}
-    - [Amzon]{"entity": "customer_name"} shipments delivered to [Bangalor]{"entity": "location", "role": "destination"}
-    - Show [Flipkrt]{"entity": "customer_name"} packages to [Delli]{"entity": "location", "role": "destination"}
-    - [Myntr]{"entity": "customer_name"} deliveries reached [Hydrbd]{"entity": "location", "role": "destination"}
-    - Orders by [Pprfry]{"entity": "customer_name"} sent to [Puna]{"entity": "location", "role": "destination"}
-    - Find shipments from [Oola]{"entity": "customer_name"} to [Ahmdbd]{"entity": "location", "role": "destination"}
-    - Give me [JMart]{"entity": "customer_name"} deliveries sent to [Jaypur]{"entity": "location", "role": "destination"}
-    - List orders under [BigBsket]{"entity": "customer_name"} shipped to [Indr]{"entity": "location", "role": "destination"}
-    - Orders from [Tta Cliq]{"entity": "customer_name"} sent to [Kolkatta]{"entity": "location", "role": "destination"}
-    - Deliveries of [Urban Ladr]{"entity": "customer_name"} that went to [Nagpr]{"entity": "location", "role": "destination"}
-    - Any [Wakfit]{"entity": "customer_name"} orders shipped to [Chnnai]{"entity": "location", "role": "destination"}
-    - [Big Baskt]{"entity": "customer_name"} shipments arrived in [Indorr]{"entity": "location", "role": "destination"}
-    - Are there any orders from [Flipkart]{"entity": "customer_name"} to [Delhi]{"entity": "location", "role": "destination"}
-    - I need deliveries by [Amazn]{"entity": "customer_name"} for [Bglr]{"entity": "location", "role": "destination"}
-    - [Tata Clicq]{"entity": "customer_name"} orders that went to [Kolkat]{"entity": "location", "role": "destination"}
-    - Shipments from [URBN Ladder]{"entity": "customer_name"} delivered to [Nagpoor]{"entity": "location", "role": "destination"}
-    - [Jio Mart]{"entity": "customer_name"} bookings shipped to [Jypur]{"entity": "location", "role": "destination"}
-    - Orders for [Mntra]{"entity": "customer_name"} reaching [Hyderbad]{"entity": "location", "role": "destination"}
-    - [OlA]{"entity": "customer_name"} deliveries to [Ahmedbad]{"entity": "location", "role": "destination"}
-    - Show me all orders shipped to [Visakhapatnam]{"entity": "location", "role": "destination"}
-    - How many shipments went to [Visakhapatnam]{"entity": "location", "role": "destination"}
-    - Get [Ola ELE]{"entity": "customer_name"} orders that reached [Visakhapatnam]{"entity": "location", "role": "destination"}
-    - [Flipkart]{"entity": "customer_name"} deliveries sent to [Visakhapatnam]{"entity": "location", "role": "destination"}
-    - Any orders delivered to [Visakhapatnam]{"entity": "location", "role": "destination"}
-    - I need all packages shipped to [Visakhapatnam]{"entity": "location", "role": "destination"}
-    
+    - Show me [Ola ELE]{"entity": "customer_name"} orders shipped to [Visakhapatnam]{"entity": "location", "role": "destination"}
+    - Get all [Wakefit]{"entity": "customer_name"} shipments sent to [Hyderabad]{"entity": "location", "role": "destination"}
+    - Deliveries by [Flipkart]{"entity": "customer_name"} that reached [Chennai]{"entity": "location", "role": "destination"}
+    - How many [Amazon]{"entity": "customer_name"} orders were delivered to [Bangalore]{"entity": "location", "role": "destination"}
+    - I need all orders under [Pepperfry]{"entity": "customer_name"} going to [Kolkata]{"entity": "location", "role": "destination"}
+    - [JioMart]{"entity": "customer_name"} bookings that reached [Pune]{"entity": "location", "role": "destination"}
+    - Check [BigBasket]{"entity": "customer_name"} shipments sent to [Tirupati]{"entity": "location", "role": "destination"}
+    - [Urban Ladder]{"entity": "customer_name"} orders that reached [Nagpur]{"entity": "location", "role": "destination"}
+    - Any orders from [Ola ELE]{"entity": "customer_name"} to [Vizag]{"entity": "location", "role": "destination"}
+
 - intent: get_orders_by_status
   examples: |
     - show me orders that are [delivered](delivery_status)
