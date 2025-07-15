@@ -602,24 +602,39 @@ export function Chat() {
 
                           return (
                             <div className="overflow-x-auto mt-2 text-black">
-                              <button
-                                onClick={() => {
-                                  try {
-                                    const worksheet = XLSX.utils.json_to_sheet(tableArray);
-                                    const workbook = XLSX.utils.book_new();
-                                    XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
-                                    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-                                    const file = new Blob([excelBuffer], { type: "application/octet-stream" });
-                                    saveAs(file, "exported_data.xlsx");
-                                    toast.success("Excel file downloaded!");
-                                  } catch (err) {
+                              <div className="flex gap-2 mb-2">
+                                {/* Client-side Excel Download */}
+                                <button
+                                  onClick={() => {
+                                    try {
+                                      const worksheet = XLSX.utils.json_to_sheet(tableArray);
+                                      const workbook = XLSX.utils.book_new();
+                                      XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
+                                      const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+                                      const file = new Blob([excelBuffer], { type: "application/octet-stream" });
+                                      saveAs(file, "exported_data.xlsx");
+                                      toast.success("Excel file downloaded!");
+                                    } catch (err) {
                                       toast.error("Failed to download Excel file.");
-                                  }
-                                }}
-                                className="mb-2 px-3 py-1 bg-green-600 text-white border-none rounded cursor-pointer hover:bg-green-700 transition"
-                              >
-                                📥 Download as Excel
-                              </button>
+                                    }
+                                  }}
+                                  className="px-3 py-1 bg-green-600 text-white border-none rounded cursor-pointer hover:bg-green-700 transition"
+                                >
+                                  📥 Download as Excel
+                                </button>
+                                {/* Backend Excel Download */}
+                                {custom.excel_url && (
+                                  <a
+                                    href={custom.excel_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download
+                                    className="px-3 py-1 bg-blue-600 text-white border-none rounded cursor-pointer hover:bg-blue-700 transition"
+                                  >
+                                    📄 Download Backend Excel
+                                  </a>
+                                )}
+                              </div>
                               <table className="min-w-full border text-sm bg-white">
                                 <thead className="bg-gray-200">
                                   <tr>
