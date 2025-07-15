@@ -246,7 +246,7 @@ class ActionCxOrder(Action):
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
         if rows:
-            dispatcher.utter_message(custom={"orders": serialize_for_json(rows), "excel_url": public_url})
+            dispatcher.utter_message(custom={"table_data": serialize_for_json(rows), "excel_url": public_url})
 
         print(f"[TIME] action_cx_date took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
@@ -305,7 +305,7 @@ class ActionrouteOrder(Action):
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
         if rows:
-            dispatcher.utter_message(custom={"orders": serialize_for_json(rows), "excel_url": public_url})
+            dispatcher.utter_message(custom={"table_data": serialize_for_json(rows), "excel_url": public_url})
 
         print(f"[TIME] action_route took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
@@ -370,7 +370,7 @@ class ActionFordestination(Action):
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
         if rows:
-            dispatcher.utter_message(custom={"orders": serialize_for_json(rows), "excel_url": public_url})
+            dispatcher.utter_message(custom={"table_data": serialize_for_json(rows), "excel_url": public_url})
 
         print(f"[TIME] action_cx_destination took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
@@ -471,7 +471,7 @@ class ActionGetOrdersByStatus(Action):
                     "Status": order.get("orderStatus", order.get("Order Status", "Unknown")),
                     "Date": order.get("createdAt").strftime('%Y-%m-%d') if order.get("createdAt") else ""
                 })
-            dispatcher.utter_message(custom={"orders": serialize_for_json(orders_json), "excel_url": public_url})
+            dispatcher.utter_message(custom={"table_data": serialize_for_json(orders_json), "excel_url": public_url})
 
         print(f"[TIME] action_get_orders_by_status took {time.time() - start_time:.2f} seconds")
         return []
@@ -615,7 +615,7 @@ class ActionGetOrdersByTAT(Action):
             df.to_excel(filepath, index=False)
 
             public_url = f"http://51.20.18.59:8080/static/files/{filename}"
-            dispatcher.utter_message(custom={"orders": serialize_for_json(matching_orders), "excel_url": public_url})
+            dispatcher.utter_message(custom={"table_data": serialize_for_json(matching_orders), "excel_url": public_url})
 
         print(f"[TIME] action_get_orders_by_tat took {time.time() - start_time:.2f} seconds")
         return []
@@ -712,7 +712,7 @@ class ActionPendingOrdersPastDays(Action):
         
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
         if rows:
-            dispatcher.utter_message(custom={"orders": serialize_for_json(rows), "excel_url": public_url})
+            dispatcher.utter_message(custom={"table_data": serialize_for_json(rows), "excel_url": public_url})
 
         print(f"[TIME] action_pending_orders_past_days took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
@@ -786,7 +786,7 @@ class ActionTopPincodesByCustomer(Action):
                     "Pincode": pincode,
                     "Order Count": count
                 })
-            dispatcher.utter_message(custom={"pincodes": serialize_for_json(pincodes_json), "excel_url": public_url})
+            dispatcher.utter_message(custom={"table_data": serialize_for_json(pincodes_json), "excel_url": public_url})
 
         print(f"[TIME] action_top_pincodes_by_customer took {(time.time() - start_time):.2f} seconds")
         return []
@@ -921,7 +921,7 @@ class ActionDynamicOrderQuery(Action):
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
         if rows:
-            dispatcher.utter_message(custom={"orders": serialize_for_json(rows), "excel_url": public_url})
+            dispatcher.utter_message(custom={"table_data": serialize_for_json(rows), "excel_url": public_url})
 
         print(f"[TIME] action_dynamic_order_query took {(time.time() - start_time):.2f} seconds")
         return []
@@ -994,7 +994,7 @@ class ActionOrderStatusByInvoice(Action):
         
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
         if rows:
-            dispatcher.utter_message(custom={"orders": serialize_for_json(rows), "excel_url": public_url})
+            dispatcher.utter_message(custom={"table_data": serialize_for_json(rows), "excel_url": public_url})
         print(f"[TIME] action_order_status_by_invoice took {(time.time() - start_time):.2f} seconds")
         return []
 
@@ -1102,7 +1102,7 @@ class ActionPendingOrdersBeforeLastTwoDays(Action):
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
         if rows:
-            dispatcher.utter_message(custom={"orders": serialize_for_json(rows), "excel_url": public_url})
+            dispatcher.utter_message(custom={"table_data": serialize_for_json(rows), "excel_url": public_url})
 
         print(f"[TIME] action_pending_orders_before_last_two_days took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
@@ -1171,14 +1171,14 @@ class ActionOrderDetailsByID(Action):
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
         
-        dispatcher.utter_message(custom={"order_info": {
+        dispatcher.utter_message(custom={"table_data": serialize_for_json([{ 
                 "Order ID": order_id,
                 "Sender City": sender_city,
                 "Receiver Address": receiver_address,
                 "Invoice Number": invoice_number,
                 "Payment Mode": payment_mode,
                 "LR Number": lr_number
-            }, "excel_url": public_url})
+            }]), "excel_url": public_url})
         print(f"[TIME] action_fetch_order_info_by_id took {(time.time() - start_time):.2f} seconds")
         return []
 
@@ -1278,7 +1278,7 @@ class ActionCitywiseDeliveredOrderDistribution(Action):
                     "Customer": order.get("Customer"),
                     "Status": order.get("Status")
                 })
-            dispatcher.utter_message(custom={"city_orders": serialize_for_json(filtered_orders_json), "excel_url": public_url})
+            dispatcher.utter_message(custom={"table_data": serialize_for_json(filtered_orders_json), "excel_url": public_url})
 
         print(f"[TIME] action_citywise_delivered_order_distribution took {(time.time() - start_time):.2f} seconds")
         return []
