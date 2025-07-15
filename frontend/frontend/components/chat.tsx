@@ -121,24 +121,23 @@ function renderMessageText(text: string) {
 }
 
 const SUGGESTIONS = [
-  "Show me the orders for Wakefit from 2025-06-21 to 2025-07-31",
-  "Get me the orders going from Hyderabad to Visakhapatnam",
-  "How many shipments were delivered to Coimbatore?",
-  "Show all pending orders",
-  "Find orders with wallet payment method",
-  "Order status for OLAELE04199",
-  "Track order with invoice number 9849577711",
-  "Show me all delivered orders within 2 days",
-  "Is service available in pincode 530013?",
+  "Show me the orders for CUSTOMER_NAME from 2025-06-21 to 2025-07-31",
+  "Get me the orders going from SENDER_CITY_NAME to RECIVER_CITY_NAME",
+  "How many shipments were delivered to DESTINATION_CITY?",
+  "Show all ORDER_STATUS orders",
+  "Order status for ORDER_ID",
+  "Track order with invoice number INVOICE_NUMBER",
+  "Show me all delivered orders within N days",
+  "Is service available in pincode PINCODE?",
   "Delivery summary from 2025-06-21 to 2025-07-31",
-  "Give me complete details for order ID OLAELE04199",
+  "Give me complete details for order ID ORDER_ID",
   "long pending orders",
-  "Show pending orders from the last 5 days",
-  "Top delivery pincodes for Ola Ele",
+  "Show pending orders from the last N days",
+  "Top delivery pincodes for CUSTOMER_NAME",
   "how delivered orders distributed across cities",
-  "Delivered report across cities for Ola ELE",
-  "Show me the order trend for the past 30 days",
-  "What’s the delay trend in the past 15 days?",
+  "Delivered report across cities for CUSTOMER_NAME",
+  "Show me the order trend for CUSTOMER_NAME in the past N days",
+  "What’s the delay trend in the past N days?",
   "Who is updating most of the delivery statuses?"
 ];
 
