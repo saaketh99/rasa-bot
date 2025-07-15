@@ -137,7 +137,7 @@ const SUGGESTIONS = [
   "how delivered orders distributed across cities",
   "Delivered report across cities for CUSTOMER_NAME",
   "Show me the order trend for CUSTOMER_NAME in the past N days",
-  "What’s the delay trend in the past N days?",
+  "What is the delay trend in the past N days?",
   "Who is updating most of the delivery statuses?"
 ];
 
