@@ -33,6 +33,7 @@ interface RasaResponse {
   buttons?: Array<{ title: string; payload: string }>
   image?: string
   attachment?: any
+  custom?: any // <-- Add this line to fix linter errors
 }
 
 interface ConversationMeta {
@@ -376,28 +377,49 @@ export function Chat() {
         const botMessages: ChatMessage[] = data.responses
           .filter((resp: RasaResponse) => resp.text && resp.text.trim())
           .map((resp: RasaResponse): ChatMessage => {
-            const tableData = parseTextToTableData(resp.text);
+            // --- START PATCH: Merge all structured data into table_data ---
+            let customData: any = {};
             let messageText = resp.text;
-            let customData = {};
+            let tableData: any[] | null = null;
 
+            // If backend sends custom field with structured data
+            if (resp.hasOwnProperty('custom') && resp.custom && typeof resp.custom === 'object') {
+              // Find any array field in custom (e.g., orders, city_orders, pincodes, etc.)
+              const arrayField = Object.keys(resp.custom).find(
+                key => Array.isArray(resp.custom[key]) && resp.custom[key].length > 0 && typeof resp.custom[key][0] === 'object'
+              );
+              if (arrayField) {
+                tableData = resp.custom[arrayField];
+                customData.table_data = tableData;
+              }
+            }
+
+            // If not found, try to parse from text
+            if (!tableData) {
+              tableData = parseTextToTableData(resp.text);
+              if (tableData) {
+                customData.table_data = tableData;
+              }
+            }
+
+            // Set message text to a title if table data is present
             if (tableData) {
-              // Get the first non-list line as the title, or use a default.
               const firstLine = resp.text.split('\n')[0].trim();
               if (firstLine && !firstLine.trim().startsWith('-') && !firstLine.trim().startsWith('Order ID:')) {
-                  messageText = firstLine;
+                messageText = firstLine;
               } else {
-                  messageText = "Here are the details I found:";
+                messageText = "Here are the details I found:";
               }
-              customData = { table_data: tableData };
             }
+            // --- END PATCH ---
 
             return {
               id: getClientUniqueId(),
               text: messageText,
-            sender: "bot" as const,
-            timestamp: Date.now(),
-            buttons: resp.buttons,
-            image: resp.image,
+              sender: "bot" as const,
+              timestamp: Date.now(),
+              buttons: resp.buttons,
+              image: resp.image,
               custom: customData,
             };
           });
@@ -511,7 +533,7 @@ export function Chat() {
             }`}
             style={{ minWidth: "220px" }}
           >
-            <div className="bg-white rounded-lg shadow-lg p-2 flex flex-col gap-2">
+            <div className="bg-white rounded-lg shadow-lg p-2 flex flex-col gap-2 max-h-80 overflow-y-auto">
               {SUGGESTIONS.map((s, i) => (
                 <button
                   key={i}
