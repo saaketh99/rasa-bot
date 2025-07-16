@@ -1595,21 +1595,29 @@ class ActionStakeholderDistribution(Action):
         return []
 
 
+from typing import List, Dict, Text, Any
+from rasa_sdk import Action, Tracker
+from rasa_sdk.executor import CollectingDispatcher
+from datetime import datetime
+import pandas as pd
+
 class ActionListOrdersByStatus(Action):
     def name(self) -> Text:
         return "action_list_orders_by_status"
 
+    def run(self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
 
-    def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-
-        start_time = datetime.now()
         status_input = tracker.get_slot("order_status")
-        vehicle_type = tracker.get_slot("vehicle_type")
+        customer_name = tracker.get_slot("customer_name")
 
         if not status_input:
-            dispatcher.utter_message("Please provide the order status: pending, delivered, or intransit.")
+            dispatcher.utter_message("Please provide the order status: pending, delivered, or in transit.")
             return []
 
+    
+        status_input = status_input.lower().replace("-", " ").strip()
         status_mapping = {
             "pending": [
                 "at_fm_agent_hub", "at_lm_agent_hub", "cancelled", "fm_package_verified",
@@ -1617,7 +1625,7 @@ class ActionListOrdersByStatus(Action):
                 "lm_delayed", "out_for_delivery", "out_for_pickup", "pickup_failed"
             ],
             "delivered": ["delivered", "delivered_to_neighbour", "delivered_to_watchman"],
-            "intransit": ["in_transit_to_destination_city"]
+            "in transit": ["in_transit_to_destination_city"]
         }
 
         if status_input not in status_mapping:
@@ -1629,49 +1637,58 @@ class ActionListOrdersByStatus(Action):
                 "orderStatus": {"$in": status_mapping[status_input]}
             }
 
-            if vehicle_type:
-                query["package.0.sku.0.sku_name"] = {"$regex": vehicle_type, "$options": "i"}
+            if customer_name:
+                query["end.contact.name"] = {"$regex": customer_name, "$options": "i"}
 
             matched_orders = list(collection.find(query))
 
             if not matched_orders:
-                dispatcher.utter_message(f"No {status_input} orders found for {vehicle_type or 'given criteria'}.")
+                dispatcher.utter_message(f"No {status_input} orders found for {customer_name or 'given criteria'}.")
                 return []
 
             results = []
             for order in matched_orders:
                 order_id = order.get("sm_orderid", "N/A")
-                customer_name = order.get("end", {}).get("contact", {}).get("name", "Unknown")
-                pickup_city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "")
-                drop_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "")
-                order_status = order.get("orderStatus", "unknown")
+                customer = order.get("end", {}).get("contact", {}).get("name", "Unknown")
+                pickup_city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
+                drop_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
+                status = order.get("orderStatus", "Unknown")
+
                 created_at = order.get("createdAt", {}).get("$date", "")
+                created_str = "N/A"
 
                 if isinstance(created_at, int):
-                    created_at = datetime.fromtimestamp(created_at / 1000).strftime('%Y-%m-%d %H:%M:%S')
+                    created_dt = datetime.fromtimestamp(created_at / 1000)
+                    created_str = created_dt.strftime('%Y-%m-%d %H:%M:%S')
+                elif isinstance(created_at, str):
+                    try:
+                        created_dt = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+                        created_str = created_dt.strftime('%Y-%m-%d %H:%M:%S')
+                    except Exception:
+                        created_str = created_at
 
                 results.append({
                     "Order ID": order_id,
-                    "Customer Name": customer_name,
+                    "Customer Name": customer,
                     "Pickup City": pickup_city,
                     "Drop City": drop_city,
-                    "Status": order_status,
-                    "Created At": created_at
+                    "Status": status,
+                    "Created At": created_str
                 })
 
-        
+            # Create Excel file
             df = pd.DataFrame(results)
-            file_name = f"orders_{status_input}_{datetime.now().strftime('%Y%m%d%H%M%S')}.xlsx"
+            file_name = f"orders_{status_input.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d%H%M%S')}.xlsx"
             file_path = f"/tmp/{file_name}"
             df.to_excel(file_path, index=False)
 
-            
-            msg_lines = [f" Found {len(results)} {status_input} orders:\n"]
+            # Message formatting
+            msg_lines = [f"Found {len(results)} {status_input} orders:\n"]
             header = f"{'Order ID':<30} {'Customer':<25} {'Pickup':<15} {'Drop':<15} {'Status':<25}"
             msg_lines.append(header)
             msg_lines.append("-" * len(header))
 
-            for r in results[:10]:  
+            for r in results[:10]:  # limit to 10 in chat
                 line = f"{r['Order ID']:<30} {r['Customer Name']:<25} {r['Pickup City']:<15} {r['Drop City']:<15} {r['Status']:<25}"
                 msg_lines.append(line)
 
