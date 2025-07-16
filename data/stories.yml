@@ -242,7 +242,6 @@ stories:
         - pickup_location: "Vizag"
     - action: action_get_pending_orders_by_pickup_city
 
-stories:
 - story: Get customer pending orders by locations
   steps:
   - intent: get_customer_pending_orders_all_cities
