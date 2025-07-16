@@ -102,10 +102,6 @@ rules:
     - intent: get_stakeholder_distribution
     - action: action_stakeholder_distribution
 
-- rule: Handle order status queries
-  steps:
-    - intent: list_orders_by_status
-    - action: action_list_orders_by_status
 
 - rule: Handle pending orders by pickup location
   steps:

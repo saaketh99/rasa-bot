@@ -90,6 +90,13 @@ nlu:
     - see orders marked as [delivered](delivery_status)
     - get all shipments which are [pending](delivery_status)
     - show me orders in [in transit](delivery_status) status
+    - show me [delivered](delivery_status) orders for [ola ele](customer_name)
+    - list all [pending](delivery_status) shipments of [wakefit](customer_name)
+    - I want to check [in transit](delivery_status) orders for [volvo](customer_name)
+    - are there any [delivered](delivery_status) packages for [Suresh](customer_name)?
+    - give me [pending](delivery_status) orders placed by [Meena](customer_name)
+    - show all [in transit](delivery_status) deliveries for [John Doe](customer_name)
+    - get [delivered](delivery_status) items ordered by [Priya](customer_name)
 
 - intent: track_order_by_id
   examples: |
@@ -468,31 +475,6 @@ nlu:
     - List any pending dispatches from [Nizamabad](pickup)
     - Pending orders sourced from [Karimnagar](pickup)
     - Is there any pending shipment in [Machilipatnam](pickup)?
-
-
-- intent: list_orders_by_status
-  examples: |
-    - Show me [pending](order_status) orders for [AMEER ENTERPRISES](customer_name)
-    - Get all [delivered](order_status) orders placed by [A.P.Naveen Kumar Addagala](customer_name)
-    - List [cancelled](order_status) orders from [DECCAN HOME DECOR](customer_name)
-    - Which orders are [delivered](order_status) for [Brilliant world school](customer_name)?
-    - Display [in transit](order_status) orders of [M.R.MOHAN REDDY](customer_name)
-    - All [delayed](order_status) orders under [ATPU - Kukatpally](customer_name)
-    - Fetch [delivered](order_status) orders for [LAXMI FURNITURE](customer_name)
-    - Show [in transit](order_status) orders from [Ola Elec Vizianagaram](customer_name)
-    - Are there any [delivered](order_status) orders by [RAFA TRADERS](customer_name)?
-    - List [pending](order_status) orders for [Krishnaveni Jatla](customer_name)
-    - Give me [in transit](order_status) shipments under [Wakefit](customer_name)
-    - Fetch [delivered](order_status) items for [Ola ELE](customer_name)
-    - Get all [cancelled](order_status) bookings from [Wakefit](customer_name)
-    - Show [pending](order_status) consignments for [Ola Elec](customer_name)
-    - Which orders were [delayed](order_status) for [DECCAN HOME DECOR](customer_name)?
-    - List all [in transit](order_status) orders placed by [A.P.Naveen Kumar Addagala](customer_name)
-    - Find [delivered](order_status) orders of [Brilliant world school](customer_name)
-    - Tell me [cancelled](order_status) orders for [LAXMI FURNITURE](customer_name)
-    - Check [pending](order_status) orders for [M.R.MOHAN REDDY](customer_name)
-    - Retrieve [delivered](order_status) orders placed by [AMEER ENTERPRISES](customer_name)
-
 
 - synonym: Hyderabad
   examples: |

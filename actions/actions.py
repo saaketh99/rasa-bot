@@ -409,47 +409,53 @@ class ActionGetOrdersByStatus(Action):
         start_time = time.time()
         message_text = tracker.latest_message.get("text", "").lower()
 
-        delivered_statuses = ["delivered", "delivered_at_security", "delivered_at_neighbor"]
-        cancelled_statuses = ["cancelled"]
-        exclude_statuses = set(delivered_statuses + cancelled_statuses)
+        # 🔄 Define your mapped statuses
+        status_mapping = {
+            "pending": [
+                "at_fm_agent_hub", "at_lm_agent_hub", "cancelled", "fm_package_verified",
+                "handed_over_to_agent", "handed_over_to_midmile_shipper",
+                "lm_delayed", "out_for_delivery", "out_for_pickup", "pickup_failed"
+            ],
+            "delivered": ["delivered", "delivered_to_neighbour", "delivered_to_watchman"],
+            "in transit": ["in_transit_to_destination_city"]
+        }
 
-        matched_orders = []
+        # 🧠 Determine the requested status category
+        status_category = None
+        if any(keyword in message_text for keyword in ["delivered"]):
+            status_category = "delivered"
+        elif any(keyword in message_text for keyword in ["cancelled", "canceled", "pending", "waiting", "pickup", "delayed"]):
+            status_category = "pending"
+        elif any(keyword in message_text for keyword in ["in transit", "transit", "shipped", "on the way"]):
+            status_category = "in transit"
+
         custom_filter = {}
 
-        if any(keyword in message_text for keyword in ["delivered"]):
-            custom_filter = {
-                "orderStatus": {"$in": delivered_statuses}
-            }
-
-        elif any(keyword in message_text for keyword in ["cancelled", "canceled"]):
-            custom_filter = {
-                "orderStatus": {"$in": cancelled_statuses}
-            }
-
-        elif any(keyword in message_text for keyword in ["pending", "undelivered", "not delivered", "delayed", "waiting"]):
-            non_delivered_statuses = [s for s in known_statuses if s not in exclude_statuses]
-            custom_filter = {
-                "orderStatus": {"$in": non_delivered_statuses}
-            }
-
+        if status_category:
+            custom_filter["orderStatus"] = {"$in": status_mapping[status_category]}
         else:
+            # fallback to fuzzy match
             status = fuzzy_status_match(message_text)
             if not status:
                 dispatcher.utter_message("Sorry, I couldn't identify the delivery status you're looking for.")
                 print(f"[TIME] action_get_orders_by_status took {time.time() - start_time:.2f} seconds")
                 return []
+            custom_filter["orderStatus"] = {"$regex": f"^{status}$", "$options": "i"}
 
-            custom_filter = {
-                "orderStatus": {"$regex": f"^{status}$", "$options": "i"}
-            }
+        # 🔍 Try extracting customer name using vector-based matching
+        customer_name = extract_customer_name_by_vector(message_text)  # implement this function
+        if customer_name:
+            custom_filter["start.contact.name"] = {"$regex": customer_name, "$options": "i"}
 
+        # 🔎 Query matching orders
         matched_orders = list(collection.find(custom_filter))
 
         if not matched_orders:
-            dispatcher.utter_message("No orders found for the requested delivery status.")
+            dispatcher.utter_message("No orders found for the requested filters.")
             print(f"[TIME] action_get_orders_by_status took {time.time() - start_time:.2f} seconds")
             return []
 
+        # 📋 Format message
         message = "**Orders by Status**\n\n"
         message += f"{'Order ID':<35} {'Customer':<25} {'Status':<20} {'Date':<12}\n"
         message += f"{'-'*35} {'-'*25} {'-'*20} {'-'*12}\n"
@@ -458,43 +464,35 @@ class ActionGetOrdersByStatus(Action):
 
         for order in matched_orders[:10]:
             order_id = order.get("sm_orderid", "N/A")
-            customer_name = order.get("start", {}).get("contact", {}).get("name", "Unknown")
+            customer = order.get("start", {}).get("contact", {}).get("name", "Unknown")
             status = order.get("orderStatus", order.get("Order Status", "Unknown"))
             created_at = order.get("createdAt", None)
             booking_date = created_at.strftime('%Y-%m-%d') if hasattr(created_at, 'strftime') else str(created_at)
 
-            message += f"{order_id:<35} {customer_name:<25} {status:<20} {booking_date:<12}\n"
+            message += f"{order_id:<35} {customer:<25} {status:<20} {booking_date:<12}\n"
 
-        for order in matched_orders:
-            created_at = order.get("createdAt", None)
-            booking_date = created_at.strftime('%Y-%m-%d') if hasattr(created_at, 'strftime') else str(created_at)
             rows.append({
-                "Order ID": order.get("sm_orderid", "N/A"),
-                "Customer": order.get("start", {}).get("contact", {}).get("name", "Unknown"),
-                "Status": order.get("orderStatus", order.get("Order Status", "Unknown")),
+                "Order ID": order_id,
+                "Customer": customer,
+                "Status": status,
                 "Date": booking_date
             })
 
         message += f"\nTotal orders: {len(matched_orders)}"
         dispatcher.utter_message(message)
 
+        # 📁 Save to Excel
         df = pd.DataFrame(rows)
         os.makedirs("static/files", exist_ok=True)
         filename = "orders_by_status.xlsx"
         filepath = os.path.join("static/files", filename)
         df.to_excel(filepath, index=False)
-
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
-        if matched_orders:
-            orders_json = []
-            for order in matched_orders[:10]:
-                orders_json.append({
-                    "Order ID": order.get("sm_orderid", "N/A"),
-                    "Customer": order.get("start", {}).get("contact", {}).get("name", "Unknown"),
-                    "Status": order.get("orderStatus", order.get("Order Status", "Unknown")),
-                    "Date": order.get("createdAt").strftime('%Y-%m-%d') if order.get("createdAt") else ""
-                })
-            dispatcher.utter_message(custom={"table_data": serialize_for_json(orders_json), "excel_url": public_url})
+
+        dispatcher.utter_message(custom={
+            "table_data": serialize_for_json(rows[:10]),
+            "excel_url": public_url
+        })
 
         print(f"[TIME] action_get_orders_by_status took {time.time() - start_time:.2f} seconds")
         return []
@@ -1595,110 +1593,6 @@ class ActionStakeholderDistribution(Action):
         return []
 
 
-from typing import List, Dict, Text, Any
-from rasa_sdk import Action, Tracker
-from rasa_sdk.executor import CollectingDispatcher
-from datetime import datetime
-import pandas as pd
-
-class ActionListOrdersByStatus(Action):
-    def name(self) -> Text:
-        return "action_list_orders_by_status"
-
-    def run(self, dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-
-        status_input = tracker.get_slot("order_status")
-        customer_name = tracker.get_slot("customer_name")
-
-        if not status_input:
-            dispatcher.utter_message("Please provide the order status: pending, delivered, or in transit.")
-            return []
-
-    
-        status_input = status_input.lower().replace("-", " ").strip()
-        status_mapping = {
-            "pending": [
-                "at_fm_agent_hub", "at_lm_agent_hub", "cancelled", "fm_package_verified",
-                "handed_over_to_agent", "handed_over_to_midmile_shipper",
-                "lm_delayed", "out_for_delivery", "out_for_pickup", "pickup_failed"
-            ],
-            "delivered": ["delivered", "delivered_to_neighbour", "delivered_to_watchman"],
-            "in transit": ["in_transit_to_destination_city"]
-        }
-
-        if status_input not in status_mapping:
-            dispatcher.utter_message(f"Invalid status '{status_input}' given. Please try again.")
-            return []
-
-        try:
-            query = {
-                "orderStatus": {"$in": status_mapping[status_input]}
-            }
-
-            if customer_name:
-                query["end.contact.name"] = {"$regex": customer_name, "$options": "i"}
-
-            matched_orders = list(collection.find(query))
-
-            if not matched_orders:
-                dispatcher.utter_message(f"No {status_input} orders found for {customer_name or 'given criteria'}.")
-                return []
-
-            results = []
-            for order in matched_orders:
-                order_id = order.get("sm_orderid", "N/A")
-                customer = order.get("end", {}).get("contact", {}).get("name", "Unknown")
-                pickup_city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
-                drop_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
-                status = order.get("orderStatus", "Unknown")
-
-                created_at = order.get("createdAt", {}).get("$date", "")
-                created_str = "N/A"
-
-                if isinstance(created_at, int):
-                    created_dt = datetime.fromtimestamp(created_at / 1000)
-                    created_str = created_dt.strftime('%Y-%m-%d %H:%M:%S')
-                elif isinstance(created_at, str):
-                    try:
-                        created_dt = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
-                        created_str = created_dt.strftime('%Y-%m-%d %H:%M:%S')
-                    except Exception:
-                        created_str = created_at
-
-                results.append({
-                    "Order ID": order_id,
-                    "Customer Name": customer,
-                    "Pickup City": pickup_city,
-                    "Drop City": drop_city,
-                    "Status": status,
-                    "Created At": created_str
-                })
-
-            # Create Excel file
-            df = pd.DataFrame(results)
-            file_name = f"orders_{status_input.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d%H%M%S')}.xlsx"
-            file_path = f"/tmp/{file_name}"
-            df.to_excel(file_path, index=False)
-
-            # Message formatting
-            msg_lines = [f"Found {len(results)} {status_input} orders:\n"]
-            header = f"{'Order ID':<30} {'Customer':<25} {'Pickup':<15} {'Drop':<15} {'Status':<25}"
-            msg_lines.append(header)
-            msg_lines.append("-" * len(header))
-
-            for r in results[:10]:  # limit to 10 in chat
-                line = f"{r['Order ID']:<30} {r['Customer Name']:<25} {r['Pickup City']:<15} {r['Drop City']:<15} {r['Status']:<25}"
-                msg_lines.append(line)
-
-            dispatcher.utter_message("\n".join(msg_lines))
-
-        except Exception as e:
-            dispatcher.utter_message(f"Error while fetching orders: {str(e)}")
-            return []
-
-        return []
 
 class ActionGetPendingOrdersByPickupCity(Action):
     def name(self) -> Text:

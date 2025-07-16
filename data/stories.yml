@@ -224,13 +224,7 @@ stories:
     - action: action_citywise_delivered_order_distribution
 
 
-- story: List orders by status for a customer
-  steps:
-    - intent: list_orders_by_status
-      entities:
-        - customer_name: "AMEER ENTERPRISES"
-        - order_status: "delivered"
-    - action: action_list_orders_by_status
+
 
 - story: Get pending orders by pickup location
   steps:
@@ -239,20 +233,7 @@ stories:
         - pickup_location: "Hyderabad"
     - action: action_get_pending_orders_by_pickup_city
 
-- story: List orders by status only
-  steps:
-    - intent: list_orders_by_status
-      entities:
-        - order_status: "pending"
-    - action: action_list_orders_by_status
 
-- story: List cancelled orders for another customer
-  steps:
-    - intent: list_orders_by_status
-      entities:
-        - customer_name: "DECCAN HOME DECOR"
-        - order_status: "cancelled"
-    - action: action_list_orders_by_status
 
 - story: Get pending orders from Vizag
   steps:
