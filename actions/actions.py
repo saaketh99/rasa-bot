@@ -1570,7 +1570,174 @@ class ActionStakeholderDistribution(Action):
         dispatcher.utter_message(custom={"stakeholders": serialize_for_json(stakeholder_data), "total": total_delivered})
         print(f"[TIME] action_stakeholder_distribution took {(time.time() - start_time):.2f} seconds")
         return []
-    
+
+
+class ActionListOrdersByStatus(Action):
+    def name(self) -> Text:
+        return "action_list_orders_by_status"
+
+
+    def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+
+        start_time = datetime.now()
+        status_input = tracker.get_slot("order_status")
+        vehicle_type = tracker.get_slot("vehicle_type")
+
+        if not status_input:
+            dispatcher.utter_message("Please provide the order status: pending, delivered, or intransit.")
+            return []
+
+        status_mapping = {
+            "pending": [
+                "at_fm_agent_hub", "at_lm_agent_hub", "cancelled", "fm_package_verified",
+                "handed_over_to_agent", "handed_over_to_midmile_shipper",
+                "lm_delayed", "out_for_delivery", "out_for_pickup", "pickup_failed"
+            ],
+            "delivered": ["delivered", "delivered_to_neighbour", "delivered_to_watchman"],
+            "intransit": ["in_transit_to_destination_city"]
+        }
+
+        if status_input not in status_mapping:
+            dispatcher.utter_message(f"Invalid status '{status_input}' given. Please try again.")
+            return []
+
+        try:
+            query = {
+                "orderStatus": {"$in": status_mapping[status_input]}
+            }
+
+            if vehicle_type:
+                query["package.0.sku.0.sku_name"] = {"$regex": vehicle_type, "$options": "i"}
+
+            matched_orders = list(collection.find(query))
+
+            if not matched_orders:
+                dispatcher.utter_message(f"No {status_input} orders found for {vehicle_type or 'given criteria'}.")
+                return []
+
+            results = []
+            for order in matched_orders:
+                order_id = order.get("sm_orderid", "N/A")
+                customer_name = order.get("end", {}).get("contact", {}).get("name", "Unknown")
+                pickup_city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "")
+                drop_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "")
+                order_status = order.get("orderStatus", "unknown")
+                created_at = order.get("createdAt", {}).get("$date", "")
+
+                if isinstance(created_at, int):
+                    created_at = datetime.fromtimestamp(created_at / 1000).strftime('%Y-%m-%d %H:%M:%S')
+
+                results.append({
+                    "Order ID": order_id,
+                    "Customer Name": customer_name,
+                    "Pickup City": pickup_city,
+                    "Drop City": drop_city,
+                    "Status": order_status,
+                    "Created At": created_at
+                })
+
+        
+            df = pd.DataFrame(results)
+            file_name = f"orders_{status_input}_{datetime.now().strftime('%Y%m%d%H%M%S')}.xlsx"
+            file_path = f"/tmp/{file_name}"
+            df.to_excel(file_path, index=False)
+
+            
+            msg_lines = [f" Found {len(results)} {status_input} orders:\n"]
+            header = f"{'Order ID':<30} {'Customer':<25} {'Pickup':<15} {'Drop':<15} {'Status':<25}"
+            msg_lines.append(header)
+            msg_lines.append("-" * len(header))
+
+            for r in results[:10]:  
+                line = f"{r['Order ID']:<30} {r['Customer Name']:<25} {r['Pickup City']:<15} {r['Drop City']:<15} {r['Status']:<25}"
+                msg_lines.append(line)
+
+            dispatcher.utter_message("\n".join(msg_lines))
+
+        except Exception as e:
+            dispatcher.utter_message(f"Error while fetching orders: {str(e)}")
+            return []
+
+        return []
+
+class ActionGetPendingOrdersByPickupCity(Action):
+    def name(self) -> Text:
+        return "action_get_pending_orders_by_pickup_city"
+
+    def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+
+        start_time = datetime.now()
+        pickup_city_input = tracker.get_slot("pickup")
+
+        if not pickup_city_input:
+            dispatcher.utter_message("Please provide a pickup city to filter pending orders.")
+            return []
+
+        PENDING_STATUSES = [
+            "at_fm_agent_hub", "at_lm_agent_hub", "cancelled", "fm_package_verified",
+            "handed_over_to_agent", "handed_over_to_midmile_shipper",
+            "lm_delayed", "out_for_delivery", "out_for_pickup", "pickup_failed"
+        ]
+
+        try:
+            query = {
+                "orderStatus": {"$in": PENDING_STATUSES},
+                "start.address.mapData.city": {"$regex": pickup_city_input, "$options": "i"}
+            }
+
+            matched_orders = list(collection.find(query))
+
+            if not matched_orders:
+                dispatcher.utter_message(f"No pending orders found from {pickup_city_input}.")
+                return []
+
+            now = datetime.now(pytz.utc)
+            results = []
+
+            for order in matched_orders:
+                created_raw = order.get("createdAt", {}).get("$date", "")
+                created_at = ""
+
+                if isinstance(created_raw, int):
+                    created_at = datetime.fromtimestamp(created_raw / 1000, pytz.utc)
+                elif isinstance(created_raw, str):
+                    created_at = datetime.fromisoformat(created_raw.replace("Z", "+00:00"))
+
+                booked_str = created_at.strftime('%Y-%m-%d %H:%M') if created_at else "N/A"
+                tat_days = (now - created_at).days if created_at else "N/A"
+
+                drop_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
+                status = order.get("orderStatus", "unknown")
+
+                results.append({
+                    "Order Booked Date": booked_str,
+                    "TAT (Days)": tat_days,
+                    "Destination Location": drop_city,
+                    "Current Status": status
+                })
+
+            df = pd.DataFrame(results)
+            file_name = f"pending_orders_{pickup_city_input}_{datetime.now().strftime('%Y%m%d%H%M%S')}.xlsx"
+            file_path = f"/tmp/{file_name}"
+            df.to_excel(file_path, index=False)
+
+
+            msg_lines = [f" Pending orders from {pickup_city_input}:\n"]
+            header = f"{'Booked Date':<20} {'TAT (Days)':<12} {'Destination':<20} {'Status':<30}"
+            msg_lines.append(header)
+            msg_lines.append("-" * len(header))
+
+            for row in results[:10]:
+                msg_lines.append(f"{row['Order Booked Date']:<20} {row['TAT (Days)']:<12} {row['Destination Location']:<20} {row['Current Status']:<30}")
+
+            dispatcher.utter_message("\n".join(msg_lines))
+
+        except Exception as e:
+            dispatcher.utter_message(f"Error while fetching pending orders: {str(e)}")
+            return []
+
+        return []
+
 class ActionDefaultFallback(Action):
     def name(self):
         return "action_default_fallback"

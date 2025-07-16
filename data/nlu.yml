@@ -447,6 +447,32 @@ nlu:
     - stakeholder update share for customer [Wakefit](customer_name)
     - tell me who updated [Ola](customer_name)'s orders
 
+- intent: get_pending_orders_by_pickup_city
+  examples: |
+    - Show me pending orders from [Hyderabad](pickup)
+    - List all pending orders in [Bangalore](pickup)
+    - Any pending orders from [Vizag](pickup)?
+    - Do we have pending orders for [Chennai](pickup)?
+    - Get pending orders from [Mumbai](pickup)
+    - Which orders are pending from [Kadapa](pickup)?
+    - Give me pending pickups in [Kurnool](pickup)
+    - Orders waiting for pickup in [Warangal](pickup)
+    - Fetch pending city orders from [Nellore](pickup)
+    - Show pending delivery requests from [Tirupati](pickup)
+
+- intent: list_orders_by_status
+  examples: |
+    - Show me [pending](order_status) orders for [AMEER ENTERPRISES](customer_name)
+    - Get all [delivered](order_status) orders placed by [A.P.Naveen Kumar Addagala](customer_name)
+    - List [cancelled](order_status) orders from [DECCAN HOME DECOR](customer_name)
+    - Which orders are [delivered ](order_status) for [Brilliant world school](customer_name)?
+    - Display [in transit](order_status) orders of [M.R.MOHAN REDDY](customer_name)
+    - All [delayed](order_status) orders under [ATPU - Kukatpally](customer_name)
+    - Fetch [delivered](order_status) orders for [LAXMI FURNITURE](customer_name)
+    - Show [in transit](order_status) orders from [Ola Elec Vizianagaram](customer_name)
+    - Are there any [delivered](order_status) orders by [RAFA TRADERS](customer_name)?
+    - List [pending](order_status) orders for [Krishnaveni Jatla](customer_name)
+
 - synonym: Hyderabad
   examples: |
     - hyd
@@ -669,6 +695,670 @@ nlu:
 
 
 lookup_tables:
+- lookup: customer_name
+  examples: |
+     A.P.Naveen Kumar Addagala
+     AAN
+     AANCO
+     ADH
+     ADHYA
+     ADI
+     ADILA
+     AKS
+     AKSHA
+     AKSHAY SINHA
+     AME
+     AMEER
+     AMEER ENTERPRISES
+     ANI
+     ANITH
+     ANK
+     ANKIT
+     APN
+     APNAV
+     APP
+     APPLE
+     ARY
+     ARYAN
+     ASH
+     ASHIS
+     ASI
+     ASIAN
+     ASIAN HANDLOOM
+     ATP
+     ATPU - Kukatpally
+     ATPU Unit
+     ATPUK
+     ATPUU
+     Aanco Industries
+     Adhya Beds And Furnishing
+     Adilabad Ola Store
+     Anitha Francis
+     Ankith Ankith
+     Apple M
+     Aryan Kumar
+     Ashish V
+     B sarala Radhamohna
+     B. Vinayagan
+     BAL
+     BALA MURALI
+     BALAJ
+     BALAM
+     BALUO
+     BAS
+     BASHE
+     BHA
+     BHASK
+     BIN
+     BINDU
+     BINDU FURNITURE
+     BRI
+     BRILL
+     BSA
+     BSARA
+     BVI
+     BVINA
+     Balaji S
+     Balaji furniture Balaji f
+     Balu ongole
+     Basheer Khan
+     Bhaskar Rao Baratam
+     Brilliant world school
+     CEN
+     CENTR
+     CENTRAL FURNITURE
+     CHE
+     CHEND
+     CHENDUR PLY N LAMINATE
+     CLA
+     CLASS
+     CLASSIC FURNITURE
+     CRA
+     CRAFT
+     Craftazing Decor
+     D pavan kumar
+     DEC
+     DECCA
+     DECCAN HOME DECOR
+     DEE
+     DEEPA
+     DEEPT
+     DEEPTI MEGA FURNITURE SHO
+     DEV
+     DEVEN
+     DEVENDAR T
+     DIL
+     DILEE
+     DPA
+     DPAVA
+     DR Furniture
+     DR RANJITH
+     DRA
+     DRANU
+     DRF
+     DRFUR
+     DRR
+     DRRAN
+     DWE
+     DWELL
+     Deepanksh D
+     Dileep kumar
+     Dr. Anusha Dr. Anusha
+     Dwell decor
+     ELU
+     ELURU
+     Eluru Ola Store
+     FAR
+     FAROO
+     FUR
+     FURNI
+     FURNITURE GALLERY
+     FURNITURE POINT
+     Farooq Basha
+     G Swarupa Raju
+     G.N. FURNISHINGS
+     GAJ
+     GAJJA
+     GNF
+     GNFUR
+     GOP
+     GOPI KRISHNA ELECTRONICS
+     GOPIK
+     GSW
+     GSWAR
+     Gajjala krishna pravalika
+     HAN
+     HANDL
+     HANDLOOM HUB
+     HANME
+     HAR
+     HAREE
+     HARIS
+     HEL
+     HELAN
+     HELANZO
+     Hanmeshwar Naidu
+     Hareesh
+     Harish Reddy
+     IMT
+     IMTHI
+     IND
+     INDIA
+     INDIAN OAK FURNISHINGS
+     JAY
+     JAYAC
+     JAYAN
+     JON
+     JONNA
+     JOT
+     JOTHY
+     JUB
+     JUBED
+     JYO
+     JYOTH
+     JYOTHI FURNITURE CENTRE
+     Jayanth R
+     Jonnaguddi Ola Store
+     Jubeda Jubeda
+     K R FURNITURES
+     K Raju Gopal
+     K chiranjeevi
+     K k foam Traders
+     K.Sindhu
+     KAD
+     KADAP
+     KAR
+     KARAN
+     KARIM
+     KCH
+     KCHIR
+     KHA
+     KHADA
+     KHI
+     KHIDK
+     KHIDKEE SHOPPEE
+     KIR
+     KIRAN
+     KIRAN MATTRESS WORLD
+     KKF
+     KKFOA
+     KOC
+     KOCHH
+     KOCHHARS INTERIORS
+     KRA
+     KRAJU
+     KRF
+     KRFUR
+     KRI
+     KRISH
+     KSI
+     KSIND
+     KUR
+     KURNO
+     Kadapa Ola Store
+     Karimnagar Ola Store
+     Khadar basha Basha
+     Krishnaveni Jatla
+     Kurnool Ola Store
+     L. Hari Krishna L. Hari K
+     LAL
+     LALIT
+     LALITHA VIJAYESWARI FURNI
+     LAX
+     LAXMI
+     LAXMI FURNITURE
+     LAXMI HANDLOOM
+     LHA
+     LHARI
+     LIK
+     LIKIT
+     LIKITH FURNITURES
+     LIV
+     LIVIN
+     LIVING HOME STORE
+     Living Space Furnishing
+     M S SRI VENKATA RAMANA FU
+     M ramudu Ramudu
+     M.R.MOHAN REDDY
+     MAH
+     MAHAL
+     MAHALAKKSHMI ENTERPRISES
+     MAHBU
+     MAJ
+     MAJES
+     MAJESTIC FURNITURE
+     MAL
+     MALLI
+     MAN
+     MANIK
+     MANIKANTA FURNITURE AND W
+     MANIS
+     MAT
+     MATTR
+     MATTRESS HOUSE
+     MED
+     MEDAK
+     MOU
+     MOUNI
+     MRA
+     MRAMU
+     MRM
+     MRMOH
+     MRN
+     MRNAR
+     MRNEE
+     MRR
+     MRRAV
+     MRS
+     MRSAT
+     MRU
+     MRUDA
+     MSS
+     MSSN Murthy Murthy
+     MSSNM
+     MSSRI
+     Mahbubnagar Ola Store
+     Mallikarjun B
+     Manikandan A
+     Manish P
+     Mattress Wala
+     Medak Ola Store
+     Mounika D
+     Mr. Narendra,
+     Mr. Neeraj
+     Mr. Ravi Kumar
+     Mr. Sathish
+     Mr. Uday Kumar .
+     N.R.K. FURNITURES
+     NAN
+     NANDI
+     NAR
+     NAREN
+     NARENDRA
+     NARES
+     NEW
+     NEW FORTUNE FURNITURE WOR
+     NEWFO
+     NIK
+     NIKSH
+     NIKSHAN ELECTRONICS
+     NIS
+     NISSY
+     NISSY SALES
+     NIZ
+     NIZAM
+     NRK
+     NRKFU
+     Nandi Furnishings
+     Naresh
+     Nizamabad Ola Store
+     OLA
+     OLA CAMPUS
+     OLACA
+     OLAEL
+     OLAWA
+     OM SAAJ FURNITURE
+     OMS
+     OMSAA
+     Ola Elec Srikakulam
+     Ola Elec VSP-SaradaColony
+     Ola Elec Vizianagaram
+     Ola Warehouse - HYD
+     P. Solomon Raj
+     PAD
+     PADMA
+     PAI
+     PAI INTERNATIONAL ELECTRO
+     PAIIN
+     PAR
+     PARAM
+     PARAMASWARA TRADERS
+     PAT
+     PATAN
+     PAV
+     PAVAN
+     PAVAN KUMAR P
+     PED
+     PEDDA
+     PEDDA VENKATA REDDY
+     PER
+     PERFE
+     PERFECT FURNITURES
+     PRA
+     PRATI
+     PSO
+     PSOLO
+     PUN
+     PUNJA
+     PUNJAB HANDLOOM
+     Padma Reddy
+     Patancheru Ola Store
+     Pratik Madhukar Kamble
+     R MURALI Murali
+     RAD
+     RADHI
+     RAF
+     RAFA TRADERS
+     RAFAT
+     RAG
+     RAGA ENTERPRISES
+     RAGAE
+     RAGHU
+     RAGHUNATH HANDLOOM
+     RAI
+     RAINB
+     RAINBOW FURNITURE
+     RAJ
+     RAJAH
+     RAJKU
+     RAJNI
+     RAJUD
+     RAM
+     RAMAC
+     RAMACHANDRA BROTHERS
+     RAMES
+     RAMYA
+     RAT
+     RATNA
+     RAV
+     RAVI S
+     RAVIS
+     RMU
+     RMURA
+     Radhika pittala
+     Raghu S
+     Rajahmundry Ola Store
+     Rajkumar Traders
+     Rajnish Jaiswal
+     Raju Dvj
+     Ramesh Ch
+     Ramya
+     Ratna Ratna
+     S Chakravarthi S Chakrava
+     S Prathap Reddy
+     S.Harikrishnan S.Harikris
+     S.V Furnitures
+     SAI
+     SAI DEEKSHITHA ENTERPRISE
+     SAIDE
+     SAIKI
+     SAINI
+     SAJ
+     SAJIT
+     SAN
+     SANDE
+     SAP
+     SAPNA
+     SAR
+     SARAV
+     SAT
+     SATYA
+     SAV
+     SAVIT
+     SCH
+     SCHAK
+     SHA
+     SHANM
+     SHANMUGAM FURNITURE MAKER
+     SHARI
+     SHI
+     SHIVA
+     SHIVS
+     SID
+     SIDDI
+     SIS
+     SISTA
+     SIY
+     SIYAS
+     SIYAS FURNITURE PRIVATE L
+     SK Nazeer Hussain SK Naze
+     SKN
+     SKNAZ
+     SOL
+     SOLAP
+     SOLAPUR CHADAR CENTER
+     SPR
+     SPRAT
+     SRA
+     SRAVA
+     SRAVY
+     SRE
+     SREEM
+     SRI
+     SRI BALAJI FURNITURE AND
+     SRI LAKSHMI SAINADH PLAZA
+     SRI SRI COMFORTS
+     SRI URBAN FURNITURE GALLE
+     SRIBA
+     SRIDI
+     SRIDINESH ENTERPRISES PRI
+     SRIKA
+     SRILA
+     SRINI
+     SRINU
+     SRISR
+     SRIUR
+     SRIVA
+     SRIVARI CORPORATION
+     SRIVE
+     SRIVI
+     STA
+     STALO
+     STANL
+     SUB
+     SUBHA
+     SUD
+     SUDHA
+     SUDHA FURNITURE AND INTE
+     SUM
+     SUMAD
+     SUMADHEER LIVING
+     SUR
+     SURES
+     SURESH KUMAR REDDY
+     SVF
+     SVFUR
+     SWA
+     SWARN
+     Sai kiran Kiran
+     Sainiketh M
+     Sandeep Sandeep
+     Sapna B
+     Saravanan Gajendrian
+     Satyanarayana kamisetti S
+     Savithiri S
+     Shanmugam S
+     Shiv Shakti Traders
+     Shiva Enterprises
+     Shivaiah Kadapa
+     Shivakumar Bomman
+     Siddi Ramulu Ramulu
+     Siddipet Ola Store
+     Sista suryakumari Sista s
+     Sravan Kumar
+     Sravanthi Induri
+     Sree Mahalakshmi Enterpri
+     Sri Lakshmi Furniture
+     Sri Venkateshwara furnitu
+     Sri Vijaya Lakshmi Enterp
+     Sri Vinayaka Home Needs
+     Srinu Srinu
+     Stalon s FURNSQUARE
+     Stanley Pinto
+     Subham Ganediwal
+     Swarna latha Latha
+     TAT
+     TATAV
+     TEJ
+     TEJAM
+     THA
+     THARA
+     THE
+     THE HOME COMFORTS
+     THE URBAN FURNITURE
+     THEHO
+     THEUR
+     THU
+     THULA
+     THULASI RAM O
+     TIR
+     TIRUP
+     Tatavarthy Hari Gopala Ra
+     Teja Mobile world And ele
+     Tharak Tharak
+     Tirupati Ola Store
+     UMA
+     UMA MAHESHWARA ENTERPRISE
+     UMAAS
+     UMAMA
+     UNI
+     UNIVE
+     UNIVERSAL MATTRESS CO
+     URB
+     URBAN
+     Uma ashok Ashok
+     Urban Furniture gallery
+     V Amarnath
+     V S CENTRAL
+     VAL
+     VALIS
+     VAM
+     VAMAR
+     VAR
+     VARUN
+     VAS
+     VASAV
+     VASAVI INTERIORS AND FURN
+     VED
+     VEDAG
+     VEL
+     VELLO
+     VEN
+     VENKA
+     VENKATESH P
+     VI KINGS ENTERPRISES
+     VIG
+     VIGNE
+     VIJ
+     VIJAY
+     VIK
+     VIKIN
+     VIN
+     VINAY
+     VIZ
+     VIZAG
+     VPJ
+     VPJVE
+     VSC
+     VSCEN
+     VVK
+     VVK ENTERPRISES
+     VVKEN
+     Vali Sk
+     Varunya Enterprises
+     Vedagna Tadiboyena
+     Vellore Ola Store
+     Venkambotlu Kommalapati
+     Vignesh Venkatraman
+     Vijay Furniture World
+     Vijaya Rama Raju
+     Vijayawada Ola Store
+     Vinay Vinay
+     Vizag Ola Store
+     WAK
+     WAKE UP
+     WAKEU
+     WAR
+     WARAN
+     WS_
+     WS_VI
+     WS_Vijayawada-Kandrika-Vi
+     WS_Visakapatnam-Indiranag
+     Warangal Ola Store
+     XC- Narsapur
+     XC-Amalapuram
+     XC-Anantapur-Rudrampeta
+     XC-Bangalore-Indiranagar
+     XC-Bhimavaram-Tammi-Raju-
+     XC-Chittoor-Kattamanchi
+     XC-Eluru-Jangareddigudem
+     XC-Eluru-Santhi-Nagar
+     XC-Guntur-Naidupet
+     XC-Hyderabad-Nagole
+     XC-Jangareddigudem
+     XC-Kadapa-Bhagya-Nagar-Co
+     XC-Kakinada-Jawahar-Stree
+     XC-Khamamm-Rotary-Nagar
+     XC-Konaseema-Amalapuram
+     XC-Kothagudem-Laxmidevipa
+     XC-Krishna-Gudivada
+     XC-Krishna-Kankipadu
+     XC-Kurnool-Sree-Rama-Naga
+     XC-NTR-Nandigama
+     XC-Nalgonda-Industrial-Ar
+     XC-Nellore-Magunta-Layout
+     XC-Ongole-Sivaji-Nagar
+     XC-Rajahmundry
+     XC-Suryapet-Vidyanagar
+     XC-Tirupathi-Air-Bypass-R
+     XC-Vellore-Church-Colony
+     XC-Vijayawada-Machavaram
+     XC-Visakhapatnam-Gopalapa
+     XC-Vishakapatnam-Gajuwaka
+     XC-WestGodavari-Narsapur
+     XC-WestGodavari-Tadepalli
+     XCA
+     XCAMA
+     XCANA
+     XCB
+     XCBAN
+     XCBHI
+     XCC
+     XCCHI
+     XCE
+     XCELU
+     XCG
+     XCGUN
+     XCH
+     XCHYD
+     XCJ
+     XCJAN
+     XCK
+     XCKAD
+     XCKAK
+     XCKHA
+     XCKON
+     XCKOT
+     XCKRI
+     XCKUR
+     XCN
+     XCNAL
+     XCNAR
+     XCNEL
+     XCNTR
+     XCO
+     XCONG
+     XCR
+     XCRAJ
+     XCS
+     XCSUR
+     XCT
+     XCTIR
+     XCV
+     XCVEL
+     XCVIJ
+     XCVIS
+     XCW
+     XCWES
+     imthiyas nisha
+     jayachitra j jayachitra j
+     jothy ganeshan
+     karan karan
+     sajith pasha
+     sravya
+     srikar varma C.A
+     srinivas srinivas
+     vpj Venkatesh Venlatesh
 - lookup: destination
   examples: |
     Abraharam
