@@ -412,7 +412,7 @@ class ActionGetOrdersByStatus(Action):
 
         status_mapping = {
             "pending": [
-                "at_fm_agent_hub", "at_lm_agent_hub", "cancelled", "fm_package_verified",
+                "at_fm_agent_hub", "at_lm_agent_hub", "fm_package_verified",
                 "handed_over_to_agent", "handed_over_to_midmile_shipper",
                 "lm_delayed", "out_for_delivery", "out_for_pickup", "pickup_failed"
             ],
@@ -441,7 +441,6 @@ class ActionGetOrdersByStatus(Action):
 
             custom_filter["orderStatus"] = {"$regex": f"^{status}$", "$options": "i"}
 
-        # 🔍 Customer name filtering logic (from ActionCxOrder)
         if customer_input:
             all_names = collection.distinct("start.contact.name")
             matched_customers = [name for name in all_names if customer_input.lower() in name.lower()]
@@ -449,7 +448,6 @@ class ActionGetOrdersByStatus(Action):
                 dispatcher.utter_message(f"No matching customers found for '{customer_input}'.")
                 return []
 
-            # Build regex condition for each match
             regex_conditions = [{"start.contact.name": {"$regex": name.strip(), "$options": "i"}} for name in matched_customers]
             custom_filter["$or"] = regex_conditions
 
@@ -460,8 +458,8 @@ class ActionGetOrdersByStatus(Action):
             print(f"[TIME] action_get_orders_by_status took {time.time() - start_time:.2f} seconds")
             return []
 
-        # 📋 Format message
-        message = "**Orders by Status**\n\n"
+        customer_name = customer_input or "Unknown Customer"
+        message = f"**Orders by Status for {customer_name}**\n\n"
         message += f"{'Order ID':<35} {'Customer':<25} {'Status':<20} {'Date':<12}\n"
         message += f"{'-'*35} {'-'*25} {'-'*20} {'-'*12}\n"
 
@@ -486,7 +484,6 @@ class ActionGetOrdersByStatus(Action):
         message += f"\nTotal orders: {len(matched_orders)}"
         dispatcher.utter_message(message)
 
-        # 📁 Save to Excel
         df = pd.DataFrame(rows)
         os.makedirs("static/files", exist_ok=True)
         filename = "orders_by_status.xlsx"
@@ -856,7 +853,6 @@ class ActionDynamicOrderQuery(Action):
         filename = ""
         message = ""
 
-        # DELIVERY REPORT
         if is_delivery_report and start_dt and end_dt:
             query = {
                 "orderStatus": {"$in": ["delivered", "delivered_at_security", "delivered_at_neighbor"]},
@@ -1777,18 +1773,18 @@ class ActionGetCustomerPendingOrdersAllCities(Action):
 
                 city_counts[pickup_city] = city_counts.get(pickup_city, 0) + 1
 
-            # 📝 Format message
-            msg_lines = [f"📦 Pending Orders for **{customer_input}**:\n"]
+        
+            msg_lines = [f"Pending Orders for **{customer_input}**:\n"]
 
             for city, orders in orders_by_city.items():
-                msg_lines.append(f"\n📍 **Location: {city}**")
+                msg_lines.append(f"\n **Location: {city}**")
                 header = f"{'Order ID':<20} {'Date':<12} {'TAT':<6} {'Drop City':<20} {'Status':<30}"
                 msg_lines.append(header)
                 msg_lines.append("-" * len(header))
                 for o in orders[:10]:  # Limit per city output
                     msg_lines.append(f"{o['Order ID']:<20} {o['Date']:<12} {str(o['TAT']):<6} {o['Drop City']:<20} {o['Status']:<30}")
 
-            msg_lines.append("\n📊 **Total Pending Orders by Location:**")
+            msg_lines.append("\n **Total Pending Orders by Location:**")
             for city, count in city_counts.items():
                 msg_lines.append(f"- {city}: {count}")
 
