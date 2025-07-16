@@ -1720,13 +1720,18 @@ class ActionGetPendingOrdersByPickupCity(Action):
             results = []
 
             for order in matched_orders:
-                created_raw = order.get("createdAt", {}).get("$date", "")
-                created_at = ""
+                created_at = order.get("createdAt", "")
 
-                if isinstance(created_raw, int):
-                    created_at = datetime.fromtimestamp(created_raw / 1000, pytz.utc)
-                elif isinstance(created_raw, str):
-                    created_at = datetime.fromisoformat(created_raw.replace("Z", "+00:00"))
+                # Handle Firestore-style timestamp (milliseconds)
+                if isinstance(created_at, int):
+                    created_at = datetime.fromtimestamp(created_at / 1000, pytz.utc)
+                # Handle ISO string timestamp
+                elif isinstance(created_at, str):
+                    created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+                # Else assume it's already a datetime
+                elif not isinstance(created_at, datetime):
+                    created_at = None
+
 
                 booked_str = created_at.strftime('%Y-%m-%d %H:%M') if created_at else "N/A"
                 tat_days = (now - created_at).days if created_at else "N/A"
