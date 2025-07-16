@@ -408,8 +408,8 @@ class ActionGetOrdersByStatus(Action):
 
         start_time = time.time()
         message_text = tracker.latest_message.get("text", "").lower()
+        customer_input = tracker.get_slot("customer_name")
 
-        # 🔄 Define your mapped statuses
         status_mapping = {
             "pending": [
                 "at_fm_agent_hub", "at_lm_agent_hub", "cancelled", "fm_package_verified",
@@ -420,7 +420,6 @@ class ActionGetOrdersByStatus(Action):
             "in transit": ["in_transit_to_destination_city"]
         }
 
-        # 🧠 Determine the requested status category
         status_category = None
         if any(keyword in message_text for keyword in ["delivered"]):
             status_category = "delivered"
@@ -434,20 +433,26 @@ class ActionGetOrdersByStatus(Action):
         if status_category:
             custom_filter["orderStatus"] = {"$in": status_mapping[status_category]}
         else:
-            # fallback to fuzzy match
             status = fuzzy_status_match(message_text)
             if not status:
                 dispatcher.utter_message("Sorry, I couldn't identify the delivery status you're looking for.")
                 print(f"[TIME] action_get_orders_by_status took {time.time() - start_time:.2f} seconds")
                 return []
+
             custom_filter["orderStatus"] = {"$regex": f"^{status}$", "$options": "i"}
 
-        # 🔍 Try extracting customer name using vector-based matching
-        customer_name = extract_customer_name_by_vector(message_text)  # implement this function
-        if customer_name:
-            custom_filter["start.contact.name"] = {"$regex": customer_name, "$options": "i"}
+        # 🔍 Customer name filtering logic (from ActionCxOrder)
+        if customer_input:
+            all_names = collection.distinct("start.contact.name")
+            matched_customers = [name for name in all_names if customer_input.lower() in name.lower()]
+            if not matched_customers:
+                dispatcher.utter_message(f"No matching customers found for '{customer_input}'.")
+                return []
 
-        # 🔎 Query matching orders
+            # Build regex condition for each match
+            regex_conditions = [{"start.contact.name": {"$regex": name.strip(), "$options": "i"}} for name in matched_customers]
+            custom_filter["$or"] = regex_conditions
+
         matched_orders = list(collection.find(custom_filter))
 
         if not matched_orders:
@@ -1603,14 +1608,14 @@ class ActionGetPendingOrdersByPickupCity(Action):
         start_time = datetime.now()
         message_text = tracker.latest_message.get("text", "")
         pickup_city_input = extract_pickup_city(message_text)
-
+        customer_input = tracker.get_slot("customer_name")
 
         if not pickup_city_input:
             dispatcher.utter_message("Please provide a pickup city to filter pending orders.")
             return []
 
         PENDING_STATUSES = [
-            "at_fm_agent_hub", "at_lm_agent_hub", "cancelled", "fm_package_verified",
+            "at_fm_agent_hub", "at_lm_agent_hub", "fm_package_verified",
             "handed_over_to_agent", "handed_over_to_midmile_shipper",
             "lm_delayed", "out_for_delivery", "out_for_pickup", "pickup_failed"
         ]
@@ -1620,6 +1625,16 @@ class ActionGetPendingOrdersByPickupCity(Action):
                 "orderStatus": {"$in": PENDING_STATUSES},
                 "start.address.mapData.city": {"$regex": pickup_city_input, "$options": "i"}
             }
+
+            # Add customer name filtering if provided
+            if customer_input:
+                all_names = collection.distinct("start.contact.name")
+                matched_customers = [name for name in all_names if customer_input.lower() in name.lower()]
+                if not matched_customers:
+                    dispatcher.utter_message(f"No matching customers found for '{customer_input}'.")
+                    return []
+                regex_conditions = [{"start.contact.name": {"$regex": name.strip(), "$options": "i"}} for name in matched_customers]
+                query["$or"] = regex_conditions
 
             matched_orders = list(collection.find(query))
 
@@ -1638,23 +1653,20 @@ class ActionGetPendingOrdersByPickupCity(Action):
                 elif isinstance(created_at, str):
                     created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
                 elif isinstance(created_at, datetime):
-                    # Make sure it's timezone-aware
                     if created_at.tzinfo is None:
                         created_at = pytz.utc.localize(created_at)
 
-                # Ensure created_at is always timezone-aware, or set to None
                 if not isinstance(created_at, datetime) or created_at.tzinfo is None:
                     created_at = None
 
-
-
                 booked_str = created_at.strftime('%Y-%m-%d %H:%M') if created_at else "N/A"
                 tat_days = (now - created_at).days if created_at else "N/A"
-
                 drop_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
                 status = order.get("orderStatus", "unknown")
+                customer_name = order.get("start", {}).get("contact", {}).get("name", "Unknown")
 
                 results.append({
+                    "Customer Name": customer_name,
                     "Order Booked Date": booked_str,
                     "TAT (Days)": tat_days,
                     "Destination Location": drop_city,
@@ -1666,14 +1678,19 @@ class ActionGetPendingOrdersByPickupCity(Action):
             file_path = f"/tmp/{file_name}"
             df.to_excel(file_path, index=False)
 
+            msg_lines = [f"Pending orders from {pickup_city_input}"]
+            if customer_input:
+                msg_lines[0] += f" for {customer_input}"
+            msg_lines[0] += ":\n"
 
-            msg_lines = [f" Pending orders from {pickup_city_input}:\n"]
-            header = f"{'Booked Date':<20} {'TAT (Days)':<12} {'Destination':<20} {'Status':<30}"
+            header = f"{'Customer':<20} {'Booked Date':<20} {'TAT (Days)':<12} {'Destination':<20} {'Status':<30}"
             msg_lines.append(header)
             msg_lines.append("-" * len(header))
 
             for row in results[:10]:
-                msg_lines.append(f"{row['Order Booked Date']:<20} {row['TAT (Days)']:<12} {row['Destination Location']:<20} {row['Current Status']:<30}")
+                msg_lines.append(
+                    f"{row['Customer Name']:<20} {row['Order Booked Date']:<20} {row['TAT (Days)']:<12} {row['Destination Location']:<20} {row['Current Status']:<30}"
+                )
 
             dispatcher.utter_message("\n".join(msg_lines))
 
@@ -1682,6 +1699,107 @@ class ActionGetPendingOrdersByPickupCity(Action):
             return []
 
         return []
+
+class ActionGetCustomerPendingOrdersAllCities(Action):
+    def name(self) -> Text:
+        return "action_get_customer_pending_orders_all_cities"
+
+    def run(self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+
+        customer_input = tracker.get_slot("customer_name")
+        if not customer_input:
+            dispatcher.utter_message("Please provide a customer name to fetch the orders.")
+            return []
+
+        PENDING_STATUSES = [
+            "at_fm_agent_hub", "at_lm_agent_hub", "fm_package_verified",
+            "handed_over_to_agent", "handed_over_to_midmile_shipper",
+            "lm_delayed", "out_for_delivery", "out_for_pickup", "pickup_failed"
+        ]
+
+        all_names = collection.distinct("start.contact.name")
+        matched_customers = [name for name in all_names if customer_input.lower() in name.lower()]
+
+        if not matched_customers:
+            dispatcher.utter_message(f"No matching customers found for '{customer_input}'.")
+            return []
+
+        try:
+            query = {
+                "$and": [
+                    {"orderStatus": {"$in": PENDING_STATUSES}},
+                    {"$or": [{"start.contact.name": {"$regex": name, "$options": "i"}} for name in matched_customers]}
+                ]
+            }
+
+            matched_orders = list(collection.find(query))
+
+            if not matched_orders:
+                dispatcher.utter_message(f"No pending orders found for {customer_input}.")
+                return []
+
+            from collections import defaultdict
+            import pytz
+
+            now = datetime.now(pytz.utc)
+            orders_by_city = defaultdict(list)
+            city_counts = {}
+
+            for order in matched_orders:
+                pickup_city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
+
+                created_at = order.get("createdAt", "")
+                if isinstance(created_at, int):
+                    created_at = datetime.fromtimestamp(created_at / 1000, pytz.utc)
+                elif isinstance(created_at, str):
+                    created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+                elif isinstance(created_at, datetime) and created_at.tzinfo is None:
+                    created_at = pytz.utc.localize(created_at)
+                if not isinstance(created_at, datetime):
+                    created_at = None
+
+                booking_date = created_at.strftime('%Y-%m-%d') if created_at else "N/A"
+                tat_days = (now - created_at).days if created_at else "N/A"
+
+                drop_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
+                status = order.get("orderStatus", "unknown")
+                order_id = order.get("sm_orderid", "N/A")
+
+                orders_by_city[pickup_city].append({
+                    "Order ID": order_id,
+                    "Date": booking_date,
+                    "TAT": tat_days,
+                    "Drop City": drop_city,
+                    "Status": status
+                })
+
+                city_counts[pickup_city] = city_counts.get(pickup_city, 0) + 1
+
+            # 📝 Format message
+            msg_lines = [f"📦 Pending Orders for **{customer_input}**:\n"]
+
+            for city, orders in orders_by_city.items():
+                msg_lines.append(f"\n📍 **Location: {city}**")
+                header = f"{'Order ID':<20} {'Date':<12} {'TAT':<6} {'Drop City':<20} {'Status':<30}"
+                msg_lines.append(header)
+                msg_lines.append("-" * len(header))
+                for o in orders[:10]:  # Limit per city output
+                    msg_lines.append(f"{o['Order ID']:<20} {o['Date']:<12} {str(o['TAT']):<6} {o['Drop City']:<20} {o['Status']:<30}")
+
+            msg_lines.append("\n📊 **Total Pending Orders by Location:**")
+            for city, count in city_counts.items():
+                msg_lines.append(f"- {city}: {count}")
+
+            dispatcher.utter_message("\n".join(msg_lines))
+
+        except Exception as e:
+            dispatcher.utter_message(f"Error retrieving orders: {str(e)}")
+            return []
+
+        return []
+
 
 class ActionDefaultFallback(Action):
     def name(self):

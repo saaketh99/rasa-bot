@@ -475,6 +475,31 @@ nlu:
     - List any pending dispatches from [Nizamabad](pickup)
     - Pending orders sourced from [Karimnagar](pickup)
     - Is there any pending shipment in [Machilipatnam](pickup)?
+    - Show me pending orders from [Hyderabad](pickup) for [ola ele](customer_name)
+    - Any pending orders from [Vizag](pickup) under [wakefit](customer_name)?
+    - Get pending orders for [Suresh](customer_name) from [Mumbai](pickup)
+    - Do we have pending shipments from [Tirupati](pickup) for [Anjali](customer_name)?
+    - Check for pending pickups in [Nellore](pickup) made by [Kiran](customer_name)
+    - List pending orders placed by [Priya](customer_name) in [Vijayawada](pickup)
+    - Are there any pending deliveries from [Kurnool](pickup) for [John](customer_name)?
+
+- intent: get_customer_pending_orders_all_cities
+  examples: |
+    - Get pending orders for [Ola Ele](customer_name) as per locations
+    - Show me pending consignments of [Wakefit](customer_name) by city
+    - List pending orders across locations for [Volvo](customer_name)
+    - What are [Ola Ele](customer_name)'s pending orders across all pickup locations?
+    - Check orders for [Wakefit](customer_name) by pickup location
+    - Display all pending shipments of [Volvo](customer_name) sorted by city
+    - Show me [Wakefit](customer_name)'s undelivered orders by location
+    - Give report of [Ola Ele](customer_name)'s pending orders city-wise
+    - I want all pending orders of [Volvo](customer_name) grouped by pickup city
+    - Pull pending order list of [Wakefit](customer_name) per city
+    - What are the pending shipments for [Ola Ele](customer_name) based on locations?
+    - Get customer [Wakefit](customer_name)'s pending orders divided by pickup location
+    - Do we have any pending orders for [Volvo](customer_name) by cities?
+    - Retrieve all pending city-wise orders of [Ola Ele](customer_name)
+    - Can you show [Wakefit](customer_name)'s pending orders as per pickup cities?
 
 - synonym: Hyderabad
   examples: |
