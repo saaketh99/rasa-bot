@@ -64,6 +64,27 @@ def extract_destination_city(text: str) -> Optional[str]:
                 continue
     return None
 
+from typing import Optional
+
+def extract_pickup_city(text: str) -> Optional[str]:
+    keywords = ["from", "pickup from", "collected from", "picked up at", "dispatched from", "shipping from", "leaving from"]
+    text_lower = text.lower()
+    print(f"[DEBUG] Text for pickup extraction: {text_lower}")
+
+    for kw in keywords:
+        if kw in text_lower:
+            try:
+                city_part = text_lower.split(kw)[-1].strip()
+                matched_city = fuzzy_city_match(city_part, known_cities)
+                print(f"[DEBUG] Keyword: {kw}, City Part: {city_part}, Matched: {matched_city}")
+                return matched_city
+            except Exception as e:
+                print(f"[DEBUG] Error in pickup extraction for '{kw}': {e}")
+                continue
+
+    return None
+
+
 def extract_dates_from_text(text: str) -> Tuple[Optional[str], Optional[str]]:
     print(f"[DEBUG] Text for date extraction: {text}")
     text = text.lower().replace("–", "-").replace(" to ", " - ").replace(" and ", " - ").replace("between ", "")
@@ -1667,7 +1688,9 @@ class ActionGetPendingOrdersByPickupCity(Action):
     def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
 
         start_time = datetime.now()
-        pickup_city_input = tracker.get_slot("pickup")
+        message_text = tracker.latest_message.get("text", "")
+        pickup_city_input = extract_pickup_city(message_text)
+
 
         if not pickup_city_input:
             dispatcher.utter_message("Please provide a pickup city to filter pending orders.")
