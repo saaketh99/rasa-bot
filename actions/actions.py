@@ -15,7 +15,7 @@ from collections import Counter
 from bson.regex import Regex
 
 
-client = MongoClient("mongodb+srv://ordersDbAdmin:LuiQu4KLLM0KXvQX@orders-cluster.jbais.mongodb.net/")
+client = MongoClient("mongodb+srv://ordersDbReader:7HFtko7GNplIIi11@orders-flex-cluster.wbz5pht.mongodb.net/w=majority&appName=orders-flex-cluster")
 db = client["orders-db"]
 collection = db["SaaS_Orders"]
 
