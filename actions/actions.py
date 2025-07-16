@@ -1761,7 +1761,7 @@ class ActionGetCustomerPendingOrdersAllCities(Action):
 
                 drop_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
                 status = order.get("orderStatus", "unknown")
-                order_id = order.get("sm_orderid", "N/A")
+                order_id = order.get("orderId", "N/A")
 
                 orders_by_city[pickup_city].append({
                     "Order ID": order_id,
