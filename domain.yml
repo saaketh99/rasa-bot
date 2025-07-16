@@ -43,6 +43,7 @@ entities:
  - number
  - time_unit
  - order_status
+ - pickup
  - location:
       roles:
         - pickup
@@ -206,7 +207,7 @@ slots:
     mappings:
       - type: from_entity
         entity: order_status
-        
+
 session_config:
   session_expiration_time: 60
   carry_over_slots_to_new_session: true
