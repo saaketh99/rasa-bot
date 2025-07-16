@@ -1722,15 +1722,19 @@ class ActionGetPendingOrdersByPickupCity(Action):
             for order in matched_orders:
                 created_at = order.get("createdAt", "")
 
-                # Handle Firestore-style timestamp (milliseconds)
                 if isinstance(created_at, int):
                     created_at = datetime.fromtimestamp(created_at / 1000, pytz.utc)
-                # Handle ISO string timestamp
                 elif isinstance(created_at, str):
                     created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
-                # Else assume it's already a datetime
-                elif not isinstance(created_at, datetime):
+                elif isinstance(created_at, datetime):
+                    # Make sure it's timezone-aware
+                    if created_at.tzinfo is None:
+                        created_at = pytz.utc.localize(created_at)
+
+                # Ensure created_at is always timezone-aware, or set to None
+                if not isinstance(created_at, datetime) or created_at.tzinfo is None:
                     created_at = None
+
 
 
                 booked_str = created_at.strftime('%Y-%m-%d %H:%M') if created_at else "N/A"
