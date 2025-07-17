@@ -1822,23 +1822,33 @@ class ActionGetPendingOrdersMatrix(Action):
                 date_str = created_at.strftime('%d/%m/%Y')
                 pivot_data[city][date_str] += 1
 
-
             all_dates = sorted({date for city_data in pivot_data.values() for date in city_data})
-            header = f"{'Location':<20}\t" + "\t".join(all_dates) + "\tTotal"
-            lines = [header, "-" * 80]
+
+            # Find the longest city name for padding
+            max_city_length = max(len(city) for city in pivot_data.keys())
+            date_col_width = 10  # Set fixed width for date columns for alignment
+
+            # Build header
+            header = f"{'Location'.ljust(max_city_length)}" + "".join(
+                f"{date:>{date_col_width}}" for date in all_dates
+            ) + f"{'Total':>{date_col_width}}"
+            lines = [header, "-" * (max_city_length + (len(all_dates) + 1) * date_col_width)]
 
             grand_total = 0
 
+            # Build rows
             for city in sorted(pivot_data):
                 date_counts = pivot_data[city]
                 total = sum(date_counts.values())
                 grand_total += total
-                row = f"{city:<20}\t" + "\t".join(str(date_counts.get(d, 0)) for d in all_dates) + f"\t{total}"
+                row = f"{city.ljust(max_city_length)}" + "".join(
+                    f"{date_counts.get(d, 0):>{date_col_width}}" for d in all_dates
+                ) + f"{total:>{date_col_width}}"
                 lines.append(row)
 
+            lines.append("-" * (max_city_length + (len(all_dates) + 1) * date_col_width))
+            lines.append(f"{'Grand Total:'.ljust(max_city_length + len(all_dates) * date_col_width)}{grand_total:>{date_col_width}}")
 
-            lines.append("-" * 80)
-            lines.append(f"Grand Total:\t{grand_total}")
 
         
             matrix_type = "Destination" if use_destination else "Pickup"
