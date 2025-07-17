@@ -518,28 +518,42 @@ nlu:
 
 - intent: ask_pending_orders_matrix
   examples: |
-    - show me the pending orders matrix
-    - give me the matrix of pending orders by location
-    - show pending orders matrix by city and date
+    - show me the pending orders matrix by pickup location
+    - give me the matrix of pending orders by destination city
+    - show pending orders matrix by pickup and destination
     - I need a pending orders matrix grouped by pickup city
-    - can you provide a matrix of all pending orders?
-    - generate a city-wise pending orders matrix
-    - I want the pending orders matrix with date-wise split
-    - fetch matrix for all unfulfilled orders
+    - can you provide a matrix of all pending orders by destination?
+    - generate a destination-wise pending orders matrix
+    - I want the pending orders matrix with pickup date split
+    - fetch matrix for all unfulfilled orders grouped by pickup
     - show pickup city-wise matrix for pending orders
-    - create a matrix showing pending orders per city and day
-    - pending orders matrix summary please
-    - display pending orders matrix city-wise
+    - create a matrix showing pending orders per destination and day
+    - pending orders matrix summary by pickup
+    - display pending orders matrix by destination location
     - give me matrix of pickup locations with pending orders
-    - I want a matrix of pending orders
-    - pending orders by city and date
-    - get me a pending orders matrix grouped by date
-    - provide a matrix of current pending statuses
-    - prepare pending orders matrix for me
-    - matrix of open orders by location
-    - matrix showing pending orders by city
-    - show the table of pending orders
-    - generate the pending summary matrix
+    - I want a matrix of pending orders based on pickup city
+    - pending orders by destination city and date
+    - get me a pending orders matrix grouped by pickup and drop
+    - provide a matrix of current pending statuses by pickup
+    - prepare pending orders matrix for me by destination
+    - matrix of open orders by pickup location
+    - matrix showing pending orders by destination city
+    - show the table of pending orders grouped by pickup
+    - generate the pending summary matrix by drop location
+    - show matrix of pending shipments from [Ola Ele](customer_name) by pickup city
+    - pending matrix for [Wakefit](customer_name) by destination
+    - pending matrix by city for [Volvo](customer_name) by pickup
+    - generate matrix for [Meena](customer_name) orders by destination city
+    - show matrix of pending orders from [Zepto](customer_name) by pickup
+    - city-wise pending matrix for [Amazon](customer_name) grouped by pickup
+    - I want a matrix view of [BigBasket](customer_name) orders by destination
+    - give me a pending matrix for [Flipkart](customer_name) by pickup location
+    - pending orders matrix city-wise for [Tata Croma](customer_name) by destination
+    - what’s the pending matrix for [Reliance Trends](customer_name) grouped by pickup
+    - matrix of unfulfilled orders from [Decathlon](customer_name) based on destination city
+    - can I see matrix of orders still pending for [Ajio](customer_name) with pickup
+
+
 
 
 - synonym: Hyderabad
