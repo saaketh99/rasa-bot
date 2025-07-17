@@ -13,6 +13,7 @@ from datetime import datetime
 from datetime import datetime, timedelta
 from collections import Counter
 from bson.regex import Regex
+from collections import defaultdict
 import pytz
 
 client = MongoClient("mongodb+srv://ordersDbReader:7HFtko7GNplIIi11@orders-flex-cluster.wbz5pht.mongodb.net/w=majority&appName=orders-flex-cluster")
@@ -23,6 +24,26 @@ sender_cities = collection.distinct("start.address.mapData.city")
 receiver_cities = collection.distinct("end.address.mapData.city")
 known_cities = list(set(sender_cities + receiver_cities))
 known_statuses = list(collection.distinct("orderStatus"))
+
+pretty_status_labels = {
+    "at_fm_agent_hub": "At First-Mile Hub",
+    "at_lm_agent_hub": "At Last-Mile Hub",
+    "fm_package_verified": "First-Mile Package Verified",
+    "handed_over_to_agent": "Handed Over to Agent",
+    "handed_over_to_midmile_shipper": "Handed to Mid-Mile Shipper",
+    "lm_delayed": "Last-Mile Delay",
+    "out_for_delivery": "Out for Delivery",
+    "out_for_pickup": "Out for Pickup",
+    "pickup_failed": "Pickup Failed",
+    "delivered": "Delivered",
+    "delivered_to_neighbour": "Delivered to Neighbour",
+    "delivered_to_watchman": "Delivered to Watchman",
+    "in_transit_to_destination_city": "In Transit to Destination"
+}
+
+def get_aesthetic_status(raw_status: str) -> str:
+    return pretty_status_labels.get(raw_status, raw_status.replace("_", " ").title())
+
 
 def fuzzy_city_match(city_name, known_cities, top_n=3, min_score=50):
     matches = process.extract(city_name, known_cities, scorer=fuzz.token_sort_ratio, limit=top_n)
@@ -237,22 +258,26 @@ class ActionCxOrder(Action):
             return []
 
         message = f"Orders for **{customer_input}** from **{s_date.date()}** to **{e_date.date()}**:\n\n"
-        message += f"{'Order ID':<40} {'From':<20} {'To':<20}\n"
-        message += f"{'-'*40} {'-'*20} {'-'*20}\n"
-        rows = []
+        message += f"{'Order ID':<40} {'From':<15} {'To':<15} {'Status':<30}\n"
+        message += f"{'-'*40} {'-'*15} {'-'*15} {'-'*30}\n"
 
-        for order in matched_orders[:10]:
-            order_id = order.get("sm_orderid", "N/A")
+        rows = []
+        for order in matched_orders:
+            order_id = order.get("orderId", "N/A")
             from_city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
             to_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
-            message += f"{order_id:<40} {from_city:<20} {to_city:<20}\n"
+            raw_status = order.get("status", "unknown")
+            aesthetic_status = get_aesthetic_status(raw_status)
 
-        for order in matched_orders:
+            if len(rows) < 10:
+                message += f"{order_id:<40} {from_city:<15} {to_city:<15} {aesthetic_status:<30}\n"
+
             rows.append({
-                "Order ID": order.get("sm_orderid", "N/A"),
+                "Order ID": order_id,
                 "Customer": order.get("start", {}).get("contact", {}).get("name", "Unknown"),
-                "From City": order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown"),
-                "To City": order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown"),
+                "From City": from_city,
+                "To City": to_city,
+                "Status": aesthetic_status,
                 "Created At": order.get("createdAt")
             })
 
@@ -271,6 +296,7 @@ class ActionCxOrder(Action):
 
         print(f"[TIME] action_cx_date took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
+
 
 class ActionrouteOrder(Action):
     def name(self) -> Text:
@@ -300,7 +326,7 @@ class ActionrouteOrder(Action):
         rows = []
 
         for order in matched_orders[:10]:
-            order_id = order.get("sm_orderid", "N/A")
+            order_id = order.get("orderId", "N/A")
             sender = order.get("start", {}).get("contact", {}).get("name", "Unknown")
             created_at = order.get("createdAt")
             created_date = created_at.strftime('%Y-%m-%d') if hasattr(created_at, 'strftime') else str(created_at)
@@ -308,7 +334,7 @@ class ActionrouteOrder(Action):
 
         for order in matched_orders:
             rows.append({
-                "Order ID": order.get("sm_orderid", "N/A"),
+                "Order ID": order.get("orderId", "N/A"),
                 "Sender": order.get("start", {}).get("contact", {}).get("name", "Unknown"),
                 "Pickup City": pickup,
                 "Drop City": drop,
@@ -366,14 +392,14 @@ class ActionFordestination(Action):
         rows = []
 
         for order in matched_orders[:10]:
-            order_id = order.get("sm_orderid", "N/A")
+            order_id = order.get("orderId", "N/A")
             from_city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
             to_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
             message += f"{order_id:<40} {from_city:<20} {to_city:<20}\n"
 
         for order in matched_orders:
             rows.append({
-                "Order ID": order.get("sm_orderid", "N/A"),
+                "Order ID": order.get("orderId", "N/A"),
                 "Customer": order.get("start", {}).get("contact", {}).get("name", "Unknown"),
                 "From City": order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown"),
                 "To City": order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown"),
@@ -417,27 +443,83 @@ class ActionGetOrdersByStatus(Action):
             "delivered": ["delivered", "delivered_to_neighbour", "delivered_to_watchman"],
             "in transit": ["in_transit_to_destination_city"]
         }
+        status_aliases = {
+            "LMD": "lm_delayed",
+            "last mile delay": "lm_delayed",
+            "last-mile delay": "lm_delayed",
 
-        status_category = None
-        if any(keyword in message_text for keyword in ["delivered"]):
-            status_category = "delivered"
-        elif any(keyword in message_text for keyword in ["cancelled", "canceled", "pending", "waiting", "pickup", "delayed"]):
-            status_category = "pending"
-        elif any(keyword in message_text for keyword in ["in transit", "transit", "shipped", "on the way"]):
-            status_category = "in transit"
+            "FMD": "fm_package_verified",
+            "first mile delay": "fm_package_verified",
+            "package verification": "fm_package_verified",
+
+            "AFMH": "at_fm_agent_hub",
+            "at first mile hub": "at_fm_agent_hub",
+
+            "ALMH": "at_lm_agent_hub",
+            "at last mile hub": "at_lm_agent_hub",
+
+            "PF": "pickup_failed",
+            "pickup failed": "pickup_failed",
+
+            "OFD": "out_for_delivery",
+            "out for delivery": "out_for_delivery",
+
+            "OFP": "out_for_pickup",
+            "out for pickup": "out_for_pickup",
+
+            "HOA": "handed_over_to_agent",
+            "handover to agent": "handed_over_to_agent",
+
+            "HOS": "handed_over_to_midmile_shipper",
+            "handover to shipper": "handed_over_to_midmile_shipper",
+
+            "IT": "in_transit_to_destination_city",
+            "in transit": "in_transit_to_destination_city",
+
+            "DEL": "delivered",
+            "delivered": "delivered",
+
+            "DELN": "delivered_to_neighbour",
+            "delivered to neighbour": "delivered_to_neighbour",
+
+            "DELW": "delivered_to_watchman",
+            "delivered to watchman": "delivered_to_watchman"
+        }
+
+  
 
         custom_filter = {}
+        specific_status = None
 
-        if status_category:
-            custom_filter["orderStatus"] = {"$in": status_mapping[status_category]}
+        for phrase, raw_status in status_aliases.items():
+            if phrase in message_text:
+                specific_status = raw_status
+                break
         else:
-            status = fuzzy_status_match(message_text)
-            if not status:
-                dispatcher.utter_message("Sorry, I couldn't identify the delivery status you're looking for.")
-                print(f"[TIME] action_get_orders_by_status took {time.time() - start_time:.2f} seconds")
-                return []
+            for raw_status, pretty in pretty_status_labels.items():
+                if raw_status in message_text or pretty.lower() in message_text:
+                    specific_status = raw_status
+                    break
 
-            custom_filter["orderStatus"] = {"$regex": f"^{status}$", "$options": "i"}
+        if specific_status:
+            custom_filter["orderStatus"] = specific_status
+        else:
+            status_category = None
+            if any(word in message_text for word in ["delivered"]):
+                status_category = "delivered"
+            elif any(word in message_text for word in ["cancelled", "canceled", "pending", "waiting", "pickup", "delayed"]):
+                status_category = "pending"
+            elif any(word in message_text for word in ["in transit", "transit", "shipped", "on the way"]):
+                status_category = "in transit"
+
+            if status_category:
+                custom_filter["orderStatus"] = {"$in": status_mapping[status_category]}
+            else:
+                status = fuzzy_status_match(message_text)
+                if not status:
+                    dispatcher.utter_message("Sorry, I couldn't identify the delivery status you're looking for.")
+                    return []
+                custom_filter["orderStatus"] = {"$regex": f"^{status}$", "$options": "i"}
 
         if customer_input:
             all_names = collection.distinct("start.contact.name")
@@ -453,25 +535,24 @@ class ActionGetOrdersByStatus(Action):
 
         if not matched_orders:
             dispatcher.utter_message("No orders found for the requested filters.")
-            print(f"[TIME] action_get_orders_by_status took {time.time() - start_time:.2f} seconds")
             return []
 
         customer_name = customer_input or "Unknown Customer"
-        message = f"**Orders by Status for {customer_name}**\n\n"
-        message += f"{'Order ID':<35} {'Customer':<25} {'Status':<20} {'Date':<12}\n"
-        message += f"{'-'*35} {'-'*25} {'-'*20} {'-'*12}\n"
+        message = f"**Orders for {customer_name}**\n\n"
+        message += f"{'Order ID':<35} {'Customer':<25} {'Status':<30} {'Date':<12}\n"
+        message += f"{'-'*35} {'-'*25} {'-'*30} {'-'*12}\n"
 
         rows = []
 
         for order in matched_orders[:10]:
-            order_id = order.get("sm_orderid", "N/A")
+            order_id = order.get("orderId", "N/A")
             customer = order.get("start", {}).get("contact", {}).get("name", "Unknown")
-            status = order.get("orderStatus", order.get("Order Status", "Unknown"))
+            raw_status = order.get("orderStatus", order.get("Order Status", "Unknown"))
+            status = get_aesthetic_status(raw_status)
             created_at = order.get("createdAt", None)
             booking_date = created_at.strftime('%Y-%m-%d') if hasattr(created_at, 'strftime') else str(created_at)
 
-            message += f"{order_id:<35} {customer:<25} {status:<20} {booking_date:<12}\n"
-
+            message += f"{order_id:<35} {customer:<25} {status:<30} {booking_date:<12}\n"
             rows.append({
                 "Order ID": order_id,
                 "Customer": customer,
@@ -498,6 +579,7 @@ class ActionGetOrdersByStatus(Action):
         return []
 
 
+
 class ActionGetOrderStatus(Action):
     def name(self) -> Text:
         return "action_get_order_status"
@@ -510,32 +592,30 @@ class ActionGetOrderStatus(Action):
 
         order_id = next(tracker.get_latest_entity_values("order_id"), None)
 
-        
         if not order_id:
             dispatcher.utter_message("Please provide the order ID to check its status.")
             print(f"[TIME] action_get_order_status took {time.time() - start_time:.2f} seconds")
             return []
 
-        
         order = collection.find_one({
             "$or": [
-                {"sm_orderid": order_id},
+                {"orderId": order_id},
                 {"Order ID": order_id}
             ]
         })
 
-    
         if not order:
             dispatcher.utter_message(f"No order found with ID {order_id}.")
             print(f"[TIME] action_get_order_status took {time.time() - start_time:.2f} seconds")
             return []
 
-        
-        status = order.get("orderStatus") or order.get("Order Status") or "Unknown"
-        message = f"Status of order ID {order_id}: {status}"
+        raw_status = order.get("orderStatus") or order.get("Order Status") or "Unknown"
+        aesthetic_status = get_aesthetic_status(raw_status)
 
-        
-        if status.lower() == "delivered":
+        message = f"Status of order ID {order_id}: {aesthetic_status}"
+
+        delivery_date = None
+        if raw_status.lower() == "delivered":
             delivery_event = next(
                 (event for event in order.get("orderStatusEvents", [])
                  if event.get("status", "").lower() == "delivered"),
@@ -552,12 +632,17 @@ class ActionGetOrderStatus(Action):
             else:
                 message += ". Delivery date not available."
 
-        
         dispatcher.utter_message(message)
-        custom_data = {"Order ID": order_id, "Status": status}
-        if status.lower() == "delivered" and 'delivery_date' in locals():
+
+        custom_data = {
+            "Order ID": order_id,
+            "Status": aesthetic_status
+        }
+        if delivery_date:
             custom_data["Delivery Date"] = delivery_date
+
         dispatcher.utter_message(custom={"order_status": custom_data})
+
         print(f"[TIME] action_get_order_status took {time.time() - start_time:.2f} seconds")
         return []
 
@@ -606,7 +691,7 @@ class ActionGetOrdersByTAT(Action):
                 tat = (delivery_ts - booking_ts).days
                 if tat == tat_days:
                     matching_orders.append({
-                        "Order ID": order.get("sm_orderid", "N/A"),
+                        "Order ID": order.get("orderId", "N/A"),
                         "Sender": order.get("start", {}).get("contact", {}).get("name", "Unknown"),
                         "Booking Date": booking_ts.strftime('%Y-%m-%d'),
                         "Delivery Date": delivery_ts.strftime('%Y-%m-%d'),
@@ -692,24 +777,26 @@ class ActionPendingOrdersPastDays(Action):
 
         rows = []
         message = f"Pending orders for **{customer_input}** in the past **{n_days}** days:\n"
-        message += f"{'Order ID':<35} {'Status':<20} {'To City':<20} {'Created At':<15}\n"
-        message += f"{'-'*35} {'-'*20} {'-'*20} {'-'*15}\n"
+        message += f"{'Order ID':<35} {'Status':<35} {'To City':<20} {'Created At':<15}\n"
+        message += f"{'-'*35} {'-'*35} {'-'*20} {'-'*15}\n"
 
         for order in results[:10]:
-            order_id = order.get("sm_orderid", "N/A")
-            status = order.get("orderStatus", "Unknown")
+            order_id = order.get("orderId", "N/A")
+            raw_status = order.get("orderStatus", "unknown")
+            status = get_aesthetic_status(raw_status)
             to_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
             created_at = order.get("createdAt")
             created_date = created_at.strftime('%Y-%m-%d') if hasattr(created_at, "strftime") else str(created_at)
 
-            message += f"{order_id:<35} {status:<20} {to_city:<20} {created_date:<15}\n"
+            message += f"{order_id:<35} {status:<35} {to_city:<20} {created_date:<15}\n"
 
         for order in results:
-            order_id = order.get("sm_orderid", "N/A")
-            status = order.get("orderStatus", "Unknown")
+            order_id = order.get("orderId", "N/A")
+            raw_status = order.get("orderStatus", "unknown")
+            status = get_aesthetic_status(raw_status)
+            to_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
             created_at = order.get("createdAt")
             created_date = created_at.strftime('%Y-%m-%d') if hasattr(created_at, "strftime") else str(created_at)
-            to_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
 
             rows.append({
                 "Order ID": order_id,
@@ -724,16 +811,13 @@ class ActionPendingOrdersPastDays(Action):
         df = pd.DataFrame(rows)
         os.makedirs("static/files", exist_ok=True)
 
-
         safe_customer_name = re.sub(r'\W+', '_', customer_input).strip('_') or "customer"
         filename = f"pending_orders_{safe_customer_name}_{n_days}days.xlsx"
         filepath = os.path.join("static/files", filename)
         df.to_excel(filepath, index=False)
 
-        
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
-        if rows:
-            dispatcher.utter_message(custom={"table_data": serialize_for_json(rows), "excel_url": public_url})
+        dispatcher.utter_message(custom={"table_data": serialize_for_json(rows), "excel_url": public_url})
 
         print(f"[TIME] action_pending_orders_past_days took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
@@ -863,12 +947,13 @@ class ActionDynamicOrderQuery(Action):
                 return []
 
             message = f"**Delivered Orders between {start_date_str} and {end_date_str}:**\n"
-            message += f"{'Order ID':<24} {'Status':<20} {'Created At':<12}\n"
-            message += f"{'-'*24} {'-'*20} {'-'*12}\n"
+            message += f"{'Order ID':<24} {'Status':<35} {'Created At':<12}\n"
+            message += f"{'-'*24} {'-'*35} {'-'*12}\n"
 
             for order in results:
-                order_id = order.get("sm_orderid", "N/A")
-                status = order.get("orderStatus", "Delivered")
+                order_id = order.get("orderId", "N/A")
+                raw_status = order.get("orderStatus", "delivered")
+                status = get_aesthetic_status(raw_status)
                 created = order.get("createdAt")
                 created_str = created.strftime('%Y-%m-%d') if hasattr(created, 'strftime') else str(created)
 
@@ -879,7 +964,7 @@ class ActionDynamicOrderQuery(Action):
                 })
 
             for row in rows[:10]:
-                message += f"{row['Order ID']:<24} {row['Status']:<20} {row['Created At']:<12}\n"
+                message += f"{row['Order ID']:<24} {row['Status']:<35} {row['Created At']:<12}\n"
 
             filename = f"delivered_orders_{start_date_str}_to_{end_date_str}.xlsx"
 
@@ -905,12 +990,13 @@ class ActionDynamicOrderQuery(Action):
                 return []
 
             message = f"**Orders from location `{location_code}` between {start_date_str} and {end_date_str}:**\n"
-            message += f"{'Order ID':<24} {'Status':<20} {'Created At':<12}\n"
-            message += f"{'-'*24} {'-'*20} {'-'*12}\n"
+            message += f"{'Order ID':<24} {'Status':<35} {'Created At':<12}\n"
+            message += f"{'-'*24} {'-'*35} {'-'*12}\n"
 
             for order in results:
-                order_id = order.get("sm_orderid", "N/A")
-                status = order.get("orderStatus", "Unknown")
+                order_id = order.get("orderId", "N/A")
+                raw_status = order.get("orderStatus", "unknown")
+                status = get_aesthetic_status(raw_status)
                 created = order.get("createdAt")
                 created_str = created.strftime('%Y-%m-%d') if hasattr(created, 'strftime') else str(created)
 
@@ -921,7 +1007,7 @@ class ActionDynamicOrderQuery(Action):
                 })
 
             for row in rows[:10]:
-                message += f"{row['Order ID']:<24} {row['Status']:<20} {row['Created At']:<12}\n"
+                message += f"{row['Order ID']:<24} {row['Status']:<35} {row['Created At']:<12}\n"
 
             filename = f"orders_{location_code}_{start_date_str}_to_{end_date_str}.xlsx"
 
@@ -931,7 +1017,6 @@ class ActionDynamicOrderQuery(Action):
 
         message += f"\n**Total Records**: {len(rows)}"
         dispatcher.utter_message(message)
-
 
         df = pd.DataFrame(rows)
         os.makedirs("static/files", exist_ok=True)
@@ -946,7 +1031,7 @@ class ActionDynamicOrderQuery(Action):
         print(f"[TIME] action_dynamic_order_query took {(time.time() - start_time):.2f} seconds")
         return []
 
-    
+
 class ActionOrderStatusByInvoice(Action):
     def name(self) -> Text:
         return "action_order_status_by_invoice"
@@ -956,17 +1041,13 @@ class ActionOrderStatusByInvoice(Action):
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
 
         start_time = time.time()
-
-        
         invoice_number = next(tracker.get_latest_entity_values("invoice_number"), None)
 
-        
         if not invoice_number:
             dispatcher.utter_message("Please provide a valid invoice number to check the order status.")
             print(f"[TIME] action_order_status_by_invoice took {time.time() - start_time:.2f} seconds")
             return []
 
-        
         matched_orders = list(collection.find({
             "$or": [
                 {"Invoice Number": {"$regex": f"^{invoice_number}$", "$options": "i"}},
@@ -974,29 +1055,28 @@ class ActionOrderStatusByInvoice(Action):
             ]
         }))
 
-        
         if not matched_orders:
             dispatcher.utter_message(f"No orders found with invoice number {invoice_number}.")
             print(f"[TIME] action_order_status_by_invoice took {time.time() - start_time:.2f} seconds")
             return []
 
-        
         rows = []
         message = f"Order(s) with invoice number **{invoice_number}**:\n"
 
         for order in matched_orders[::10]:
             order_id = order.get("sm_orderid") or order.get("Order ID", "N/A")
-            status = order.get("orderStatus") or order.get("Order Status", "Unknown")
+            raw_status = order.get("orderStatus") or order.get("Order Status", "Unknown")
+            aesthetic_status = get_aesthetic_status(raw_status)
             created = order.get("createdAt")
             booking_date = created.strftime('%Y-%m-%d') if hasattr(created, 'strftime') else str(created)
             customer_name = order.get("start", {}).get("contact", {}).get("name", "Unknown")
 
-            message += f"- **Order ID**: {order_id} | **Status**: {status} | **Date**: {booking_date} | **Customer**: {customer_name}\n"
+            message += f"- **Order ID**: {order_id} | **Status**: {aesthetic_status} | **Date**: {booking_date} | **Customer**: {customer_name}\n"
 
             rows.append({
                 "Order ID": order_id,
                 "Invoice Number": invoice_number,
-                "Status": status,
+                "Status": aesthetic_status,
                 "Customer": customer_name,
                 "Booking Date": booking_date
             })
@@ -1004,19 +1084,19 @@ class ActionOrderStatusByInvoice(Action):
         message += f"\n**Total orders found**: {len(rows)}"
         dispatcher.utter_message(message)
 
-        
         df = pd.DataFrame(rows)
         os.makedirs("static/files", exist_ok=True)
         filename = f"order_status_invoice_{invoice_number}.xlsx".replace(" ", "_").replace(":", "-")
         filepath = os.path.join("static/files", filename)
         df.to_excel(filepath, index=False)
 
-        
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
         if rows:
             dispatcher.utter_message(custom={"table_data": serialize_for_json(rows), "excel_url": public_url})
+
         print(f"[TIME] action_order_status_by_invoice took {(time.time() - start_time):.2f} seconds")
         return []
+
 
 class ActionCheckServiceByPincode(Action):
     def name(self) -> Text:
@@ -1089,12 +1169,13 @@ class ActionPendingOrdersBeforeLastTwoDays(Action):
 
         rows = []
         message = f"**Pending orders created before {cutoff_date.strftime('%Y-%m-%d')}**\n"
-        message += f"{'Order ID':<24} {'Customer':<20} {'Status':<20} {'To City':<15} {'Created At':<12}\n"
-        message += f"{'-'*24} {'-'*20} {'-'*20} {'-'*15} {'-'*12}\n"
+        message += f"{'Order ID':<24} {'Customer':<20} {'Status':<30} {'To City':<15} {'Created At':<12}\n"
+        message += f"{'-'*24} {'-'*20} {'-'*30} {'-'*15} {'-'*12}\n"
 
         for order in results:
-            order_id = order.get("sm_orderid", "N/A")
-            status = order.get("orderStatus", "Unknown")
+            order_id = order.get("orderId", "N/A")
+            raw_status = order.get("orderStatus", "Unknown")
+            pretty_status = get_aesthetic_status(raw_status)
             created_at = order.get("createdAt")
             created_date = created_at.strftime('%Y-%m-%d') if hasattr(created_at, "strftime") else str(created_at)
             customer_name = order.get("start", {}).get("contact", {}).get("name", "Unknown")
@@ -1103,13 +1184,13 @@ class ActionPendingOrdersBeforeLastTwoDays(Action):
             rows.append({
                 "Order ID": order_id,
                 "Customer": customer_name,
-                "Status": status,
+                "Status": pretty_status,
                 "To City": to_city,
                 "Created At": created_date
             })
 
         for row in rows[:10]:
-            message += f"{row['Order ID']:<24} {row['Customer']:<20} {row['Status']:<20} {row['To City']:<15} {row['Created At']:<12}\n"
+            message += f"{row['Order ID']:<24} {row['Customer']:<20} {row['Status']:<30} {row['To City']:<15} {row['Created At']:<12}\n"
 
         message += f"\n**Total pending orders:** {len(rows)}"
         dispatcher.utter_message(message)
@@ -1121,11 +1202,11 @@ class ActionPendingOrdersBeforeLastTwoDays(Action):
         df.to_excel(filepath, index=False)
 
         public_url = f"http://51.20.18.59:8080/static/files/{filename}"
-        if rows:
-            dispatcher.utter_message(custom={"table_data": serialize_for_json(rows), "excel_url": public_url})
+        dispatcher.utter_message(custom={"table_data": serialize_for_json(rows), "excel_url": public_url})
 
         print(f"[TIME] action_pending_orders_before_last_two_days took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
+
 
 class ActionOrderDetailsByID(Action):
     def name(self) -> Text:
@@ -1147,7 +1228,7 @@ class ActionOrderDetailsByID(Action):
 
         
         order = collection.find_one({
-            "$or": [{"sm_orderid": order_id}, {"Order ID": order_id}]
+            "$or": [{"orderId": order_id}, {"Order ID": order_id}]
         })
 
         
@@ -1246,7 +1327,7 @@ class ActionCitywiseDeliveredOrderDistribution(Action):
 
         for order in results[:10]:
             city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
-            order_id = order.get("sm_orderid", "N/A")
+            order_id = order.get("orderId", "N/A")
             status = order.get("orderStatus", "delivered")
             customer = order.get("start", {}).get("contact", {}).get("name", "Unknown")
             city_counts[city] += 1
@@ -1520,7 +1601,7 @@ class ActionStakeholderDistribution(Action):
                             }
                         }
                     },
-                    "sm_orderid": 1
+                    "orderId": 1
                 }
             },
             {
@@ -1591,117 +1672,11 @@ class ActionStakeholderDistribution(Action):
         print(f"[TIME] action_stakeholder_distribution took {(time.time() - start_time):.2f} seconds")
         return []
 
-
-
-class ActionGetPendingOrdersByPickupCity(Action):
+class ActionGetPendingOrdersByPickupCity(Action): 
     def name(self) -> Text:
         return "action_get_pending_orders_by_pickup_city"
 
     def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-
-        start_time = datetime.now()
-        message_text = tracker.latest_message.get("text", "")
-        pickup_city_input = extract_pickup_city(message_text)
-        customer_input = tracker.get_slot("customer_name")
-
-        if not pickup_city_input:
-            dispatcher.utter_message("Please provide a pickup city to filter pending orders.")
-            return []
-
-        PENDING_STATUSES = [
-            "at_fm_agent_hub", "at_lm_agent_hub", "fm_package_verified",
-            "handed_over_to_agent", "handed_over_to_midmile_shipper",
-            "lm_delayed", "out_for_delivery", "out_for_pickup", "pickup_failed"
-        ]
-
-        try:
-            query = {
-                "orderStatus": {"$in": PENDING_STATUSES},
-                "start.address.mapData.city": {"$regex": pickup_city_input, "$options": "i"}
-            }
-
-            # Add customer name filtering if provided
-            if customer_input:
-                all_names = collection.distinct("start.contact.name")
-                matched_customers = [name for name in all_names if customer_input.lower() in name.lower()]
-                if not matched_customers:
-                    dispatcher.utter_message(f"No matching customers found for '{customer_input}'.")
-                    return []
-                regex_conditions = [{"start.contact.name": {"$regex": name.strip(), "$options": "i"}} for name in matched_customers]
-                query["$or"] = regex_conditions
-
-            matched_orders = list(collection.find(query))
-
-            if not matched_orders:
-                dispatcher.utter_message(f"No pending orders found from {pickup_city_input}.")
-                return []
-
-            now = datetime.now(pytz.utc)
-            results = []
-
-            for order in matched_orders:
-                created_at = order.get("createdAt", "")
-
-                if isinstance(created_at, int):
-                    created_at = datetime.fromtimestamp(created_at / 1000, pytz.utc)
-                elif isinstance(created_at, str):
-                    created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
-                elif isinstance(created_at, datetime):
-                    if created_at.tzinfo is None:
-                        created_at = pytz.utc.localize(created_at)
-
-                if not isinstance(created_at, datetime) or created_at.tzinfo is None:
-                    created_at = None
-
-                booked_str = created_at.strftime('%Y-%m-%d %H:%M') if created_at else "N/A"
-                tat_days = (now - created_at).days if created_at else "N/A"
-                drop_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
-                status = order.get("orderStatus", "unknown")
-                customer_name = order.get("start", {}).get("contact", {}).get("name", "Unknown")
-
-                results.append({
-                    "Customer Name": customer_name,
-                    "Order Booked Date": booked_str,
-                    "TAT (Days)": tat_days,
-                    "Destination Location": drop_city,
-                    "Current Status": status
-                })
-
-            df = pd.DataFrame(results)
-            file_name = f"pending_orders_{pickup_city_input}_{datetime.now().strftime('%Y%m%d%H%M%S')}.xlsx"
-            file_path = f"/tmp/{file_name}"
-            df.to_excel(file_path, index=False)
-
-            msg_lines = [f"Pending orders from {pickup_city_input}"]
-            if customer_input:
-                msg_lines[0] += f" for {customer_input}"
-            msg_lines[0] += ":\n"
-
-            header = f"{'Customer':<20} {'Booked Date':<20} {'TAT (Days)':<12} {'Destination':<20} {'Status':<30}"
-            msg_lines.append(header)
-            msg_lines.append("-" * len(header))
-
-            for row in results[:10]:
-                msg_lines.append(
-                    f"{row['Customer Name']:<20} {row['Order Booked Date']:<20} {row['TAT (Days)']:<12} {row['Destination Location']:<20} {row['Current Status']:<30}"
-                )
-
-            dispatcher.utter_message("\n".join(msg_lines))
-
-        except Exception as e:
-            dispatcher.utter_message(f"Error while fetching pending orders: {str(e)}")
-            return []
-
-        return []
-
-class ActionGetCustomerPendingOrdersAllCities(Action):
-    def name(self) -> Text:
-        return "action_get_customer_pending_orders_all_cities"
-
-    def run(self, dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-
         customer_input = tracker.get_slot("customer_name")
         if not customer_input:
             dispatcher.utter_message("Please provide a customer name to fetch the orders.")
@@ -1729,13 +1704,9 @@ class ActionGetCustomerPendingOrdersAllCities(Action):
             }
 
             matched_orders = list(collection.find(query))
-
             if not matched_orders:
                 dispatcher.utter_message(f"No pending orders found for {customer_input}.")
                 return []
-
-            from collections import defaultdict
-            import pytz
 
             now = datetime.now(pytz.utc)
             orders_by_city = defaultdict(list)
@@ -1743,22 +1714,20 @@ class ActionGetCustomerPendingOrdersAllCities(Action):
 
             for order in matched_orders:
                 pickup_city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
+                created_at = order.get("createdAt")
 
-                created_at = order.get("createdAt", "")
                 if isinstance(created_at, int):
                     created_at = datetime.fromtimestamp(created_at / 1000, pytz.utc)
                 elif isinstance(created_at, str):
                     created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
                 elif isinstance(created_at, datetime) and created_at.tzinfo is None:
                     created_at = pytz.utc.localize(created_at)
-                if not isinstance(created_at, datetime):
-                    created_at = None
 
                 booking_date = created_at.strftime('%Y-%m-%d') if created_at else "N/A"
                 tat_days = (now - created_at).days if created_at else "N/A"
-
                 drop_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
-                status = order.get("orderStatus", "unknown")
+                status_raw = order.get("orderStatus", "unknown")
+                status = get_aesthetic_status(status_raw)
                 order_id = order.get("orderId", "N/A")
 
                 orders_by_city[pickup_city].append({
@@ -1768,10 +1737,8 @@ class ActionGetCustomerPendingOrdersAllCities(Action):
                     "Drop City": drop_city,
                     "Status": status
                 })
-
                 city_counts[pickup_city] = city_counts.get(pickup_city, 0) + 1
 
-        
             msg_lines = [f"Pending Orders for **{customer_input}**:\n"]
 
             for city, orders in orders_by_city.items():
@@ -1779,7 +1746,7 @@ class ActionGetCustomerPendingOrdersAllCities(Action):
                 header = f"{'Order ID':<20} {'Date':<12} {'TAT':<6} {'Drop City':<20} {'Status':<30}"
                 msg_lines.append(header)
                 msg_lines.append("-" * len(header))
-                for o in orders[:10]:  # Limit per city output
+                for o in orders[:10]:
                     msg_lines.append(f"{o['Order ID']:<20} {o['Date']:<12} {str(o['TAT']):<6} {o['Drop City']:<20} {o['Status']:<30}")
 
             msg_lines.append("\n **Total Pending Orders by Location:**")
@@ -1794,6 +1761,68 @@ class ActionGetCustomerPendingOrdersAllCities(Action):
 
         return []
 
+class ActionGetPendingOrdersMatrix(Action):
+    def name(self) -> Text:
+        return "action_get_pending_orders_matrix"
+
+    def run(self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+
+        PENDING_STATUSES = [
+            "at_fm_agent_hub", "at_lm_agent_hub", "fm_package_verified",
+            "handed_over_to_agent", "handed_over_to_midmile_shipper",
+            "lm_delayed", "out_for_delivery", "out_for_pickup", "pickup_failed"
+        ]
+
+        try:
+            query = {"orderStatus": {"$in": PENDING_STATUSES}}
+            orders = list(collection.find(query))
+
+            if not orders:
+                dispatcher.utter_message("No pending orders found.")
+                return []
+
+
+            pivot_data = defaultdict(lambda: defaultdict(int))
+            now = datetime.now(pytz.utc)
+
+            for order in orders:
+                city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
+
+                created_at = order.get("createdAt", "")
+                if isinstance(created_at, int):
+                    created_at = datetime.fromtimestamp(created_at / 1000, pytz.utc)
+                elif isinstance(created_at, str):
+                    created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+                elif isinstance(created_at, datetime) and created_at.tzinfo is None:
+                    created_at = pytz.utc.localize(created_at)
+                if not isinstance(created_at, datetime):
+                    continue
+
+                date_str = created_at.strftime('%d/%m/%Y')
+                pivot_data[city][date_str] += 1
+
+            all_dates = sorted({date for city in pivot_data for date in pivot_data[city]})
+            header = f"{'Location':<20} " + " ".join([f"{d:<12}" for d in all_dates]) + " Total"
+            lines = [header, "-" * len(header)]
+
+            for city, date_counts in pivot_data.items():
+                total = sum(date_counts.values())
+                row = f"{city:<20} " + " ".join([f"{date_counts.get(d, 0):<12}" for d in all_dates]) + f" {total}"
+                lines.append(row)
+
+            grand_total = sum([sum(date_counts.values()) for date_counts in pivot_data.values()])
+            lines.append("\nGrand Total: " + str(grand_total))
+
+            dispatcher.utter_message(" **Pending Orders Matrix (by Pickup City and Date)**")
+            dispatcher.utter_message("\n".join(lines))
+
+        except Exception as e:
+            dispatcher.utter_message(f"Error generating matrix: {str(e)}")
+            return []
+
+        return []
 
 class ActionDefaultFallback(Action):
     def name(self):

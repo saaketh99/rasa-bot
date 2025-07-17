@@ -90,13 +90,25 @@ nlu:
     - see orders marked as [delivered](delivery_status)
     - get all shipments which are [pending](delivery_status)
     - show me orders in [in transit](delivery_status) status
-    - show me [delivered](delivery_status) orders for [ola ele](customer_name)
-    - list all [pending](delivery_status) shipments of [wakefit](customer_name)
-    - I want to check [in transit](delivery_status) orders for [volvo](customer_name)
-    - are there any [delivered](delivery_status) packages for [Suresh](customer_name)?
-    - give me [pending](delivery_status) orders placed by [Meena](customer_name)
-    - show all [in transit](delivery_status) deliveries for [John Doe](customer_name)
-    - get [delivered](delivery_status) items ordered by [Priya](customer_name)
+    - show me [LMD](delivery_status) orders
+    - list all [Last-Mile Delay](delivery_status) shipments
+    - get orders that are [OFD](delivery_status)
+    - check [Out for Delivery](delivery_status) packages
+    - find [pickup failed](delivery_status) orders
+    - show [Out for Pickup](delivery_status) consignments
+    - are there any [handed over to agent](delivery_status) orders?
+    - I need details of [in transit to destination](delivery_status) shipments
+    - any orders [at first mile hub](delivery_status)?
+    - check for [at last mile hub](delivery_status) orders
+    - list [Package Verification](delivery_status) shipments
+    - get [FMD](delivery_status) orders
+    - show [handed over to shipper](delivery_status) items
+    - show me [LMD](delivery_status) orders from [Ola Ele](customer_name)
+    - list all [OFD](delivery_status) shipments for [Wakefit](customer_name)
+    - show [pickup failed](delivery_status) orders by [Volvo](customer_name)
+    - are there any [Package Verification](delivery_status) items from [Meena](customer_name)?
+    - get [delivered](delivery_status) packages from [John](customer_name)
+    - find [in transit](delivery_status) items for [Priya](customer_name)
 
 - intent: track_order_by_id
   examples: |
@@ -723,6 +735,44 @@ nlu:
 
 
 lookup_tables:
+- lookup: delivery_status
+  examples: |
+    pending
+    in transit
+    delivered
+    lmd
+    LMD
+    last mile delay
+    last-mile delay
+    ofd
+    OFD
+    out for delivery
+    out-for-delivery
+    fmd
+    FMD
+    first mile delay
+    first-mile delay
+    pickup failed
+    Pickup Failed
+    out for pickup
+    Out for Pickup
+    at first mile hub
+    At First Mile Hub
+    at last mile hub
+    At Last Mile Hub
+    handed over to agent
+    Handed Over to Agent
+    handed over to shipper
+    Handed Over to Shipper
+    package verification
+    Package Verification
+    in transit to destination
+    In Transit to Destination
+    processing
+    Processing
+    not shipped
+    Not Shipped
+
 - lookup: customer_name
   examples: |
      A.P.Naveen Kumar Addagala
