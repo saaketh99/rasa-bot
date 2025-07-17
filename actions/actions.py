@@ -1821,46 +1821,42 @@ class ActionGetPendingOrdersMatrix(Action):
 
                 date_str = created_at.strftime('%d/%m/%Y')
                 pivot_data[city][date_str] += 1
+            # Determine column widths
             all_dates = sorted({date for city_data in pivot_data.values() for date in city_data})
+            max_city_len = max(len(city) for city in pivot_data)  # longest city name
+            date_col_width = max(10, max(len(d) for d in all_dates))  # min 10 chars wide for date
+            total_col_width = 5  # can be adjusted if needed
 
-            # Find the maximum city name length
-            max_city_len = max(len(city) for city in pivot_data)
-
-            # Set fixed column width for date columns
-            date_col_width = 12
-
-            # Build header with padded columns
+            # Build header
             header = f"{'Location'.ljust(max_city_len)}" + "".join(
-                f"{date:>{date_col_width}}" for date in all_dates
-            ) + f"{'Total':>{date_col_width}}"
+                f"{date.rjust(date_col_width)}" for date in all_dates
+            ) + f"{'Total'.rjust(total_col_width)}"
 
-            # Line width for consistent horizontal rule
-            line_width = max_city_len + (len(all_dates) + 1) * date_col_width
+            line_width = len(header)
             lines = [header, "-" * line_width]
 
+            # Build rows
             grand_total = 0
-
-            # Build each row with aligned columns
             for city in sorted(pivot_data):
                 date_counts = pivot_data[city]
                 total = sum(date_counts.values())
                 grand_total += total
                 row = f"{city.ljust(max_city_len)}" + "".join(
-                    f"{date_counts.get(d, 0):>{date_col_width}}" for d in all_dates
-                ) + f"{total:>{date_col_width}}"
+                    f"{str(date_counts.get(d, 0)).rjust(date_col_width)}" for d in all_dates
+                ) + f"{str(total).rjust(total_col_width)}"
                 lines.append(row)
 
-            # Append the final total row
+            # Final line and total
             lines.append("-" * line_width)
-            lines.append(f"{'Grand Total:'.ljust(line_width - date_col_width)}{grand_total:>{date_col_width}}")
+            lines.append(f"{'Grand Total:'.ljust(line_width - total_col_width)}{str(grand_total).rjust(total_col_width)}")
 
-
-        
+            # Title
             matrix_type = "Destination" if use_destination else "Pickup"
             title = f"**Pending Orders Matrix for {customer_input.title()} by {matrix_type} City**" if customer_input else f"**Pending Orders Matrix (by {matrix_type} City and Date)**"
 
             dispatcher.utter_message(title)
             dispatcher.utter_message(f"\n" + "\n".join(lines) + "\n")
+
 
 
         except Exception as e:
