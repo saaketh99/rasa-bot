@@ -1860,7 +1860,7 @@ class ActionGetPendingOrdersMatrix(Action):
             title = f"**Pending Orders Matrix for {customer_input.title()} by {matrix_type} City**" if customer_input else f"**Pending Orders Matrix (by {matrix_type} City and Date)**"
 
             dispatcher.utter_message(title)
-            dispatcher.utter_message(f"```\n" + "\n".join(lines) + "\n```")
+            dispatcher.utter_message(f"\n" + "\n".join(lines) + "\n")
 
 
         except Exception as e:
