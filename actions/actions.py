@@ -1822,25 +1822,31 @@ class ActionGetPendingOrdersMatrix(Action):
                 date_str = created_at.strftime('%d/%m/%Y')
                 pivot_data[city][date_str] += 1
 
+
             all_dates = sorted({date for city_data in pivot_data.values() for date in city_data})
-            col_width = 14
-            header = f"{'Location':<20}" + "".join(f"{d:<{col_width}}" for d in all_dates) + f"{'Total':<{col_width}}"
-            lines = [header, "-" * len(header)]
+            header = f"{'Location':<20}\t" + "\t".join(all_dates) + "\tTotal"
+            lines = [header, "-" * 80]
+
+            grand_total = 0
 
             for city in sorted(pivot_data):
                 date_counts = pivot_data[city]
                 total = sum(date_counts.values())
-                row = f"{city:<20}" + "".join(f"{date_counts.get(d, 0):<{col_width}}" for d in all_dates) + f"{total:<{col_width}}"
+                grand_total += total
+                row = f"{city:<20}\t" + "\t".join(str(date_counts.get(d, 0)) for d in all_dates) + f"\t{total}"
                 lines.append(row)
 
-            grand_total = sum(sum(date_counts.values()) for date_counts in pivot_data.values())
-            lines.append(f"\nGrand Total: {grand_total}")
 
+            lines.append("-" * 80)
+            lines.append(f"Grand Total:\t{grand_total}")
+
+        
             matrix_type = "Destination" if use_destination else "Pickup"
             title = f"**Pending Orders Matrix for {customer_input.title()} by {matrix_type} City**" if customer_input else f"**Pending Orders Matrix (by {matrix_type} City and Date)**"
 
             dispatcher.utter_message(title)
             dispatcher.utter_message(f"```\n" + "\n".join(lines) + "\n```")
+
 
         except Exception as e:
             dispatcher.utter_message(f"Error generating matrix: {str(e)}")
