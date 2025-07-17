@@ -1821,22 +1821,24 @@ class ActionGetPendingOrdersMatrix(Action):
 
                 date_str = created_at.strftime('%d/%m/%Y')
                 pivot_data[city][date_str] += 1
-
             all_dates = sorted({date for city_data in pivot_data.values() for date in city_data})
 
-            # Find the longest city name for padding
+            # Get the max length of city names for consistent left-padding
             max_city_length = max(len(city) for city in pivot_data.keys())
-            date_col_width = 10  # Set fixed width for date columns for alignment
+            date_col_width = 12  # Wider width for better spacing
 
-            # Build header
+            # Header row with padded column titles
             header = f"{'Location'.ljust(max_city_length)}" + "".join(
                 f"{date:>{date_col_width}}" for date in all_dates
             ) + f"{'Total':>{date_col_width}}"
-            lines = [header, "-" * (max_city_length + (len(all_dates) + 1) * date_col_width)]
+
+            # Divider line matching total width
+            line_width = max_city_length + (len(all_dates) + 1) * date_col_width
+            lines = [header, "-" * line_width]
 
             grand_total = 0
 
-            # Build rows
+            # Each row: city name + date counts + row total
             for city in sorted(pivot_data):
                 date_counts = pivot_data[city]
                 total = sum(date_counts.values())
@@ -1846,9 +1848,9 @@ class ActionGetPendingOrdersMatrix(Action):
                 ) + f"{total:>{date_col_width}}"
                 lines.append(row)
 
-            lines.append("-" * (max_city_length + (len(all_dates) + 1) * date_col_width))
-            lines.append(f"{'Grand Total:'.ljust(max_city_length + len(all_dates) * date_col_width)}{grand_total:>{date_col_width}}")
-
+            # Add final total line
+            lines.append("-" * line_width)
+            lines.append(f"{'Grand Total:'.ljust(line_width - date_col_width)}{grand_total:>{date_col_width}}")
 
         
             matrix_type = "Destination" if use_destination else "Pickup"
