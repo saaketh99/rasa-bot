@@ -246,3 +246,10 @@ stories:
   steps:
   - intent: get_customer_pending_orders_all_cities
   - action: action_get_customer_pending_orders_all_cities
+
+
+- story: Show pending orders matrix
+  steps:
+    - intent: ask_pending_orders_matrix
+    - action: action_get_pending_orders_matrix
+

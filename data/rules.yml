@@ -113,6 +113,11 @@ rules:
   - intent: get_customer_pending_orders_all_cities
   - action: action_get_customer_pending_orders_all_cities
 
+- rule: Respond to pending orders matrix request
+  steps:
+    - intent: ask_pending_orders_matrix
+    - action: action_get_pending_orders_matrix
+
 - rule: Fallback if user message is not understood
   steps:
   - intent: nlu_fallback

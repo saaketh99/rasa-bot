@@ -513,6 +513,30 @@ nlu:
     - Retrieve all pending city-wise orders of [Ola Ele](customer_name)
     - Can you show [Wakefit](customer_name)'s pending orders as per pickup cities?
 
+- intent: ask_pending_orders_matrix
+  examples: |
+    show me the pending orders matrix
+    give me the matrix of pending orders by location
+    show pending orders matrix by city and date
+    I need a pending orders matrix grouped by pickup city
+    can you provide a matrix of all pending orders?
+    generate a city-wise pending orders matrix
+    I want the pending orders matrix with date-wise split
+    fetch matrix for all unfulfilled orders
+    show pickup city-wise matrix for pending orders
+    create a matrix showing pending orders per city and day
+    pending orders matrix summary please
+    display pending orders matrix city-wise
+    give me matrix of pickup locations with pending orders
+    I want a matrix of pending orders
+    pending orders by city and date
+    get me a pending orders matrix grouped by date
+    provide a matrix of current pending statuses
+    prepare pending orders matrix for me
+    matrix of open orders by location
+    matrix showing pending orders by city
+
+
 - synonym: Hyderabad
   examples: |
     - hyd
