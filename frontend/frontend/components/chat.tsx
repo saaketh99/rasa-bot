@@ -33,7 +33,7 @@ interface RasaResponse {
   buttons?: Array<{ title: string; payload: string }>
   image?: string
   attachment?: any
-  custom?: any // <-- Add this line to fix linter errors
+  custom?: any;
 }
 
 interface ConversationMeta {
@@ -54,13 +54,13 @@ function ClientTime({ timestamp }: { timestamp: number }) {
 
 // Helper to render message text with download button if link is present
 function renderMessageText(text: string) {
-  // Regex to match markdown links: [label](url)
+  // This function can remain as is, since the logic to render download links is separate
+  // from the main table rendering.
   const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/;
   const markdownMatch = text.match(markdownLinkRegex);
   if (markdownMatch) {
     const label = markdownMatch[1];
     const url = markdownMatch[2];
-    // If the link is to an image, show the image and a download button
     if (url.match(/\.(png|jpg|jpeg|gif|svg)$/i)) {
       return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
@@ -69,28 +69,20 @@ function renderMessageText(text: string) {
             alt={label}
             style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid #ddd', marginBottom: 8 }}
           />
-          <button
-            onClick={() => {
-              // Download the image
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = url.split('/').pop() || 'graph.png';
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-            }}
-            style={{ padding: '8px 16px', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: 5, cursor: 'pointer' }}
-          >
-            📈 Download Graph
-          </button>
+          <a href={url} download target="_blank" rel="noopener noreferrer">
+            <button
+              style={{ padding: '8px 16px', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: 5, cursor: 'pointer' }}
+            >
+              📈 Download Graph
+            </button>
+          </a>
         </div>
       );
     } else {
-      // Otherwise, show a button to open/download the link
       return (
-        <a href={url} target="_blank" rel="noopener noreferrer" download={url.endsWith('.xlsx') || url.endsWith('.xls') ? true : undefined}>
+        <a href={url} target="_blank" rel="noopener noreferrer" download={url.endsWith('.xlsx') || url.endsWith('.xls')}>
           <button
-            style={{ padding: '8px 16px', backgroundColor: url.endsWith('.xlsx') || url.endsWith('.xls') ? '#4CAF50' : '#1976d2', color: 'white', border: 'none', borderRadius: 5, cursor: 'pointer' }}
+            style={{ padding: '8px 16px', backgroundColor: '#1976d2', color: 'white', border: 'none', borderRadius: 5, cursor: 'pointer' }}
           >
             {label}
           </button>
@@ -98,25 +90,6 @@ function renderMessageText(text: string) {
       );
     }
   }
-  // Regex to match HTML <a> download links
-  const htmlLinkRegex = /<a [^>]*href=["']([^"']+)["'][^>]*download[^>]*>([\s\S]*?)<\/a>/i;
-  const htmlMatch = text.match(htmlLinkRegex);
-  if (htmlMatch) {
-    const url = htmlMatch[1];
-    // Extract button label if present, fallback to generic
-    const labelMatch = htmlMatch[2].match(/<button[^>]*>([\s\S]*?)<\/button>/i);
-    const label = labelMatch ? labelMatch[1] : '📥 Download Excel';
-    return (
-      <a href={url} target="_blank" rel="noopener noreferrer" download>
-        <button
-          style={{ padding: '8px 16px', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: 5, cursor: 'pointer' }}
-        >
-          {label}
-        </button>
-      </a>
-    );
-  }
-  // Fallback: render as plain text
   return <span>{text}</span>;
 }
 
@@ -124,7 +97,7 @@ const SUGGESTIONS = [
   "Show me the orders for CUSTOMER_NAME from 2025-06-21 to 2025-07-31",
   "Get me the orders going from SENDER_CITY_NAME to RECIVER_CITY_NAME",
   "How many shipments were delivered to DESTINATION_CITY?",
-  "Show all ORDER_STATUS orders",
+  "Show all pending orders",
   "Order status for ORDER_ID",
   "Track order with invoice number INVOICE_NUMBER",
   "Show me all delivered orders within N days",
@@ -137,7 +110,7 @@ const SUGGESTIONS = [
   "how delivered orders distributed across cities",
   "Delivered report across cities for CUSTOMER_NAME",
   "Show me the order trend for CUSTOMER_NAME in the past N days",
-  "What is the delay trend in the past N days?",
+  "What’s the delay trend in the past N days?",
   "Who is updating most of the delivery statuses?"
 ];
 
@@ -148,86 +121,6 @@ function getClientUniqueId() {
   }
   return '';
 }
-
-/**
- * START: FINAL HELPER FUNCTION
- * This function now intelligently parses THREE different bot response formats.
- * It checks for unique keywords to decide which parser to use.
- * @param text The bot's raw text response.
- * @returns An array of objects if table data is found, otherwise null.
- */
-function parseTextToTableData(text: string) {
-    const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
-    if (lines.length === 0) return null;
-
-    let tableData: any[] = [];
-
-    // Define all regexes
-    const format1Regex = /^- Order ID: (.*?) \| Sender: (.*?) \| Booking Date: (.*?)$/;
-    const format2Line1Regex = /^- Order ID: (.*?) \| Customer: (.*?) \| Status: (.*?) \|$/;
-    const format2Line2Regex = /^Date: (.*?)$/;
-    const format3Line1Regex = /^Order ID: (.*?) \| Sender: (.*?) \| Booking: (.*?) \|$/;
-    const format3Line2Regex = /^Delivered: (.*?) \| TAT: (.*?)$/;
-
-    // --- Test for Format 3 (Delivered Orders with TAT) ---
-    // Signature: Contains "Delivered:" and "TAT:"
-    if (text.includes("Delivered:") && text.includes("TAT:")) {
-        for (let i = 0; i < lines.length - 1; i++) {
-            const match1 = lines[i].match(format3Line1Regex);
-            const match2 = lines[i + 1].match(format3Line2Regex);
-            if (match1 && match2) {
-                tableData.push({
-                    "Order ID": match1[1].trim(),
-                    "Sender": match1[2].trim(),
-                    "Booking Date": match1[3].trim(),
-                    "Delivered Date": match2[1].trim(),
-                    "TAT": match2[2].trim(),
-                });
-                i++; // Skip the next line as it's part of the current record
-            }
-        }
-        if (tableData.length > 0) return tableData;
-    }
-
-    // --- Test for Format 2 (Pending Orders) ---
-    // Signature: Contains "Customer:" and "Status:"
-    if (text.includes("Customer:") && text.includes("Status:")) {
-         for (let i = 0; i < lines.length - 1; i++) {
-            const match1 = lines[i].match(format2Line1Regex);
-            const match2 = lines[i + 1].match(format2Line2Regex);
-            if (match1 && match2) {
-                tableData.push({
-                    "Order ID": match1[1].trim(),
-                    "Customer": match1[2].trim(),
-                    "Status": match1[3].trim(),
-                    "Date": match2[1].trim(),
-                });
-                i++; // Skip the next line
-            }
-        }
-        if (tableData.length > 0) return tableData;
-    }
-
-    // --- Test for Format 1 (Simple Orders) ---
-    // Signature: Starts with "- Order ID:" and has "Sender:"
-    if (text.trim().startsWith("- Order ID:") && text.includes("Sender:")) {
-        for (const line of lines) {
-            const match = line.match(format1Regex);
-            if (match) {
-                tableData.push({
-                    "Order ID": match[1].trim(),
-                    "Sender": match[2].trim(),
-                    "Booking Date": match[3].trim(),
-                });
-            }
-        }
-        if (tableData.length > 0) return tableData;
-    }
-
-    return null; // Return null if no formats matched
-}
-// END: FINAL HELPER FUNCTION
-
 
 export function Chat() {
   const { theme, setTheme } = useTheme();
@@ -247,7 +140,6 @@ export function Chat() {
   const inputRef = useRef<HTMLInputElement>(null)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([])
-  // Add state for suggestion panel
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
 
   useEffect(() => {
@@ -350,8 +242,8 @@ export function Chat() {
 
   const sendMessage = async (messageText: string) => {
     if (!messageText.trim() || isLoading) return;
-    let id = getClientUniqueId();
-    let timestamp = Date.now();
+    const id = getClientUniqueId();
+    const timestamp = Date.now();
 
     const userMessage: ChatMessage = { id, text: messageText, sender: "user", timestamp };
 
@@ -374,63 +266,33 @@ export function Chat() {
 
       if (data.success && data.responses) {
         const botMessages: ChatMessage[] = data.responses
-          .filter((resp: RasaResponse) => resp.text && resp.text.trim())
+          // Filter out responses that are completely empty
+          .filter((resp: RasaResponse) => (resp.text && resp.text.trim()) || resp.custom || resp.image)
           .map((resp: RasaResponse): ChatMessage => {
-            // --- START PATCH: Merge all structured data into table_data ---
-            let customData: any = {};
-            let messageText = resp.text;
-            let tableData: any[] | null = null;
-
-            // If backend sends custom field with structured data
-            if (resp.hasOwnProperty('custom') && resp.custom && typeof resp.custom === 'object') {
-              // Find any array field in custom (e.g., orders, city_orders, pincodes, etc.)
-              const arrayField = Object.keys(resp.custom).find(
-                key => Array.isArray(resp.custom[key]) && resp.custom[key].length > 0 && typeof resp.custom[key][0] === 'object'
-              );
-              if (arrayField) {
-                tableData = resp.custom[arrayField];
-                customData.table_data = tableData;
-              }
-            }
-
-            // If not found, try to parse from text
-            if (!tableData) {
-              tableData = parseTextToTableData(resp.text);
-              if (tableData) {
-                customData.table_data = tableData;
-              }
-            }
-
-            // Set message text to a title if table data is present
-            if (tableData) {
-              const firstLine = resp.text.split('\n')[0].trim();
-              if (firstLine && !firstLine.trim().startsWith('-') && !firstLine.trim().startsWith('Order ID:')) {
-                messageText = firstLine;
-              } else {
-                messageText = "Here are the details I found:";
-              }
-            }
-            // --- END PATCH ---
-
+            // --- START: CORRECTED AND SIMPLIFIED LOGIC ---
+            // Simply pass the data from the backend directly to the message object.
+            // The backend is now responsible for sending a single, cohesive message.
             return {
               id: getClientUniqueId(),
-              text: messageText,
+              text: resp.text || "", // Use text if it exists, otherwise empty string
               sender: "bot" as const,
               timestamp: Date.now(),
               buttons: resp.buttons,
               image: resp.image,
-              custom: customData,
+              custom: resp.custom, // Pass the entire original custom object
             };
+            // --- END: CORRECTED AND SIMPLIFIED LOGIC ---
           });
 
         if (botMessages.length > 0) {
           setMessages((prev) => [...prev, ...botMessages]);
         } else {
+          // This case should be rare now, but kept as a fallback.
           setMessages((prev) => [
             ...prev,
             {
               id: Date.now().toString(),
-              text: "I received your message but don't have a response right now. Please try rephrasing.",
+              text: "I received your message but don't have a specific response. Could you try rephrasing?",
               sender: "bot",
               timestamp: Date.now(),
             },
@@ -514,18 +376,15 @@ export function Chat() {
       <main className="flex-1 flex flex-col h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 relative">
         {/* Suggestion Panel Button & Expandable Suggestions */}
         <div className="fixed right-6 bottom-32 z-50 flex flex-col items-end">
-          {/* Expand/Collapse Button */}
           <button
             className="bg-blue-600 text-white rounded-full p-3 shadow-lg hover:bg-blue-700 transition"
             onClick={() => setSuggestionsOpen((prev) => !prev)}
             aria-label="Show suggestions"
           >
-            {/* Icon (lightbulb) */}
             <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
               <path d="M12 2a7 7 0 0 1 7 7c0 2.5-1.5 4.5-3.5 5.5V17a1 1 0 0 1-2 0v-2.5C8.5 13.5 7 11.5 7 9a7 7 0 0 1 7-7z" fill="currentColor"/>
             </svg>
           </button>
-          {/* Suggestions Panel */}
           <div
             className={`overflow-hidden transition-all duration-300 ease-in-out ${
               suggestionsOpen ? "max-h-96 opacity-100 mt-2" : "max-h-0 opacity-0"
@@ -537,7 +396,7 @@ export function Chat() {
                 <button
                   key={i}
                   className="bg-blue-100 text-blue-800 rounded px-3 py-1 text-sm text-left hover:bg-blue-200 transition"
-                  onClick={() => { setInput(s); setSuggestionsOpen(false); }}
+                  onClick={() => { setInput(s); setSuggestionsOpen(false); inputRef.current?.focus(); }}
                 >
                   {s}
                 </button>
@@ -567,7 +426,7 @@ export function Chat() {
             <div className="space-y-4 bg-white rounded-lg p-4">
               <AnimatePresence initial={false}>
                 {messages
-                  .filter(message => !(message.sender === "bot" && (!message.text || !message.text.trim())))
+                  .filter(message => !(message.sender === "bot" && !message.text?.trim() && !message.custom && !message.image))
                   .map((message, idx) => (
                     <motion.div
                       key={message.id ? message.id + '-' + idx : idx}
@@ -590,7 +449,10 @@ export function Chat() {
                           message.sender === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
                         }`}
                       >
-                        <div className="whitespace-pre-wrap break-words">{renderMessageText(message.text)}</div>
+                        {/* Render text only if it's not empty */}
+                        {message.text && message.text.trim() && (
+                            <div className="whitespace-pre-wrap break-words">{renderMessageText(message.text)}</div>
+                        )}
                         
                         {/* DYNAMIC TABLE RENDERING */}
                         {(() => {
@@ -603,7 +465,7 @@ export function Chat() {
                           return (
                             <div className="overflow-x-auto mt-2 text-black">
                               <div className="flex gap-2 mb-2">
-                                {/* Client-side Excel Download */}
+                                {/* Client-side Excel Download (always available for tables) */}
                                 <button
                                   onClick={() => {
                                     try {
@@ -622,16 +484,16 @@ export function Chat() {
                                 >
                                   📥 Download as Excel
                                 </button>
-                                {/* Backend Excel Download */}
+                                {/* Backend Excel Download (only if URL is provided) */}
                                 {custom.excel_url && (
                                   <a
                                     href={custom.excel_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     download
-                                    className="px-3 py-1 bg-blue-600 text-white border-none rounded cursor-pointer hover:bg-blue-700 transition"
+                                    className="px-3 py-1 bg-blue-600 text-white border-none rounded cursor-pointer hover:bg-blue-700 transition no-underline"
                                   >
-                                    📄 Download Backend Excel
+                                    📄 Download Report
                                   </a>
                                 )}
                               </div>
@@ -639,7 +501,7 @@ export function Chat() {
                                 <thead className="bg-gray-200">
                                   <tr>
                                     {columns.map((col) => (
-                                      <th key={col} className="border px-2 py-1 font-semibold">{col}</th>
+                                      <th key={col} className="border px-2 py-1 font-semibold text-left">{col}</th>
                                     ))}
                                   </tr>
                                 </thead>
@@ -647,7 +509,7 @@ export function Chat() {
                                   {tableArray.map((row: any, i: number) => (
                                     <tr key={i} className="hover:bg-gray-50">
                                       {columns.map((col) => (
-                                        <td key={col} className="border px-2 py-1">{row[col]}</td>
+                                        <td key={col} className="border px-2 py-1">{String(row[col])}</td>
                                       ))}
                                     </tr>
                                   ))}
@@ -674,8 +536,8 @@ export function Chat() {
                         {message.image && (
                           <div className="mt-2 flex flex-col items-center">
                             <img
-                              src={message.image || "/placeholder.svg"}
-                              alt="Bot response"
+                              src={message.image}
+                              alt="Bot response graph"
                               className="max-w-full h-auto rounded border border-gray-300"
                             />
                           </div>
@@ -748,7 +610,6 @@ export function Chat() {
                   />
                 </div>
               )}
-              {/* REMOVE DROPDOWN SUGGESTION LOGIC */}
             </div>
             <Button type="submit" disabled={isLoading || !input.trim()} className="bg-blue-600 hover:bg-blue-700">
               <Send className="h-4 w-4" />
