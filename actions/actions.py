@@ -1833,14 +1833,14 @@ class ActionGetPendingOrdersMatrix(Action):
                 row = f"{city:<20}" + "".join(f"{date_counts.get(d, 0):<{col_width}}" for d in all_dates) + f"{total:<{col_width}}"
                 lines.append(row)
 
-                grand_total = sum(sum(date_counts.values()) for date_counts in pivot_data.values())
-                lines.append(f"\nGrand Total: {grand_total}")
+            grand_total = sum(sum(date_counts.values()) for date_counts in pivot_data.values())
+            lines.append(f"\nGrand Total: {grand_total}")
 
-                matrix_type = "Destination" if use_destination else "Pickup"
-                title = f"**Pending Orders Matrix for {customer_input.title()} by {matrix_type} City**" if customer_input else f"**Pending Orders Matrix (by {matrix_type} City and Date)**"
+            matrix_type = "Destination" if use_destination else "Pickup"
+            title = f"**Pending Orders Matrix for {customer_input.title()} by {matrix_type} City**" if customer_input else f"**Pending Orders Matrix (by {matrix_type} City and Date)**"
 
-                dispatcher.utter_message(title)
-                dispatcher.utter_message(f"```\n" + "\n".join(lines) + "\n```")
+            dispatcher.utter_message(title)
+            dispatcher.utter_message(f"```\n" + "\n".join(lines) + "\n```")
 
         except Exception as e:
             dispatcher.utter_message(f"Error generating matrix: {str(e)}")
