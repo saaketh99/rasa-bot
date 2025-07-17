@@ -1855,8 +1855,8 @@ class ActionGetPendingOrdersMatrix(Action):
             title = f"**Pending Orders Matrix for {customer_input.title()} by {matrix_type} City**" if customer_input else f"**Pending Orders Matrix (by {matrix_type} City and Date)**"
 
             dispatcher.utter_message(title)
-            matrix_output = "\n".join(lines)
-            dispatcher.utter_message(f"<pre><code>{matrix_output}</code></pre>")
+            dispatcher.utter_message(text="\n" + "\n".join(lines) + "\n")
+
 
         except Exception as e:
             dispatcher.utter_message(f"Error generating matrix: {str(e)}")
