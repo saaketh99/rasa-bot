@@ -357,95 +357,71 @@ class ActionrouteOrder(Action):
         print(f"[TIME] action_route took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
 
-class ActionGetPendingOrdersMatrix(Action):
+class ActionFordestination(Action):
     def name(self) -> Text:
-        return "action_get_pending_orders_matrix"
+        return "action_cx_destination"
 
-    def run(self, dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-
-        PENDING_STATUSES = [
-            "at_fm_agent_hub", "at_lm_agent_hub", "fm_package_verified",
-            "handed_over_to_agent", "handed_over_to_midmile_shipper",
-            "lm_delayed", "out_for_delivery", "out_for_pickup", "pickup_failed"
-        ]
-
+    def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+        start_time = datetime.now()
         customer_input = tracker.get_slot("customer_name")
-        message_text = tracker.latest_message.get("text", "").lower()
-        use_destination = False
+        message_text = tracker.latest_message.get("text", "")
+        destination = extract_destination_city(message_text)
 
-        if "destination" in message_text or "drop" in message_text or "to city" in message_text:
-            use_destination = True
-
-        try:
-            query = {"orderStatus": {"$in": PENDING_STATUSES}}
-
-            if customer_input:
-                all_names = collection.distinct("start.contact.name")
-                matched_customers = [name for name in all_names if customer_input.lower() in name.lower()]
-                if not matched_customers:
-                    dispatcher.utter_message(f"No matching customers found for '{customer_input}'.")
-                    return []
-
-                customer_conditions = [{"start.contact.name": {"$regex": name, "$options": "i"}} for name in matched_customers]
-                query = {"$and": [query, {"$or": customer_conditions}]}
-
-            orders = list(collection.find(query))
-            if not orders:
-                msg = "No pending orders found"
-                if customer_input:
-                    msg += f" for **{customer_input}**"
-                dispatcher.utter_message(msg + ".")
-                return []
-
-            pivot_data = defaultdict(lambda: defaultdict(int))
-            now = datetime.now(pytz.utc)
-
-            for order in orders:
-                city_key = "end" if use_destination else "start"
-                city = order.get(city_key, {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
-                created_at = order.get("createdAt", "")
-                if isinstance(created_at, int):
-                    created_at = datetime.fromtimestamp(created_at / 1000, pytz.utc)
-                elif isinstance(created_at, str):
-                    created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
-                elif isinstance(created_at, datetime) and created_at.tzinfo is None:
-                    created_at = pytz.utc.localize(created_at)
-
-                if not isinstance(created_at, datetime):
-                    continue
-
-                date_str = created_at.strftime('%d/%m/%Y')
-                pivot_data[city][date_str] += 1
-
-                all_dates = sorted({date for city_data in pivot_data.values() for date in city_data})
-                col_width = 10
-                header = f"{'Location':<20}" + "".join(f"{d:<{col_width}}" for d in all_dates) + f"{'Total':<{col_width}}"
-                lines = [header, "-" * len(header)]
-
-                for city, date_counts in sorted(pivot_data.items()):
-                    total = sum(date_counts.values())
-                    row = f"{city:<20}" + "".join(f"{date_counts.get(d, 0):<{col_width}}" for d in all_dates) + f"{total:<{col_width}}"
-                    lines.append(row)
-
-
-            grand_total = sum([sum(date_counts.values()) for date_counts in pivot_data.values()])
-            lines.append("\nGrand Total: " + str(grand_total))
-
-            matrix_type = "Destination" if use_destination else "Pickup"
-            title = f"**Pending Orders Matrix (by {matrix_type} City and Date)**"
-            if customer_input:
-                title = f"**Pending Orders Matrix for {customer_input.title()} by {matrix_type} City**"
-
-            dispatcher.utter_message(title)
-            dispatcher.utter_message("\n".join(lines))
-
-        except Exception as e:
-            dispatcher.utter_message(f"Error generating matrix: {str(e)}")
+        if not customer_input or not destination:
+            dispatcher.utter_message("Please provide both customer name and destination.")
             return []
 
+        all_names = collection.distinct("start.contact.name")
+        matched_customers = [name for name in all_names if customer_input.lower() in name.lower()]
+        if not matched_customers:
+            dispatcher.utter_message(f"No matching customers found for '{customer_input}'.")
+            return []
+
+        matched_orders = list(collection.find({
+            "start.contact.name": {"$in": matched_customers},
+            "end.address.mapData.city": {"$regex": f"^{destination}$", "$options": "i"}
+        }))
+
+        if not matched_orders:
+            dispatcher.utter_message("No orders found for the given customer to that destination.")
+            return []
+
+        message = f" Orders for **{customer_input}** delivered to **{destination}**:\n\n"
+        message += f"{'Order ID':<40} {'From':<20} {'To':<20}\n"
+        message += f"{'-'*40} {'-'*20} {'-'*20}\n"
+        rows = []
+
+        for order in matched_orders[:10]:
+            order_id = order.get("orderId", "N/A")
+            from_city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
+            to_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
+            message += f"{order_id:<40} {from_city:<20} {to_city:<20}\n"
+
+        for order in matched_orders:
+            rows.append({
+                "Order ID": order.get("orderId", "N/A"),
+                "Customer": order.get("start", {}).get("contact", {}).get("name", "Unknown"),
+                "From City": order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown"),
+                "To City": order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown"),
+                "Created At": order.get("createdAt")
+            })
+
+        message += f"\nTotal orders: {len(matched_orders)}"
+        dispatcher.utter_message(message)
+
+        df = pd.DataFrame(rows)
+        os.makedirs("static/files", exist_ok=True)
+        filename = "customer_orders_by_destination.xlsx"
+        filepath = os.path.join("static/files", filename)
+        df.to_excel(filepath, index=False)
+
+        public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+        if rows:
+            dispatcher.utter_message(custom={"table_data": serialize_for_json(rows), "excel_url": public_url})
+
+        print(f"[TIME] action_cx_destination took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
+
 class ActionGetOrdersByStatus(Action):
     def name(self) -> Text:
         return "action_get_orders_by_status"
@@ -1800,12 +1776,13 @@ class ActionGetPendingOrdersMatrix(Action):
         ]
 
         customer_input = tracker.get_slot("customer_name")
+        message_text = tracker.latest_message.get("text", "").lower()
+
+        use_destination = any(word in message_text for word in ["destination", "drop", "to city"])
 
         try:
-            # Step 1: Build the base query
             query = {"orderStatus": {"$in": PENDING_STATUSES}}
 
-            # Step 2: Apply customer name filter if provided
             if customer_input:
                 all_names = collection.distinct("start.contact.name")
                 matched_customers = [name for name in all_names if customer_input.lower() in name.lower()]
@@ -1816,7 +1793,6 @@ class ActionGetPendingOrdersMatrix(Action):
                 customer_conditions = [{"start.contact.name": {"$regex": name, "$options": "i"}} for name in matched_customers]
                 query = {"$and": [query, {"$or": customer_conditions}]}
 
-            # Step 3: Fetch orders
             orders = list(collection.find(query))
             if not orders:
                 msg = f"No pending orders found"
@@ -1825,14 +1801,14 @@ class ActionGetPendingOrdersMatrix(Action):
                 dispatcher.utter_message(msg + ".")
                 return []
 
-            # Step 4: Create pivot structure: city → date → count
+            
             pivot_data = defaultdict(lambda: defaultdict(int))
-            now = datetime.now(pytz.utc)
 
             for order in orders:
-                city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
-                created_at = order.get("createdAt", "")
+                address_key = "end" if use_destination else "start"
+                city = order.get(address_key, {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
 
+                created_at = order.get("createdAt", "")
                 if isinstance(created_at, int):
                     created_at = datetime.fromtimestamp(created_at / 1000, pytz.utc)
                 elif isinstance(created_at, str):
@@ -1847,20 +1823,21 @@ class ActionGetPendingOrdersMatrix(Action):
                 pivot_data[city][date_str] += 1
 
             all_dates = sorted({date for city_data in pivot_data.values() for date in city_data})
-            header = f"{'Location':<20} " + " ".join([f"{d:<12}" for d in all_dates]) + " Total"
+            col_width = 14
+            header = f"{'Location':<20}" + "".join(f"{d:<{col_width}}" for d in all_dates) + f"{'Total':<{col_width}}"
             lines = [header, "-" * len(header)]
 
-            for city, date_counts in pivot_data.items():
+            for city in sorted(pivot_data):
+                date_counts = pivot_data[city]
                 total = sum(date_counts.values())
-                row = f"{city:<20} " + " ".join([f"{date_counts.get(d, 0):<12}" for d in all_dates]) + f" {total}"
+                row = f"{city:<20}" + "".join(f"{date_counts.get(d, 0):<{col_width}}" for d in all_dates) + f"{total:<{col_width}}"
                 lines.append(row)
 
-            grand_total = sum([sum(date_counts.values()) for date_counts in pivot_data.values()])
-            lines.append("\nGrand Total: " + str(grand_total))
+            grand_total = sum(sum(date_counts.values()) for date_counts in pivot_data.values())
+            lines.append(f"\nGrand Total: {grand_total}")
 
-            title = "**Pending Orders Matrix (by Pickup City and Date)**"
-            if customer_input:
-                title = f"**Pending Orders Matrix for {customer_input.title()}**"
+            matrix_type = "Destination" if use_destination else "Pickup"
+            title = f"**Pending Orders Matrix for {customer_input.title()} by {matrix_type} City**" if customer_input else f"**Pending Orders Matrix (by {matrix_type} City and Date)**"
 
             dispatcher.utter_message(title)
             dispatcher.utter_message("\n".join(lines))
@@ -1870,7 +1847,7 @@ class ActionGetPendingOrdersMatrix(Action):
             return []
 
         return []
-    
+
 class ActionDefaultFallback(Action):
     def name(self):
         return "action_default_fallback"
