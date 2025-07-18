@@ -1,23 +1,14 @@
 # Build Stage
 FROM node:18-alpine AS builder
-
 WORKDIR /app
 COPY . .
 
-# Install dependencies (avoiding conflicts)
+# Use legacy-peer-deps to avoid dependency conflicts
 RUN npm install --legacy-peer-deps
-
-# Build the app (export is automatic with output: 'export' in next.config.js)
-RUN npm run build
+RUN npm run build && npm run export
 
 # Serve Stage
 FROM nginx:alpine
-
-# Copy the exported static site from the /out folder
 COPY --from=builder /app/out /usr/share/nginx/html
-
-# Expose default nginx port
 EXPOSE 80
-
-# Start nginx in foreground
 CMD ["nginx", "-g", "daemon off;"]
