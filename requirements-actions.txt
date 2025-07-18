@@ -1,7 +1,0 @@
-FROM rasa/rasa-sdk:3.6.1
-
-WORKDIR /app
-COPY . /app
-RUN pip install -r requirements-actions.txt
-
-CMD ["start", "--actions", "actions"]
