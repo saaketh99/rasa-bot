@@ -35,5 +35,6 @@ RUN pip install --no-cache-dir -r requirements-actions.txt
 USER 1000
 
 # Start Rasa action server
-CMD ["rasa", "run", "actions", "--port", "5055"]
+CMD ["start"]
+
 
