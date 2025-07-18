@@ -2,7 +2,9 @@
 FROM node:18-alpine AS builder
 WORKDIR /app
 COPY . .
-RUN npm install
+
+# Use legacy-peer-deps to avoid dependency conflicts
+RUN npm install --legacy-peer-deps
 RUN npm run build
 
 # Serve Stage
