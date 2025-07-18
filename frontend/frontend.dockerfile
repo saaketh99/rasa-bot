@@ -5,7 +5,7 @@ COPY . .
 
 # Use legacy-peer-deps to avoid dependency conflicts
 RUN npm install --legacy-peer-deps
-RUN npm run build && npm run export
+RUN npm run build
 
 # Serve Stage
 FROM nginx:alpine
