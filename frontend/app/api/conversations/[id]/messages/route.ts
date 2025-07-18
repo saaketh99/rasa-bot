@@ -16,6 +16,6 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     return NextResponse.json(data)
   } catch (error) {
     console.error("Failed to append message:", error)
-    return NextResponse.json({ success: false, error: "Failed to append message" })
+    return NextResponse.json({ success: false, error: error instanceof Error ? error.message : String(error) })
   }
 }
