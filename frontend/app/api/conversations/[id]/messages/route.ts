@@ -2,10 +2,11 @@ import { type NextRequest, NextResponse } from "next/server"
 
 const FASTAPI_BASE_URL = process.env.FASTAPI_BASE_URL || "http://localhost:8000"
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, context: { params: { id: string } }) {
+  const { id } = context.params;
   try {
     const body = await request.json()
-    const response = await fetch(`${FASTAPI_BASE_URL}/conversations/${params.id}/messages`, {
+    const response = await fetch(`${FASTAPI_BASE_URL}/conversations/${id}/messages`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
