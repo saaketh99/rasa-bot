@@ -18,4 +18,22 @@ RUN pip install --no-cache-dir -r requirements-actions.txt
 USER 1000
 
 # Start Rasa action server
-CMD ["run", "--port", "5055"]
+# Switch to root for installation
+USER root
+
+# Set working directory
+WORKDIR /app
+
+# Copy your action code and requirements
+COPY actions /app/actions
+COPY actions/requirements-actions.txt /app
+
+# Install required Python packages
+RUN pip install --no-cache-dir -r requirements-actions.txt
+
+# Switch back to safe user
+USER 1000
+
+# Start Rasa action server
+CMD ["rasa", "run", "actions", "--port", "5055"]
+
