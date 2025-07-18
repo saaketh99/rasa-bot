@@ -2,10 +2,9 @@ FROM rasa/rasa-sdk:3.6.1
 
 WORKDIR /app
 
-COPY actions /app/actions
-COPY requirements.txt /app/
+COPY . /app/actions         # This copies files from the `actions` directory into `/app/actions`
+COPY ../requirements.txt /app/   # This goes one directory up to get the root-level requirements.txt
 
-RUN pip install -r requirements.txt
+RUN pip install -r /app/requirements.txt
 
-CMD ["run", "--port", "5055"]
-
+CMD ["python", "-m", "rasa_sdk.endpoint", "--port", "5055"]
