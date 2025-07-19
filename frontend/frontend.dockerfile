@@ -7,8 +7,9 @@ COPY . .
 RUN npm install --legacy-peer-deps
 RUN npm run build
 
-# Serve Stage
-FROM nginx:alpine
-COPY --from=builder /app/out /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# Production Stage
+FROM node:18-alpine AS runner
+WORKDIR /app
+COPY --from=builder /app .
+EXPOSE 3000
+CMD ["npm", "run", "start"]
