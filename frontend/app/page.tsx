@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { ChatArea } from "@/components/chat-area"
@@ -25,6 +25,7 @@ export default function ChatbotPage() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null)
   const [loading, setLoading] = useState(false)
+  const [inputValue, setInputValue] = useState("")
 
   // Load conversations on mount
   useEffect(() => {
@@ -60,14 +61,12 @@ export default function ChatbotPage() {
 
       const result = await response.json()
       if (result.success) {
-        // Get bot response from Rasa
-        const botResponse = await sendToRasa(firstMessage, result.conversation_id)
-
-        // Add bot response to conversation
-        if (botResponse) {
-          await appendMessage(result.conversation_id, botResponse)
+        // Get bot responses from Rasa (array)
+        const botResponses = await sendToRasa(firstMessage, result.conversation_id)
+        // Add all bot messages to conversation
+        for (const botMessage of botResponses) {
+          await appendMessage(result.conversation_id, botMessage)
         }
-
         // Load the new conversation
         await loadConversationById(result.conversation_id)
         await loadConversations()
@@ -91,7 +90,7 @@ export default function ChatbotPage() {
     }
   }
 
-  const sendToRasa = async (message: string, sessionId: string): Promise<Message | null> => {
+  const sendToRasa = async (message: string, sessionId: string): Promise<Message[]> => {
     try {
       const response = await fetch("http://localhost:5005/webhooks/rest/webhook", {
         method: "POST",
@@ -104,23 +103,25 @@ export default function ChatbotPage() {
 
       const data = await response.json()
       if (data && data.length > 0) {
-        return {
-          id: Date.now().toString(),
-          text: data[0].text || "No response",
-          sender: "bot",
-          timestamp: Date.now(),
-        }
+        return data
+          .filter((item: any) => item.text)
+          .map((item: any) => ({
+            id: Date.now().toString() + Math.random(),
+            text: item.text,
+            sender: "bot",
+            timestamp: Date.now(),
+          }))
       }
     } catch (error) {
       console.error("Failed to get Rasa response:", error)
-      return {
+      return [{
         id: Date.now().toString(),
         text: "Sorry, I encountered an error. Please try again.",
         sender: "bot",
         timestamp: Date.now(),
-      }
+      }]
     }
-    return null
+    return []
   }
 
   const loadConversationById = async (conversationId: string) => {
@@ -150,11 +151,12 @@ export default function ChatbotPage() {
       // Add user message to conversation
       await appendMessage(currentConversation.id, userMessage)
 
-      // Get bot response
-      const botResponse = await sendToRasa(message, currentConversation.id)
+      // Get bot responses (array)
+      const botResponses = await sendToRasa(message, currentConversation.id)
 
-      if (botResponse) {
-        await appendMessage(currentConversation.id, botResponse)
+      // Add all bot messages to conversation
+      for (const botMessage of botResponses) {
+        await appendMessage(currentConversation.id, botMessage)
       }
 
       // Reload conversation to show new messages
@@ -175,6 +177,7 @@ export default function ChatbotPage() {
           currentConversation={currentConversation}
           onSelectConversation={loadConversationById}
           onNewConversation={() => setCurrentConversation(null)}
+          onIntentClick={setInputValue}
         />
         <main className="flex-1 flex flex-col">
           <ChatArea
@@ -182,6 +185,8 @@ export default function ChatbotPage() {
             onSendMessage={sendMessage}
             onCreateConversation={createNewConversation}
             loading={loading}
+            inputValue={inputValue}
+            setInputValue={setInputValue}
           />
         </main>
       </SidebarProvider>

@@ -1,15 +1,21 @@
-# Build Stage
-FROM node:18-alpine AS builder
+FROM node:18-alpine
+
 WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install --legacy-peer-deps
+
+# Copy source code
 COPY . .
 
-# Use legacy-peer-deps to avoid dependency conflicts
-RUN npm install --legacy-peer-deps
+# Build the app
 RUN npm run build
 
-# Production Stage
-FROM node:18-alpine AS runner
-WORKDIR /app
-COPY --from=builder /app .
+# Expose port
 EXPOSE 3000
-CMD ["npm", "run", "start"]
+
+# Start the app
+CMD ["npm", "start"]

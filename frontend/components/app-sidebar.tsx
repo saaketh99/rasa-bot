@@ -17,11 +17,34 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import type { Conversation } from "@/app/page"
 
+const SUGGESTED_INTENTS = [
+  "Show me the orders for Wakefit from 2025-06-21 to 2025-07-31",
+  "Get me the orders going from Hyderabad to Visakhapatnam",
+  "How many shipments were delivered to Coimbatore?",
+  "Show all pending orders",
+  "Find orders with wallet payment method",
+  "Order status for OLAELE04199",
+  "Track order with invoice number 9849577711",
+  "Show me all delivered orders within 2 days",
+  "Is service available in pincode 530013?",
+  "Delivery summary from 2025-06-21 to 2025-07-31",
+  "Give me complete details for order ID OLAELE04199 ",
+  "long pending orders",
+  "Show pending orders from the last 5 days",
+  "Top delivery pincodes for Ola Ele",
+  "how delivered orders distributed across cities",
+  "Delivered report across cities for Ola ELE",
+  "Show me the order trend for the past 30 days",
+  "What’s the delay trend in the past 15 days?",
+  "Who is updating most of the delivery statuses?"
+];
+
 interface AppSidebarProps {
   conversations: Conversation[]
   currentConversation: Conversation | null
   onSelectConversation: (id: string) => void
   onNewConversation: () => void
+  onIntentClick: (intent: string) => void;
 }
 
 export function AppSidebar({
@@ -29,6 +52,7 @@ export function AppSidebar({
   currentConversation,
   onSelectConversation,
   onNewConversation,
+  onIntentClick,
 }: AppSidebarProps) {
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp)
@@ -83,13 +107,32 @@ export function AppSidebar({
         </SidebarGroup>
 
         <SidebarGroup>
+          <SidebarGroupLabel className="text-gray-400 text-xs uppercase tracking-wide">Intents</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {SUGGESTED_INTENTS.map((intent, idx) => (
+                <SidebarMenuItem key={idx}>
+                  <SidebarMenuButton
+                    className="text-gray-300 hover:text-white hover:bg-gray-800"
+                    onClick={() => onIntentClick(intent)}
+                  >
+                    <span>{intent}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
           <SidebarGroupLabel className="text-gray-400 text-xs uppercase tracking-wide">
             Recent Sessions
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <ScrollArea className="h-[400px]">
               <SidebarMenu>
-                {conversations.map((conversation) => (
+                {/* Sort conversations by updated_at descending (most recent first) */}
+                {[...conversations].sort((a, b) => b.updated_at - a.updated_at).map((conversation) => (
                   <SidebarMenuItem key={conversation.id}>
                     <SidebarMenuButton
                       onClick={() => onSelectConversation(conversation.id)}

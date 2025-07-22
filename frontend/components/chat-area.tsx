@@ -9,18 +9,24 @@ import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import type { Conversation } from "@/app/page"
+import { useToast } from "@/hooks/use-toast";
+import * as XLSX from "xlsx";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface ChatAreaProps {
   conversation: Conversation | null
   onSendMessage: (message: string) => void
   onCreateConversation: (message: string) => void
   loading: boolean
+  inputValue: string
+  setInputValue: (v: string) => void
 }
 
-export function ChatArea({ conversation, onSendMessage, onCreateConversation, loading }: ChatAreaProps) {
-  const [input, setInput] = useState("")
+export function ChatArea({ conversation, onSendMessage, onCreateConversation, loading, inputValue, setInputValue }: ChatAreaProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const { toast } = useToast();
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -30,15 +36,15 @@ export function ChatArea({ conversation, onSendMessage, onCreateConversation, lo
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim() || loading) return
+    if (!inputValue.trim() || loading) return
 
     if (conversation) {
-      onSendMessage(input.trim())
+      onSendMessage(inputValue.trim())
     } else {
-      onCreateConversation(input.trim())
+      onCreateConversation(inputValue.trim())
     }
 
-    setInput("")
+    setInputValue("")
   }
 
   const formatTime = (timestamp?: number) => {
@@ -71,6 +77,11 @@ export function ChatArea({ conversation, onSendMessage, onCreateConversation, lo
     </div>
   )
 
+  // List of prompts/intents for which the download button should appear
+  const downloadIntents = [
+    "wakefit from", "orders going from", "shipments were delivered to", "all pending orders", "delivered orders within", "delivery summary", "long pending orders", "pending orders from the last", "top delivery pincodes", "delivered orders distributed across cities", "updating most of the delivery statuses", "pending orders from hyderabad", "pending orders for ola ele as per locations", "pending orders matrix by pickup location"
+  ];
+
   return (
     <div className="flex-1 flex flex-col h-screen">
       {/* Header */}
@@ -92,7 +103,18 @@ export function ChatArea({ conversation, onSendMessage, onCreateConversation, lo
                     message.sender === "user" ? "bg-blue-600 text-white" : "bg-gray-800 text-gray-100"
                   }`}
                 >
-                  <div className="whitespace-pre-wrap">{message.text}</div>
+                  {message.sender === "bot" ? (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        p: ({node, ...props}) => <p className="whitespace-pre-wrap" {...props} />
+                      }}
+                    >
+                      {message.text}
+                    </ReactMarkdown>
+                  ) : (
+                    <div className="whitespace-pre-wrap">{message.text}</div>
+                  )}
                   {message.timestamp && (
                     <div className={`text-xs mt-1 ${message.sender === "user" ? "text-blue-100" : "text-gray-500"}`}>
                       {formatTime(message.timestamp)}
@@ -110,6 +132,70 @@ export function ChatArea({ conversation, onSendMessage, onCreateConversation, lo
                 </div>
               </div>
             )}
+            {/* Download Button - now at the bottom, after all messages */}
+            {conversation && conversation.messages.length > 0 && (() => {
+              const lastBotMsg = [...conversation.messages].reverse().find(m => m.sender === "bot");
+              if (!lastBotMsg) return null;
+              // Check if the last bot message matches any of the download intents
+              const lowerText = lastBotMsg.text.toLowerCase();
+              const shouldShow = downloadIntents.some(intent => lowerText.includes(intent));
+              if (!shouldShow) return null;
+
+              // Try to extract an Excel file URL from the last bot message
+              const excelUrlMatch = lastBotMsg.text.match(/https?:\/\/[^\s]+\.xlsx/);
+              const excelUrl = excelUrlMatch ? excelUrlMatch[0] : null;
+
+              return (
+                <div className="flex justify-end mt-4">
+                  <Button
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    onClick={async () => {
+                      try {
+                        if (excelUrl) {
+                          toast({ title: "Download started", description: "Downloading full Excel file from backend..." });
+                          const response = await fetch(excelUrl);
+                          if (!response.ok) throw new Error("Failed to fetch Excel file");
+                          const blob = await response.blob();
+                          const url = window.URL.createObjectURL(blob);
+                          const a = document.createElement("a");
+                          a.href = url;
+                          a.download = excelUrl.split("/").pop() || "orders.xlsx";
+                          document.body.appendChild(a);
+                          a.click();
+                          a.remove();
+                          window.URL.revokeObjectURL(url);
+                        } else {
+                          toast({ title: "Download started", description: "Generating Excel from conversation..." });
+                          // Filter only bot messages
+                          const botMessages = conversation.messages.filter(m => m.sender === "bot");
+                          const data = botMessages.map(m => ({
+                            Time: m.timestamp ? new Date(m.timestamp).toLocaleString() : "",
+                            Message: m.text
+                          }));
+                          const worksheet = XLSX.utils.json_to_sheet(data);
+                          const workbook = XLSX.utils.book_new();
+                          XLSX.utils.book_append_sheet(workbook, worksheet, "Rasa Output");
+                          const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+                          const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+                          const url = window.URL.createObjectURL(blob);
+                          const a = document.createElement("a");
+                          a.href = url;
+                          a.download = "conversation_rasa_output.xlsx";
+                          document.body.appendChild(a);
+                          a.click();
+                          a.remove();
+                          window.URL.revokeObjectURL(url);
+                        }
+                      } catch (err) {
+                        toast({ title: "Download failed", description: "Could not download Excel file. Please try again later." });
+                      }
+                    }}
+                  >
+                    Download Orders (Excel)
+                  </Button>
+                </div>
+              );
+            })()}
           </div>
         </ScrollArea>
       )}
@@ -120,15 +206,15 @@ export function ChatArea({ conversation, onSendMessage, onCreateConversation, lo
           <div className="flex gap-2">
             <Input
               ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
               placeholder="Ask anything..."
               disabled={loading}
               className="flex-1 bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
             />
             <Button
               type="submit"
-              disabled={!input.trim() || loading}
+              disabled={!inputValue.trim() || loading}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
