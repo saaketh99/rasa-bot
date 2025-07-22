@@ -223,6 +223,12 @@ stories:
     - intent: citywise_delivered_order_distribution
     - action: action_citywise_delivered_order_distribution
 
+<<<<<<< HEAD
+=======
+
+
+
+>>>>>>> e930061e76b0914abb1049c02fa0db0052a94bab
 - story: Get pending orders by pickup location
   steps:
     - intent: get_pending_orders_by_pickup_city
