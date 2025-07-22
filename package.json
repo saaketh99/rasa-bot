@@ -1,15 +1,12 @@
 {
   "dependencies": {
-<<<<<<< HEAD
     "dayjs": "^1.11.13",
-    "lucide-react": "^0.525.0"
-=======
+    "lucide-react": "^0.525.0",
     "file-saver": "^2.0.5",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/file-saver": "^2.0.7",
     "@types/uuid": "^10.0.0"
->>>>>>> e930061e76b0914abb1049c02fa0db0052a94bab
   }
 }
