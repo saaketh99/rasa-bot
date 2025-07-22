@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # Rasa Server
+  rasa:
+    build:
+      context: .
+      dockerfile: Dockerfile.rasa
+    ports:
+      - "5005:5005"
+    volumes:
+      - ./actions:/app/actions
+      - ./data:/app/data
+      - ./config.yml:/app/config.yml
+      - ./domain.yml:/app/domain.yml
+      - ./endpoints.yml:/app/endpoints.yml
+      - ./credentials.yml:/app/credentials.yml
+    environment:
+      - PYTHONPATH=/app
+    command: rasa run --enable-api --cors "*" --debug
+
+  # Rasa Actions Server
+  rasa-actions:
+    build:
+      context: .
+      dockerfile: Dockerfile.rasa
+    ports:
+      - "5055:5055"
+    volumes:
+      - ./actions:/app/actions
+    environment:
+      - PYTHONPATH=/app
+    command: rasa run actions --debug
+
+  # FastAPI Backend
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile.fastapi
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URL=mongodb+srv://ordersDbAdmin:LuiQu4KLLM0KXvQX@orders-cluster.jbais.mongodb.net/orders-db?retryWrites=true&w=majority
+    depends_on:
+      - rasa
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: frontend.dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - fastapi 

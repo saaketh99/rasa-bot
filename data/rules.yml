@@ -1,0 +1,124 @@
+version: "3.1"
+
+rules:
+
+- rule: Say goodbye anytime the user says goodbye
+  steps:
+  - intent: goodbye
+  - action: utter_goodbye
+
+- rule: CX date orders
+  steps:
+    - intent: cx_date_orders
+    - action: action_cx_date
+
+- rule: Route orders between locations
+  steps:
+    - intent: route_orders
+    - action: action_route
+
+- rule: Orders to destination by customer
+  steps:
+    - intent: orders_to_destination
+    - action: action_cx_destination
+
+- rule: Get orders by status
+  steps:
+    - intent: get_orders_by_status
+    - action: action_get_orders_by_status
+
+- rule: Fetch orders by metadata
+  steps:
+    - intent: fetch_by_metadata
+    - action: action_fetch_by_metadata
+
+- rule: Track order by ID
+  steps:
+    - intent: track_order_by_id
+    - action: action_get_order_status
+
+- rule: Get orders by TAT
+  steps:
+    - intent: get_orders_by_tat
+    - action: action_get_orders_by_tat
+
+- rule: Check pending orders in last N days
+  steps:
+    - intent: get_pending_orders_past_days
+    - action: action_pending_orders_past_days
+
+- rule: Show top pincodes for customer
+  steps:
+    - intent: get_top_pincodes_by_customer
+    - action: action_top_pincodes_by_customer
+
+- rule: Orders by location and duration
+  steps:
+    - intent: orders_by_location_duration
+    - action: action_dynamic_order_query
+
+- rule: Check service by pincode
+  steps:
+    - intent: check_service_by_pincode
+    - action: action_check_service_by_pincode
+
+- rule: Delivery report by duration
+  steps:
+    - intent: delivery_report_by_duration
+    - action: action_dynamic_order_query
+
+- rule: Fetch order info by order ID
+  steps:
+    - intent: fetch_order_info_by_id
+    - action: action_fetch_order_info_by_id
+
+- rule: Track order by invoice number
+  steps:
+    - intent: track_order_by_invoice
+    - action: action_order_status_by_invoice
+
+- rule: Pending/aging orders before last 2 days
+  steps:
+    - intent: pending_orders_before_last_two_days
+    - action: action_pending_orders_before_last_two_days
+
+- rule: Delivered orders distribution by city
+  steps:
+    - intent: citywise_delivered_order_distribution
+    - action: action_citywise_delivered_order_distribution
+
+- rule: View order trends
+  steps:
+    - intent: see_order_trends
+    - action: action_show_order_trends
+
+- rule: View delayed/delivered/cancelled trend
+  steps:
+    - intent: get_delayed_order_trend
+    - action: action_delayed_orders_graph
+
+- rule: Stakeholder distribution without customer
+  steps:
+    - intent: get_stakeholder_distribution
+    - action: action_stakeholder_distribution
+
+
+- rule: Handle pending orders by pickup location
+  steps:
+    - intent: get_pending_orders_by_pickup_city
+    - action: action_get_pending_orders_by_pickup_city
+
+- rule: Trigger action to get customer pending orders grouped by locations
+  steps:
+  - intent: get_customer_pending_orders_all_cities
+  - action: action_get_customer_pending_orders_all_cities
+
+- rule: Respond to pending orders matrix request
+  steps:
+    - intent: ask_pending_orders_matrix
+    - action: action_get_pending_orders_matrix
+
+- rule: Fallback if user message is not understood
+  steps:
+  - intent: nlu_fallback
+  - action: action_default_fallback

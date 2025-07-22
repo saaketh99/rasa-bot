@@ -1,0 +1,9 @@
+rasa>=3.7.0
+fastapi
+uvicorn
+pymongo
+pandas
+python-dateutil
+rapidfuzz
+openpyxl
+python-multipart 

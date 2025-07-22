@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "dayjs": "^1.11.13",
+    "lucide-react": "^0.525.0"
+  }
+}
