@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 
-const FASTAPI_BASE_URL = process.env.FASTAPI_BASE_URL || "http://localhost:8000"
+const FASTAPI_BASE_URL = process.env.FASTAPI_BASE_URL || "http://16.171.255.49:8000"
 
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;

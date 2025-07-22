@@ -290,7 +290,7 @@ class ActionCxOrder(Action):
         filepath = os.path.join("static/files", filename)
         df.to_excel(filepath, index=False)
 
-        public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+        public_url = f"http://16.171.255.49:3000/static/files/{filename}"
         if rows:
             dispatcher.utter_message(custom={"table_data": serialize_for_json(rows), "excel_url": public_url})
 
@@ -350,7 +350,7 @@ class ActionrouteOrder(Action):
         filepath = os.path.join("static/files", filename)
         df.to_excel(filepath, index=False)
 
-        public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+        public_url = f"http://16.171.255.49:3000/static/files/{filename}"
         if rows:
             dispatcher.utter_message(custom={"table_data": serialize_for_json(rows), "excel_url": public_url})
 
@@ -415,7 +415,7 @@ class ActionFordestination(Action):
         filepath = os.path.join("static/files", filename)
         df.to_excel(filepath, index=False)
 
-        public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+        public_url = f"http://16.171.255.49:3000/static/files/{filename}"
         if rows:
             dispatcher.utter_message(custom={"table_data": serialize_for_json(rows), "excel_url": public_url})
 
@@ -568,7 +568,7 @@ class ActionGetOrdersByStatus(Action):
         filename = "orders_by_status.xlsx"
         filepath = os.path.join("static/files", filename)
         df.to_excel(filepath, index=False)
-        public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+        public_url = f"http://16.171.255.49:3000/static/files/{filename}"
 
         dispatcher.utter_message(custom={
             "table_data": serialize_for_json(rows[:10]),
@@ -720,7 +720,7 @@ class ActionGetOrdersByTAT(Action):
             filepath = os.path.join("static/files", filename)
             df.to_excel(filepath, index=False)
 
-            public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+            public_url = f"http://16.171.255.49:3000/static/files/{filename}"
             dispatcher.utter_message(custom={"table_data": serialize_for_json(matching_orders), "excel_url": public_url})
 
         print(f"[TIME] action_get_orders_by_tat took {time.time() - start_time:.2f} seconds")
@@ -816,7 +816,7 @@ class ActionPendingOrdersPastDays(Action):
         filepath = os.path.join("static/files", filename)
         df.to_excel(filepath, index=False)
 
-        public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+        public_url = f"http://16.171.255.49:3000/static/files/{filename}"
         dispatcher.utter_message(custom={"table_data": serialize_for_json(rows), "excel_url": public_url})
 
         print(f"[TIME] action_pending_orders_past_days took {(datetime.now() - start_time).total_seconds():.2f} seconds")
@@ -883,7 +883,7 @@ class ActionTopPincodesByCustomer(Action):
         filepath = os.path.join("static/files", filename)
         df.to_excel(filepath, index=False)
 
-        public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+        public_url = f"http://16.171.255.49:3000/static/files/{filename}"
         if rows:
             pincodes_json = []
             for i, (pincode, count) in enumerate(top_pincodes, start=1):
@@ -1024,7 +1024,7 @@ class ActionDynamicOrderQuery(Action):
         filepath = os.path.join("static/files", filename)
         df.to_excel(filepath, index=False)
 
-        public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+        public_url = f"http://16.171.255.49:3000/static/files/{filename}"
         if rows:
             dispatcher.utter_message(custom={"table_data": serialize_for_json(rows), "excel_url": public_url})
 
@@ -1090,7 +1090,7 @@ class ActionOrderStatusByInvoice(Action):
         filepath = os.path.join("static/files", filename)
         df.to_excel(filepath, index=False)
 
-        public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+        public_url = f"http://16.171.255.49:3000/static/files/{filename}"
         if rows:
             dispatcher.utter_message(custom={"table_data": serialize_for_json(rows), "excel_url": public_url})
 
@@ -1201,7 +1201,7 @@ class ActionPendingOrdersBeforeLastTwoDays(Action):
         filepath = os.path.join("static/files", filename)
         df.to_excel(filepath, index=False)
 
-        public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+        public_url = f"http://16.171.255.49:3000/static/files/{filename}"
         dispatcher.utter_message(custom={"table_data": serialize_for_json(rows), "excel_url": public_url})
 
         print(f"[TIME] action_pending_orders_before_last_two_days took {(datetime.now() - start_time).total_seconds():.2f} seconds")
@@ -1270,7 +1270,7 @@ class ActionOrderDetailsByID(Action):
         filepath = os.path.join("static/files", filename)
         df.to_excel(filepath, index=False)
 
-        public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+        public_url = f"http://16.171.255.49:3000/static/files/{filename}"
         
         dispatcher.utter_message(custom={"table_data": serialize_for_json([{ 
                 "Order ID": order_id,
@@ -1369,7 +1369,7 @@ class ActionCitywiseDeliveredOrderDistribution(Action):
         filepath = os.path.join("static/files", filename)
         df.to_excel(filepath, index=False)
 
-        public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+        public_url = f"http://16.171.255.49:3000/static/files/{filename}"
         if filtered_orders:
             filtered_orders_json = []
             for order in filtered_orders:
@@ -1458,7 +1458,7 @@ class ActionShowOrderTrends(Action):
         plt.savefig(image_path)
         plt.close()
 
-        public_url = f"http://51.20.18.59:8080/static/graphs/{filename}"
+        public_url = f"http://16.171.255.49:3000/static/files/{filename}"
         dispatcher.utter_message(f" Here is your order trend graph for the last {duration} {unit}:")
         dispatcher.utter_message(image=public_url)
         dispatcher.utter_message(f" [Click here to view the graph]({public_url})")
@@ -1556,7 +1556,7 @@ class ActionDelayedOrdersGraph(Action):
         plt.savefig(filepath)
         plt.close()
 
-        public_url = f"http://51.20.18.59:8080/static/graphs/{filename}"
+        public_url = f"http://16.171.255.49:3000/static/files/{filename}"
         dispatcher.utter_message(f"Here's the **{display_status}** order trend for the last {duration} {unit}:")
         dispatcher.utter_message(image=public_url)
         dispatcher.utter_message(f"[Click here to view the graph]({public_url})")
@@ -1676,7 +1676,6 @@ class ActionGetPendingOrdersByPickupCity(Action):
     def name(self) -> Text:
         return "action_get_pending_orders_by_pickup_city"
 
-<<<<<<< HEAD
     def run(self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
@@ -1695,13 +1694,6 @@ class ActionGetPendingOrdersByPickupCity(Action):
         if not pickup_location:
             dispatcher.utter_message("Please also mention the pickup location (city).")
             return []
-=======
-    def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        customer_input = tracker.get_slot("customer_name")
-        if not customer_input:
-            dispatcher.utter_message("Please provide a customer name to fetch the orders.")
-            return []
->>>>>>> e930061e76b0914abb1049c02fa0db0052a94bab
 
         PENDING_STATUSES = [
             "at_fm_agent_hub", "at_lm_agent_hub", "fm_package_verified",
@@ -1720,28 +1712,19 @@ class ActionGetPendingOrdersByPickupCity(Action):
             query = {
                 "$and": [
                     {"orderStatus": {"$in": PENDING_STATUSES}},
-<<<<<<< HEAD
                     {"$or": [{"start.contact.name": {"$regex": name, "$options": "i"}} for name in matched_customers]},
                     {"start.address.mapData.city": {"$regex": f"^{pickup_location}$", "$options": "i"}}
-=======
-                    {"$or": [{"start.contact.name": {"$regex": name, "$options": "i"}} for name in matched_customers]}
->>>>>>> e930061e76b0914abb1049c02fa0db0052a94bab
                 ]
             }
 
             matched_orders = list(collection.find(query))
             if not matched_orders:
-<<<<<<< HEAD
                 dispatcher.utter_message(f"No pending orders found for **{customer_input}** from **{pickup_location}**.")
-=======
-                dispatcher.utter_message(f"No pending orders found for {customer_input}.")
->>>>>>> e930061e76b0914abb1049c02fa0db0052a94bab
                 return []
 
             now = datetime.now(pytz.utc)
             orders_by_city = defaultdict(list)
             city_counts = {}
-<<<<<<< HEAD
             all_rows = []
 
             for order in matched_orders:
@@ -1752,13 +1735,6 @@ class ActionGetPendingOrdersByPickupCity(Action):
                 status = get_aesthetic_status(status_raw)
 
                 created_at = order.get("createdAt")
-=======
-
-            for order in matched_orders:
-                pickup_city = order.get("start", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
-                created_at = order.get("createdAt")
-
->>>>>>> e930061e76b0914abb1049c02fa0db0052a94bab
                 if isinstance(created_at, int):
                     created_at = datetime.fromtimestamp(created_at / 1000, pytz.utc)
                 elif isinstance(created_at, str):
@@ -1768,7 +1744,6 @@ class ActionGetPendingOrdersByPickupCity(Action):
 
                 booking_date = created_at.strftime('%Y-%m-%d') if created_at else "N/A"
                 tat_days = (now - created_at).days if created_at else "N/A"
-<<<<<<< HEAD
 
                 record = {
                     "Pickup City": pickup_city,
@@ -1806,7 +1781,7 @@ class ActionGetPendingOrdersByPickupCity(Action):
             filepath = os.path.join("static/files", filename)
             df.to_excel(filepath, index=False)
 
-            public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+            public_url = f"http://16.171.255.49:3000/static/files/{filename}"
             dispatcher.utter_message(" Download full Excel report here:")
             dispatcher.utter_message(public_url)
 
@@ -1897,37 +1872,15 @@ class ActionGetCustomerPendingOrdersAllCities(Action):
                 all_rows.append(record)
 
             msg_lines = [f"**Pending Orders for {customer_input.title()}**:\n"]
-=======
-                drop_city = order.get("end", {}).get("address", {}).get("mapData", {}).get("city", "Unknown")
-                status_raw = order.get("orderStatus", "unknown")
-                status = get_aesthetic_status(status_raw)
-                order_id = order.get("orderId", "N/A")
-
-                orders_by_city[pickup_city].append({
-                    "Order ID": order_id,
-                    "Date": booking_date,
-                    "TAT": tat_days,
-                    "Drop City": drop_city,
-                    "Status": status
-                })
-                city_counts[pickup_city] = city_counts.get(pickup_city, 0) + 1
-
-            msg_lines = [f"Pending Orders for **{customer_input}**:\n"]
->>>>>>> e930061e76b0914abb1049c02fa0db0052a94bab
 
             for city, orders in orders_by_city.items():
                 msg_lines.append(f"\n **Location: {city}**")
                 header = f"{'Order ID':<20} {'Date':<12} {'TAT':<6} {'Drop City':<20} {'Status':<30}"
                 msg_lines.append(header)
                 msg_lines.append("-" * len(header))
-<<<<<<< HEAD
 
                 for o in orders[:10]:
                     msg_lines.append(f"{o['Order ID']:<20} {o['Date']:<12} {str(o['TAT (days)']):<6} {o['Drop City']:<20} {o['Status']:<30}")
-=======
-                for o in orders[:10]:
-                    msg_lines.append(f"{o['Order ID']:<20} {o['Date']:<12} {str(o['TAT']):<6} {o['Drop City']:<20} {o['Status']:<30}")
->>>>>>> e930061e76b0914abb1049c02fa0db0052a94bab
 
             msg_lines.append("\n **Total Pending Orders by Location:**")
             for city, count in city_counts.items():
@@ -1935,31 +1888,23 @@ class ActionGetCustomerPendingOrdersAllCities(Action):
 
             dispatcher.utter_message("\n".join(msg_lines))
 
-<<<<<<< HEAD
             df = pd.DataFrame(all_rows)
             os.makedirs("static/files", exist_ok=True)
             filename = "customer_pending_orders_by_city.xlsx"
             filepath = os.path.join("static/files", filename)
             df.to_excel(filepath, index=False)
 
-            public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+            public_url = f"http://16.171.255.49:3000/static/files/{filename}"
             dispatcher.utter_message("Download full Excel report here:")
             dispatcher.utter_message(public_url)
 
         except Exception as e:
             dispatcher.utter_message(f" Error retrieving orders: {str(e)}")
-=======
-        except Exception as e:
-            dispatcher.utter_message(f"Error retrieving orders: {str(e)}")
->>>>>>> e930061e76b0914abb1049c02fa0db0052a94bab
             return []
 
         return []
 
-<<<<<<< HEAD
 
-=======
->>>>>>> e930061e76b0914abb1049c02fa0db0052a94bab
 class ActionGetPendingOrdersMatrix(Action):
     def name(self) -> Text:
         return "action_get_pending_orders_matrix"
@@ -1968,14 +1913,11 @@ class ActionGetPendingOrdersMatrix(Action):
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
 
-<<<<<<< HEAD
         start_time = datetime.now()
         from collections import defaultdict
         import os
         import pandas as pd
 
-=======
->>>>>>> e930061e76b0914abb1049c02fa0db0052a94bab
         PENDING_STATUSES = [
             "at_fm_agent_hub", "at_lm_agent_hub", "fm_package_verified",
             "handed_over_to_agent", "handed_over_to_midmile_shipper",
@@ -1984,10 +1926,6 @@ class ActionGetPendingOrdersMatrix(Action):
 
         customer_input = tracker.get_slot("customer_name")
         message_text = tracker.latest_message.get("text", "").lower()
-<<<<<<< HEAD
-=======
-
->>>>>>> e930061e76b0914abb1049c02fa0db0052a94bab
         use_destination = any(word in message_text for word in ["destination", "drop", "to city"])
 
         try:
@@ -2011,10 +1949,6 @@ class ActionGetPendingOrdersMatrix(Action):
                 dispatcher.utter_message(msg + ".")
                 return []
 
-<<<<<<< HEAD
-=======
-            
->>>>>>> e930061e76b0914abb1049c02fa0db0052a94bab
             pivot_data = defaultdict(lambda: defaultdict(int))
 
             for order in orders:
@@ -2034,7 +1968,6 @@ class ActionGetPendingOrdersMatrix(Action):
 
                 date_str = created_at.strftime('%d/%m/%Y')
                 pivot_data[city][date_str] += 1
-<<<<<<< HEAD
 
             all_dates = sorted({date for city_data in pivot_data.values() for date in city_data})
             city_list = sorted(pivot_data.keys())
@@ -2075,61 +2008,18 @@ class ActionGetPendingOrdersMatrix(Action):
             filepath = os.path.join("static/files", filename)
             df.to_excel(filepath, index=False)
 
-            public_url = f"http://51.20.18.59:8080/static/files/{filename}"
+            public_url = f"http://16.171.255.49:3000/static/files/{filename}"
             dispatcher.utter_message("Download the full matrix here:")
             dispatcher.utter_message(public_url)
-=======
-            # Determine column widths
-            all_dates = sorted({date for city_data in pivot_data.values() for date in city_data})
-            max_city_len = max(len(city) for city in pivot_data)  # longest city name
-            date_col_width = max(10, max(len(d) for d in all_dates))  # min 10 chars wide for date
-            total_col_width = 5  # can be adjusted if needed
-
-            # Build header
-            header = f"{'Location'.ljust(max_city_len)}" + "".join(
-                f"{date.rjust(date_col_width)}" for date in all_dates
-            ) + f"{'Total'.rjust(total_col_width)}"
-
-            line_width = len(header)
-            lines = [header, "-" * line_width]
-
-            # Build rows
-            grand_total = 0
-            for city in sorted(pivot_data):
-                date_counts = pivot_data[city]
-                total = sum(date_counts.values())
-                grand_total += total
-                row = f"{city.ljust(max_city_len)}" + "".join(
-                    f"{str(date_counts.get(d, 0)).rjust(date_col_width)}" for d in all_dates
-                ) + f"{str(total).rjust(total_col_width)}"
-                lines.append(row)
-
-            # Final line and total
-            lines.append("-" * line_width)
-            lines.append(f"{'Grand Total:'.ljust(line_width - total_col_width)}{str(grand_total).rjust(total_col_width)}")
-
-            # Title
-            matrix_type = "Destination" if use_destination else "Pickup"
-            title = f"**Pending Orders Matrix for {customer_input.title()} by {matrix_type} City**" if customer_input else f"**Pending Orders Matrix (by {matrix_type} City and Date)**"
-
-            dispatcher.utter_message(title)
-            dispatcher.utter_message(text="\n" + "\n".join(lines) + "\n")
-
->>>>>>> e930061e76b0914abb1049c02fa0db0052a94bab
 
         except Exception as e:
             dispatcher.utter_message(f"Error generating matrix: {str(e)}")
             return []
 
-<<<<<<< HEAD
         print(f"[TIME] action_get_pending_orders_matrix took {(datetime.now() - start_time).total_seconds():.2f} seconds")
         return []
 
 
-=======
-        return []
-
->>>>>>> e930061e76b0914abb1049c02fa0db0052a94bab
 class ActionDefaultFallback(Action):
     def name(self):
         return "action_default_fallback"

@@ -92,7 +92,7 @@ export default function ChatbotPage() {
 
   const sendToRasa = async (message: string, sessionId: string): Promise<Message[]> => {
     try {
-      const response = await fetch("http://localhost:5005/webhooks/rest/webhook", {
+      const response = await fetch("http://16.171.255.49:5005/webhooks/rest/webhook", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
